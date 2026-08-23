@@ -1,0 +1,96 @@
+{{ attach_library('reg_core/tenders') }}
+<article class="reg-tender-detail" data-reg-analytics-event="tender_view" data-reg-analytics-id="{{ item.id }}">
+  {% set tender_eyebrow = 'Procurement'|t %}
+  {% set tender_hero = section_hero|merge({
+    eyebrow: tender_eyebrow,
+    title: item.title,
+    description: item.summary,
+    meta: 'Last updated'|t ~ ': ' ~ item.last_updated,
+    back_url: back_url,
+    back_label: back_label
+  }) %}
+  {% include '@reg_core/reg-section-hero.html.twig' with {hero: tender_hero} only %}
+
+  <div class="reg-container reg-tender-detail__body">
+    <div class="reg-tender-detail__main">
+      <div class="reg-tender-detail__status-line">
+        <span class="reg-tender-status reg-tender-status--{{ item.status_key|clean_class }}">{{ item.status }}</span>
+        {% if item.reference %}<span>{{ 'Reference'|t }}: <strong>{{ item.reference }}</strong></span>{% endif %}
+        {% if item.entity %}<span>{{ 'Entity'|t }}: <strong>{{ item.entity_short ?: item.entity }}</strong></span>{% endif %}
+        {% if item.category %}<span>{{ 'Category'|t }}: <strong>{{ item.category }}</strong></span>{% endif %}
+        {% if item.publication_channel %}<span class="reg-pi-channel">{{ item.publication_channel }}</span>{% endif %}
+      </div>
+
+      {% if item.description %}
+        <section class="reg-tender-detail__section">
+          <h2>{{ 'Tender overview'|t }}</h2>
+          <p>{{ item.description|nl2br }}</p>
+        </section>
+      {% endif %}
+
+      <section class="reg-tender-detail__section reg-pi-how-to" aria-labelledby="reg-how-to-bid">
+        <h2 id="reg-how-to-bid">{{ 'How to bid'|t }}</h2>
+        {% if item.submission_method_key == 'umucyo' %}<p>{{ 'This tender is managed through UMUCYO. REG does not accept a duplicate bid.'|t }}</p>
+        {% elseif item.submission_method_key == 'reg_online' %}<p>{{ 'Applications for this tender are accepted through the authenticated REG Procurement Portal.'|t }}</p>
+        {% elseif item.submission_method_key == 'external' %}<p>{{ 'Use only the approved external submission platform identified for this tender.'|t }}</p>
+        {% else %}<p>{{ 'Follow the approved submission instructions in the official tender documents.'|t }}</p>{% endif %}
+        {% if item.action.enabled and item.action.url %}<a class="reg-pi-button" href="{{ item.action.url }}"{% if item.action.external %} rel="noopener noreferrer"{% endif %}>{{ item.action.label }}{% if item.action.external %} ↗{% endif %}</a>{% elseif not item.is_open %}<strong>{{ 'Online bidding is not available for this tender.'|t }}</strong>{% endif %}
+        {% if item.supplier_ctas %}<p><a href="{{ item.supplier_ctas.register_url }}">{{ 'REGISTER AS SUPPLIER'|t }}</a> · <a href="{{ item.supplier_ctas.login_url }}">{{ 'SUPPLIER LOGIN'|t }}</a></p>{% endif %}
+      </section>
+
+      <section class="reg-tender-detail__section" aria-labelledby="reg-tender-documents">
+        <div class="reg-tender-detail__section-heading">
+          <span>{{ 'Official procurement files'|t }}</span>
+          <h2 id="reg-tender-documents">{{ 'Tender documents'|t }}</h2>
+        </div>
+        {% if item.documents %}
+          <ul class="reg-tender-documents">
+            {% for document in item.documents %}
+              <li>
+                <div>
+                  <span class="reg-tender-documents__type">{{ document.type }}</span>
+                  <strong>{{ document.label }}</strong>
+                  <small>{{ document.extension|upper }} · {{ document.size }}{% if document.date %} · {{ document.date }}{% endif %}{% if document.version %} · {{ 'Version'|t }} {{ document.version }}{% endif %}</small>
+                </div>
+                <a href="{{ document.url }}">{{ document.type_key == 'terms_of_reference' ? 'Download Terms of Reference'|t : 'Download document'|t }}</a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="reg-tender-detail__empty" role="status"><p>{{ 'No public tender documents are attached to this notice.'|t }}</p></div>
+        {% endif %}
+      </section>
+
+      {% if item.related %}
+        <section class="reg-tender-detail__section">
+          <div class="reg-tender-detail__section-heading"><span>{{ 'More procurement notices'|t }}</span><h2>{{ 'Related tenders'|t }}</h2></div>
+          <ul class="reg-tender-related">
+            {% for related in item.related %}
+              <li><a href="{{ related.url }}"><strong>{{ related.title }}</strong>{% if related.reference %}<span>{{ related.reference }}</span>{% endif %}</a></li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% endif %}
+    </div>
+
+    <aside class="reg-tender-detail__aside" aria-labelledby="reg-tender-important">
+      <h2 id="reg-tender-important">{{ 'Important information'|t }}</h2>
+      <dl>
+        {% if item.entity %}<div><dt>{{ 'Entity'|t }}</dt><dd>{{ item.entity_short ?: item.entity }}</dd></div>{% endif %}
+        {% if item.tender_type %}<div><dt>{{ 'Tender type'|t }}</dt><dd>{{ item.tender_type }}</dd></div>{% endif %}
+        {% if item.re_advertised %}<div><dt>{{ 'Notice'|t }}</dt><dd>{{ 'Re-advertised'|t }}</dd></div>{% endif %}
+        {% if item.category %}<div><dt>{{ 'Category'|t }}</dt><dd>{{ item.category }}</dd></div>{% endif %}
+        {% if item.procurement_method %}<div><dt>{{ 'Procurement method'|t }}</dt><dd>{{ item.procurement_method }}</dd></div>{% endif %}
+        {% if item.project %}<div><dt>{{ 'Project'|t }}</dt><dd>{{ item.project }}</dd></div>{% endif %}
+        {% if item.contract_duration %}<div><dt>{{ 'Contract duration'|t }}</dt><dd>{{ item.contract_duration }}</dd></div>{% endif %}
+        {% if item.renewal_terms %}<div><dt>{{ 'Renewal'|t }}</dt><dd>{{ item.renewal_terms }}</dd></div>{% endif %}
+        {% if item.date %}<div><dt>{{ 'Publication date'|t }}</dt><dd>{{ item.date }}</dd></div>{% endif %}
+        {% if item.closing_date %}<div><dt>{{ 'Closing date'|t }}</dt><dd>{{ item.closing_date }}</dd></div>{% endif %}
+        {% if item.award_date %}<div><dt>{{ 'Award date'|t }}</dt><dd>{{ item.award_date }}</dd></div>{% endif %}
+        {% if item.awarded_supplier %}<div><dt>{{ 'Awarded supplier'|t }}</dt><dd>{{ item.awarded_supplier }}</dd></div>{% endif %}
+      </dl>
+      {% if item.contact %}<div class="reg-tender-detail__contact"><h3>{{ 'Official contact'|t }}</h3><p>{{ item.contact|nl2br }}</p></div>{% endif %}
+      <div class="reg-tender-detail__notice"><strong>{{ item.submission_method ?: 'Approved tender instructions'|t }}</strong><p>{{ 'Only the configured authoritative submission channel may be used.'|t }}</p></div>
+    </aside>
+  </div>
+</article>

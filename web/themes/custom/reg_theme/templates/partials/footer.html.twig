@@ -1,0 +1,59 @@
+<footer class="site-footer">
+  <div class="reg-container footer-grid">
+    <div>
+      {% if page.footer_brand %}
+        {{ page.footer_brand }}
+      {% else %}
+        <h2>{{ 'Rwanda Energy Group'|t }}</h2>
+        <p>{{ 'Powering Rwanda’s future through innovation and reliable service delivery.'|t }}</p>
+      {% endif %}
+    </div>
+    <div>
+      {% if page.footer_services %}
+        {{ page.footer_services }}
+      {% else %}
+        <h3>{{ 'Quick links'|t }}</h3>
+        <nav class="footer-menu" aria-label="{{ 'Footer utility navigation'|t }}">
+          {{ reg_utility_menu_footer }}
+        </nav>
+      {% endif %}
+    </div>
+    <div>
+      {% if page.footer_resources %}
+        {{ page.footer_resources }}
+      {% else %}
+        <h3>{{ 'Customer support'|t }}</h3>
+        <p>{{ 'For electricity service help, contact the REG call center.'|t }}</p>
+        <ul class="footer-support-links">
+          <li><a href="{{ reg_links.branches }}">{{ 'Branch Locator'|t }}</a></li>
+          <li><a class="footer-call" href="tel:{{ reg_call_center_uri }}">{{ 'Call'|t }} <strong>{{ reg_call_center }}</strong></a></li>
+          <li><a href="{{ reg_links.contact }}">{{ 'Contact REG'|t }}</a></li>
+        </ul>
+      {% endif %}
+    </div>
+    <div>
+      {% if reg_social_links.footer %}
+        <div class="footer-social">
+          <h3>{{ 'Follow REG'|t }}</h3>
+          {% include '@reg_core/reg-social-links.html.twig' with {
+            items: reg_social_links.footer,
+            variant: 'footer'
+          } only %}
+        </div>
+      {% endif %}
+      {% if page.footer_connect %}
+        {{ page.footer_connect }}
+      {% else %}
+        <h3 class="footer-language-heading">{{ 'Language'|t }}</h3>
+        {% include '@reg_theme/partials/language-switcher.html.twig' %}
+      {% endif %}
+    </div>
+  </div>
+  <div class="reg-container footer-bottom">
+    {% if page.footer_bottom %}
+      {{ page.footer_bottom }}
+    {% else %}
+      <p>{{ '© @year Rwanda Energy Group (REG). All rights reserved. Powering Rwanda’s Future.'|t({'@year': reg_year}) }}</p>
+    {% endif %}
+  </div>
+</footer>

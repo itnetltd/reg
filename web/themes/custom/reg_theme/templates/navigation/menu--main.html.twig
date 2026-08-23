@@ -1,0 +1,106 @@
+{% import _self as menus %}
+{{ menus.menu_links(items, attributes, 0, 'reg-menu') }}
+
+{% macro menu_item(item, attributes, menu_level, item_id, label_override = '') %}
+  {% set item_classes = [
+    'menu-item',
+    'menu-item--level-' ~ menu_level,
+    item.below ? 'menu-item--has-children',
+    item.in_active_trail ? 'menu-item--active-trail'
+  ] %}
+  <li{{ item.attributes.addClass(item_classes) }}>
+    <div class="menu-item__row">
+      {{ link(label_override ?: item.title, item.url) }}
+      {% if item.below %}
+        <button class="submenu-toggle" type="button" aria-expanded="false" aria-haspopup="true" aria-controls="{{ item_id }}" data-reg-submenu-toggle>
+          <span class="visually-hidden">{{ 'Toggle @item submenu'|t({'@item': label_override ?: item.title}) }}</span>
+          <span class="submenu-toggle__icon" aria-hidden="true"></span>
+        </button>
+      {% endif %}
+    </div>
+    {% if item.below %}
+      <div id="{{ item_id }}" class="submenu-wrap">
+        {{ _self.menu_links(item.below, attributes, menu_level + 1, item_id) }}
+      </div>
+    {% endif %}
+  </li>
+{% endmacro %}
+
+{% macro what_we_do(items, attributes, trail) %}
+  <div class="what-we-do-mega" data-reg-what-we-do-mega>
+    <div class="what-we-do-mega__overview">
+      {% for item in items %}
+        {% if item.attributes.hasClass('menu-item--nav-work-overview') %}
+          <a href="{{ item.url }}"{% if item.in_active_trail %} aria-current="page"{% endif %}>{{ 'What We Do Overview'|t }} <span aria-hidden="true">→</span></a>
+        {% endif %}
+      {% endfor %}
+    </div>
+    <ul class="what-we-do-mega__columns submenu menu--level-1">
+      {% for item in items %}
+        {% if item.attributes.hasClass('menu-item--nav-work-electricity-system') %}
+          {{ _self.menu_item(item, attributes, 1, trail ~ '-power-system', 'Power System'|t) }}
+        {% endif %}
+      {% endfor %}
+      {% for item in items %}
+        {% if item.attributes.hasClass('menu-item--nav-work-energy-solutions') %}
+          {{ _self.menu_item(item, attributes, 1, trail ~ '-energy-solutions', 'Energy Solutions'|t) }}
+        {% endif %}
+      {% endfor %}
+      <li class="menu-item menu-item--level-1 menu-item--has-children menu-item--development">
+        <div class="menu-item__row">
+          <span>{{ 'Development'|t }}</span>
+          <button class="submenu-toggle" type="button" aria-expanded="false" aria-haspopup="true" aria-controls="{{ trail }}-development" data-reg-submenu-toggle>
+            <span class="visually-hidden">{{ 'Toggle Development submenu'|t }}</span>
+            <span class="submenu-toggle__icon" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div id="{{ trail }}-development" class="submenu-wrap">
+          <ul class="submenu menu--level-2">
+            {% for item in items %}
+              {% if item.attributes.hasClass('menu-item--nav-work-projects') or item.attributes.hasClass('menu-item--nav-work-programs') %}
+                {{ _self.menu_item(item, attributes, 2, trail ~ '-development-' ~ loop.index) }}
+              {% endif %}
+            {% endfor %}
+          </ul>
+        </div>
+      </li>
+      {% for item in items %}
+        {% if item.attributes.hasClass('menu-item--nav-work-investment') %}
+          {{ _self.menu_item(item, attributes, 1, trail ~ '-investment') }}
+        {% endif %}
+      {% endfor %}
+    </ul>
+  </div>
+{% endmacro %}
+
+{% macro menu_links(items, attributes, menu_level, trail) %}
+  {% if items %}
+    {% set list_classes = [menu_level == 0 ? 'primary-menu' : 'submenu', 'menu--level-' ~ menu_level] %}
+    {% if menu_level == 0 %}
+      <ul{{ attributes.addClass(list_classes) }} data-reg-menu-level="{{ menu_level }}">
+    {% else %}
+      <ul class="{{ list_classes|join(' ') }}" data-reg-menu-level="{{ menu_level }}">
+    {% endif %}
+      {% for item in items %}
+        {% set item_id = trail ~ '-' ~ loop.index %}
+        {% if menu_level == 0 and item.attributes.hasClass('menu-item--what-we-do') %}
+          {% set item_classes = ['menu-item', 'menu-item--level-0', 'menu-item--has-children', 'menu-item--what-we-do', 'menu-item--mega', item.in_active_trail ? 'menu-item--active-trail'] %}
+          <li{{ item.attributes.addClass(item_classes) }}>
+            <div class="menu-item__row">
+              {{ link(item.title, item.url) }}
+              <button class="submenu-toggle" type="button" aria-expanded="false" aria-haspopup="true" aria-controls="{{ item_id }}" data-reg-submenu-toggle>
+                <span class="visually-hidden">{{ 'Toggle @item submenu'|t({'@item': item.title}) }}</span>
+                <span class="submenu-toggle__icon" aria-hidden="true"></span>
+              </button>
+            </div>
+            <div id="{{ item_id }}" class="submenu-wrap submenu-wrap--what-we-do">
+              {{ _self.what_we_do(item.below, attributes, item_id) }}
+            </div>
+          </li>
+        {% else %}
+          {{ _self.menu_item(item, attributes, menu_level, item_id) }}
+        {% endif %}
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endmacro %}

@@ -1,0 +1,8 @@
+name: Service card
+status: stable
+props:
+  type: object
+  properties:
+    item:
+      type: object
+      required: [eyebrow, title, description, url]

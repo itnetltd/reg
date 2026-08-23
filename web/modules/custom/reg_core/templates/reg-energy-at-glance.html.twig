@@ -1,0 +1,50 @@
+{% if cards %}
+  <section class="energy-glance" aria-labelledby="energy-glance-title" data-reg-counter-group>
+    <div class="reg-container">
+      <header class="energy-glance__header">
+        <span class="section-kicker section-kicker--light">{{ 'Key sector indicators'|t }}</span>
+        <h2 id="energy-glance-title">{{ 'Energy at a Glance'|t }}</h2>
+        <p>{{ 'Key indicators across electricity generation, transmission and access.'|t }}</p>
+      </header>
+      <div class="energy-glance__grid">
+        {% for card in cards %}
+          <article class="energy-glance-card energy-glance-card--{{ card.category }}" aria-labelledby="energy-glance-card-{{ card.id }}">
+            <span class="energy-glance-card__category">{{ card.category_label }}</span>
+            <p class="energy-glance-card__value">
+              <span
+                class="js-reg-counter"
+                data-counter-value="{{ card.numeric_value }}"
+                data-counter-decimals="{{ card.decimals }}"
+                aria-label="{{ card.value }}"
+              >{{ card.value }}</span>{% if card.unit %}<small>{{ card.unit }}</small>{% endif %}
+            </p>
+            <h3 id="energy-glance-card-{{ card.id }}">{{ card.title }}</h3>
+            {% if card.period %}<p class="energy-glance-card__period">{{ 'As of @period'|t({'@period': card.period}) }}</p>{% endif %}
+
+            {% if card.category == 'access' %}
+              <div class="energy-glance-card__ring" style="--energy-progress: {{ card.numeric_value|round(2, 'common') }}%" aria-hidden="true"><span></span></div>
+            {% elseif card.category == 'transmission' and card.secondary %}
+              <div class="energy-glance-card__breakdown">
+                {% for item in card.secondary %}
+                  <div>
+                    <p><strong>{{ item.title }}</strong><span>{{ item.value }} {{ item.unit }}</span></p>
+                    <span class="energy-glance-card__bar" aria-hidden="true"><i style="width: {{ item.proportion }}%"></i></span>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="energy-glance-card__signal" aria-hidden="true"><span></span><span></span><span></span></div>
+            {% endif %}
+
+            {% if card.secondary and card.category == 'access' %}
+              <dl class="energy-glance-card__split">
+                {% for item in card.secondary %}<div><dt>{{ item.title }}</dt><dd>{{ item.value }}{{ item.unit }}</dd></div>{% endfor %}
+              </dl>
+            {% endif %}
+            <a href="{{ card.url }}">{{ 'Explore @category'|t({'@category': card.category_label}) }} <span aria-hidden="true">→</span></a>
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endif %}

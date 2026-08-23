@@ -1,0 +1,75 @@
+{{ attach_library('reg_core/what_we_do') }}
+<article class="reg-wwd">
+  <div class="reg-wwd__container">
+    {% if facts %}
+      <section class="reg-wwd__section" aria-labelledby="wwd-facts">
+        <h2 id="wwd-facts">{{ page.key == 'generation' ? 'Generation at a Glance'|t : 'At a Glance'|t }}</h2>
+        <div class="reg-wwd__facts">
+          {% for fact in facts %}
+            <article class="reg-wwd__fact">
+              <strong>{{ fact.value }}{% if fact.unit == '%' %}{{ fact.unit }}{% else %} <span>{{ fact.unit }}</span>{% endif %}</strong>
+              <h3>{{ fact.metric }}</h3>
+              <p>{{ fact.period }}</p>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    <section class="reg-wwd__section reg-wwd__body" aria-labelledby="wwd-overview">
+      <h2 id="wwd-overview">{{ 'Overview'|t }}</h2>
+      {{ page.body|raw }}
+    </section>
+
+    {% if children %}
+      <section class="reg-wwd__section" aria-labelledby="wwd-areas">
+        <h2 id="wwd-areas">{{ page.key == 'generation' ? 'Energy Sources'|t : 'Explore this area'|t }}</h2>
+        <div class="reg-wwd__grid">
+          {% for child in children %}
+            <article class="reg-wwd__card">
+              <h3><a href="{{ child.url }}">{{ child.title }}</a></h3>
+              <p>{{ child.summary }}</p>
+              <a class="reg-wwd__arrow" href="{{ child.url }}">{{ 'Explore'|t }} <span aria-hidden="true">→</span></a>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    {% if access_statistics %}
+      <section class="reg-wwd__section" aria-labelledby="wwd-access">
+        <div class="reg-wwd__section-heading">
+          <div><h2 id="wwd-access">{{ 'Access by District'|t }}</h2><p>{{ 'Reporting period: July 2025'|t }}</p></div>
+          <label>{{ 'Search districts'|t }}<input type="search" data-reg-access-search placeholder="{{ 'Search by district'|t }}"></label>
+        </div>
+        <div class="reg-wwd__table-wrap">
+          <table data-reg-access-table>
+            <thead><tr><th scope="col"><button type="button" data-reg-sort="district">{{ 'District'|t }}</button></th><th scope="col"><button type="button" data-reg-sort="rate">{{ 'Access Rate'|t }}</button></th></tr></thead>
+            <tbody>{% for statistic in access_statistics %}<tr><th scope="row">{{ statistic.district }}</th><td data-rate="{{ statistic.rate|replace({'%': ''}) }}">{{ statistic.rate }}</td></tr>{% endfor %}</tbody>
+          </table>
+        </div>
+      </section>
+    {% endif %}
+
+    {% if plants %}
+      <section class="reg-wwd__section" aria-labelledby="wwd-plants">
+        <h2 id="wwd-plants">{{ 'Power Plants'|t }}</h2>
+        <p>{{ 'Values are preserved from the official REG source table and are undergoing technical review.'|t }}</p>
+        <div class="reg-wwd__table-wrap"><table><thead><tr><th>{{ 'Plant Name'|t }}</th><th>{{ 'Technology'|t }}</th><th>{{ 'Grid'|t }}</th><th>{{ 'Installed Capacity'|t }}</th><th>{{ 'Ownership'|t }}</th><th>{{ 'Year'|t }}</th></tr></thead><tbody>
+          {% for plant in plants %}<tr><th scope="row">{{ plant.name }}</th><td>{{ plant.technology }}</td><td>{{ plant.grid }}</td><td>{{ plant.capacity }} MW</td><td>{{ plant.ownership }}</td><td>{{ plant.year ?: '—' }}</td></tr>{% endfor %}
+        </tbody></table></div>
+      </section>
+    {% endif %}
+
+    {% if projects %}
+      <section class="reg-wwd__section" aria-labelledby="wwd-projects">
+        <h2 id="wwd-projects">{{ page.key == 'projects' ? 'REG Projects'|t : 'Related Projects'|t }}</h2>
+        <div class="reg-wwd__grid">{% for project in projects %}<article class="reg-wwd__card"><p class="reg-wwd__meta">{{ project.category }}</p><h3><a href="{{ project.url }}">{{ project.title }}</a></h3><p>{{ project.summary }}</p><a class="reg-wwd__arrow" href="{{ project.url }}">{{ 'View project'|t }} <span aria-hidden="true">→</span></a></article>{% endfor %}</div>
+      </section>
+    {% endif %}
+
+    {% if news %}
+      <section class="reg-wwd__section" aria-labelledby="wwd-news"><h2 id="wwd-news">{{ 'Related News'|t }}</h2><ul class="reg-wwd__news">{% for item in news %}<li><a href="{{ item.url }}">{{ item.title }}</a></li>{% endfor %}</ul></section>
+    {% endif %}
+  </div>
+</article>

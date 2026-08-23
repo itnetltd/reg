@@ -1,0 +1,19 @@
+{% if leaders %}
+  <div class="reg-about-leaders{% if compact %} reg-about-leaders--compact{% endif %}">
+    {% for leader in leaders %}
+      <article class="reg-about-leader">
+        <div class="reg-about-leader__portrait">
+          {% if leader.portrait.url %}<img src="{{ leader.portrait.url }}" alt="{{ leader.portrait.alt }}" loading="lazy" width="640" height="760">{% else %}<span aria-hidden="true">{{ leader.initials }}</span>{% endif %}
+        </div>
+        <div class="reg-about-leader__content">
+          {% if leader.entity %}<span>{{ leader.entity }}</span>{% endif %}
+          <h3>{{ leader.name }}</h3>
+          <strong>{{ leader.role }}</strong>
+          {% if not compact and leader.bio %}<div class="reg-about-leader__bio">{{ leader.bio }}</div>{% endif %}
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="reg-about-empty">{{ 'No approved leadership records are currently published.'|t }}</p>
+{% endif %}

@@ -1,0 +1,5 @@
+<section class="reg-supplier-shell">
+  <nav class="reg-supplier-nav" aria-label="{{ 'Supplier workspace'|t }}">{% for link in links %}<a href="{{ link.url }}">{{ link.label }}</a>{% endfor %}</nav>
+  <h1>{{ heading }}</h1>
+  {% if items %}<div class="reg-supplier-list">{% for item in items %}<article class="reg-supplier-card"><h2>{% if item.url %}<a href="{{ item.url }}">{{ item.title }}</a>{% else %}{{ item.title }}{% endif %}</h2><p>{{ item.reference }} · {{ item.status }}</p><small>{{ item.updated }}</small></article>{% endfor %}</div>{% else %}<p>{{ 'No records are available.'|t }}</p>{% endif %}
+</section>

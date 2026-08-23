@@ -1,0 +1,19 @@
+<div class="reg-branch-admin">
+  <div class="reg-branch-admin__intro">
+    <p>{{ 'Manage the single Drupal branch directory used by Customer Services, About REG, Contact, and the FAQ Assistant.'|t }}</p>
+    <a class="button button--primary" href="{{ add_url }}">{{ 'Add branch'|t }}</a>
+  </div>
+  <form class="reg-branch-admin__filters" action="{{ clear_url }}" method="get">
+    <label>{{ 'Branch'|t }}<input name="q" type="search" maxlength="120" value="{{ filters.q }}"></label>
+    <label>{{ 'District'|t }}<select name="district"><option value="0">{{ 'All districts'|t }}</option>{% for id, label in districts %}<option value="{{ id }}"{{ filters.district == id ? ' selected' : '' }}>{{ label }}</option>{% endfor %}</select></label>
+    <label>{{ 'Entity'|t }}<select name="entity"><option value="">{{ 'All entities'|t }}</option>{% for id, label in entities %}<option value="{{ id }}"{{ filters.entity == id ? ' selected' : '' }}>{{ label }}</option>{% endfor %}</select></label>
+    <label>{{ 'Review status'|t }}<select name="review_status"><option value="">{{ 'All review statuses'|t }}</option>{% for id, label in review_statuses %}<option value="{{ id }}"{{ filters.review_status == id ? ' selected' : '' }}>{{ label }}</option>{% endfor %}</select></label>
+    <div class="reg-branch-admin__filter-actions"><button type="submit" class="button button--primary">{{ 'Apply filters'|t }}</button><a class="button" href="{{ clear_url }}">{{ 'Clear'|t }}</a></div>
+  </form>
+  <div class="reg-branch-admin__table-wrap">
+    <table>
+      <thead><tr><th scope="col">{{ 'Branch'|t }}</th><th scope="col">{{ 'Manager'|t }}</th><th scope="col">{{ 'PH'|t }}</th><th scope="col">{{ 'TE'|t }}</th><th scope="col">{{ 'Email'|t }}</th><th scope="col">{{ 'Location completeness'|t }}</th><th scope="col">{{ 'Last verified'|t }}</th><th scope="col">{{ 'Published'|t }}</th><th scope="col">{{ 'Edit'|t }}</th></tr></thead>
+      <tbody>{% for row in rows %}<tr><th scope="row">{{ row.branch }}</th><td>{{ row.manager }}</td><td>{{ row.ph }}</td><td>{{ row.te }}</td><td>{{ row.email }}</td><td>{{ row.location }}</td><td>{{ row.last_verified }}</td><td>{{ row.published }}</td><td><a href="{{ row.edit_url }}">{{ 'Edit'|t }}</a></td></tr>{% else %}<tr><td colspan="9">{{ 'No branch records match these filters.'|t }}</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+</div>

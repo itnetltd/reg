@@ -1,0 +1,31 @@
+{% if statistics %}
+  <section class="homepage-stats" aria-labelledby="homepage-stats-title">
+    <div class="reg-container">
+      <header class="homepage-stats__header">
+        <span class="section-kicker">{{ 'Key figures'|t }}</span>
+        <h2 id="homepage-stats-title">{{ 'REG At a Glance'|t }}</h2>
+        <p>{{ "Key operational and access figures across REG's electricity and energy services."|t }}</p>
+      </header>
+      <div class="homepage-stats__grid">
+        {% for statistic in statistics %}
+          {% set counter_value = statistic.value|replace({',': ''}) %}
+          {% set counter_parts = counter_value|split('.') %}
+          {% set counter_decimals = counter_parts|length > 1 ? counter_parts[1]|length : 0 %}
+          <article class="homepage-stat" aria-labelledby="homepage-stat-{{ statistic.id }}">
+            <span class="homepage-stat__icon" aria-hidden="true"></span>
+            <p class="homepage-stat__value">
+              <span
+                class="homepage-stat__number js-reg-counter"
+                data-counter-value="{{ counter_value }}"
+                data-counter-decimals="{{ counter_decimals }}"
+                aria-label="{{ statistic.value }}"
+              >{{ statistic.value }}</span>{% if statistic.suffix %}<span class="homepage-stat__suffix{{ statistic.suffix == '%' ? ' homepage-stat__suffix--tight' }}">{{ statistic.suffix }}</span>{% endif %}
+            </p>
+            <h3 id="homepage-stat-{{ statistic.id }}">{{ statistic.title }}</h3>
+            {% if statistic.supporting_text %}<p class="homepage-stat__note">{{ statistic.supporting_text }}</p>{% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endif %}

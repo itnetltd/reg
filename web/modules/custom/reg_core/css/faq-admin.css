@@ -1,0 +1,68 @@
+.reg-faq-admin__intro,
+.reg-faq-admin__filters,
+.reg-faq-admin__filter-actions {
+  display: flex;
+  align-items: end;
+  gap: 16px;
+}
+
+.reg-faq-admin__intro {
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.reg-faq-admin__filters {
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 18px;
+  border: 1px solid #d8d8d8;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.reg-faq-admin__filters label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 700;
+}
+
+.reg-faq-admin__filters input,
+.reg-faq-admin__filters select {
+  min-width: 180px;
+  min-height: 40px;
+}
+
+.reg-faq-admin__table-wrap {
+  overflow-x: auto;
+}
+
+.reg-faq-admin table {
+  width: 100%;
+}
+
+.reg-faq-admin__review {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #e9f5ec;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reg-faq-admin__review--needs_review {
+  color: #5a3c00;
+  background: #ffe8a3;
+}
+
+@media (max-width: 720px) {
+  .reg-faq-admin__intro,
+  .reg-faq-admin__filters {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .reg-faq-admin__filters input,
+  .reg-faq-admin__filters select {
+    width: 100%;
+  }
+}

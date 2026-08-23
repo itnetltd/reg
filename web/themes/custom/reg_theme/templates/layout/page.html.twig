@@ -1,0 +1,12 @@
+<div class="site-shell">
+  {% include '@reg_theme/partials/header.html.twig' with {reg_header_front: false} %}
+
+  {{ page.public_alert }}
+
+  <main id="main-content" tabindex="-1">
+    {{ reg_section_hero_global }}
+    {{ page.content }}
+  </main>
+
+  {% include '@reg_theme/partials/footer.html.twig' %}
+</div>

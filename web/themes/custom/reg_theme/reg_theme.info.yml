@@ -1,0 +1,30 @@
+name: REG Theme
+type: theme
+description: 'Drupal 11 theme implementing the Rwanda Energy Group Figma design.'
+core_version_requirement: ^11
+base theme: false
+version: 1.0.0
+libraries:
+  - reg_theme/global
+regions:
+  top_navigation: 'Top navigation'
+  header: Header
+  primary_menu: 'Primary menu'
+  search: Search
+  public_alert: 'Public alert'
+  hero: Hero
+  homepage_stats: 'REG At a Glance'
+  quick_services: 'Quick services'
+  impact: 'Energy at a Glance'
+  service_status: 'Service status'
+  energy_awareness: 'Energy awareness'
+  news: 'News and insights'
+  tenders: Tenders
+  featured_video: 'Featured videos'
+  partners: Partners
+  content: Content
+  footer_brand: 'Footer brand'
+  footer_services: 'Footer services'
+  footer_resources: 'Footer resources'
+  footer_connect: 'Footer connect'
+  footer_bottom: 'Footer bottom'

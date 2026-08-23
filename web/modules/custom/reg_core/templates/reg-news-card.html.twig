@@ -1,0 +1,18 @@
+<article class="reg-news-card reg-news-card--{{ variant|clean_class }}">
+  <a class="reg-news-card__media" href="{{ item.url }}" aria-label="{{ 'Read @title'|t({'@title': item.title}) }}"{% if analytics_event %} data-reg-analytics-event="{{ analytics_event }}" data-reg-analytics-id="{{ item.id }}"{% endif %}>
+    {% if item.image.render %}
+      {{ item.image.render }}
+    {% else %}
+      <span class="reg-news-image-fallback" aria-hidden="true"><span>REG</span><strong>{{ 'News'|t }}</strong></span>
+    {% endif %}
+  </a>
+  <div class="reg-news-card__body">
+    <div class="reg-news-card__meta">
+      {% if item.category.label %}<span>{{ item.category.label }}</span>{% endif %}
+      {% if item.date %}<time datetime="{{ item.date_iso }}">{{ item.date }}</time>{% endif %}
+    </div>
+    <h3><a href="{{ item.url }}"{% if analytics_event %} data-reg-analytics-event="{{ analytics_event }}" data-reg-analytics-id="{{ item.id }}"{% endif %}>{{ item.title }}</a></h3>
+    {% if item.summary and variant != 'compact' %}<p>{{ item.summary }}</p>{% endif %}
+    <a class="reg-news-card__action" href="{{ item.url }}"{% if analytics_event %} data-reg-analytics-event="{{ analytics_event }}" data-reg-analytics-id="{{ item.id }}"{% endif %}>{{ variant == 'compact' ? 'Read'|t : 'Read more'|t }} <span aria-hidden="true">→</span></a>
+  </div>
+</article>

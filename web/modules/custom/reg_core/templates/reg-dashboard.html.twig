@@ -1,0 +1,24 @@
+<div class="reg-admin-report">
+  <nav class="reg-admin-nav" aria-label="{{ 'REG dashboard sections'|t }}">
+    {% for item in navigation %}<a href="{{ item.url }}"{% if item.active %} aria-current="page"{% endif %}>{{ item.label|t }}</a>{% endfor %}
+  </nav>
+  <h1>{{ title_text|t }}</h1>
+  {% if notice %}<p class="reg-admin-notice">{{ notice|t }}</p>{% endif %}
+  <form method="get" class="reg-admin-filters">
+    <label>{{ 'Date from'|t }}<input type="date" name="date_from" value="{{ filters.date_from }}"></label>
+    <label>{{ 'Date to'|t }}<input type="date" name="date_to" value="{{ filters.date_to }}"></label>
+    <label>{{ 'REG entity'|t }}<select name="entity"><option value="">{{ 'All entities'|t }}</option>{% for value in ['reg', 'eucl', 'edcl'] %}<option value="{{ value }}"{{ filters.entity == value ? ' selected' : '' }}>{{ value|upper }}</option>{% endfor %}</select></label>
+    <label>{{ 'Content type'|t }}<select name="content_type"><option value="">{{ 'All content types'|t }}</option>{% for value, label in content_types %}<option value="{{ value }}"{{ filters.content_type == value ? ' selected' : '' }}>{{ label|t }}</option>{% endfor %}</select></label>
+    <label>{{ 'Language'|t }}<select name="language"><option value="">{{ 'All languages'|t }}</option><option value="en"{{ filters.language == 'en' ? ' selected' : '' }}>{{ 'English'|t }}</option><option value="rw"{{ filters.language == 'rw' ? ' selected' : '' }}>{{ 'Kinyarwanda'|t }}</option></select></label>
+    <label>{{ 'Department'|t }}<input name="department" value="{{ filters.department }}" maxlength="64"></label>
+    <label>{{ 'Status'|t }}<input name="status" value="{{ filters.status }}" maxlength="32"></label>
+    <button type="submit">{{ 'Apply filters'|t }}</button>
+  </form>
+  <div class="reg-kpi-grid">
+    {% for card in cards %}<article><strong>{{ card.value }}</strong><span>{{ card.label|t }}</span></article>{% else %}<p>{{ 'No aggregate data is available for this period.'|t }}</p>{% endfor %}
+  </div>
+  {% if exports %}<div class="reg-admin-exports"><strong>{{ 'CSV exports'|t }}:</strong> {% for item in exports %}<a href="{{ item.url }}">{{ item.label|t }}</a>{% endfor %}</div>{% endif %}
+  {% for table in tables %}
+    <div class="reg-admin-table-wrap"><table><caption>{{ table.caption|t }}</caption><thead><tr>{% for header in table.headers %}<th scope="col">{{ header|t }}</th>{% endfor %}</tr></thead><tbody>{% for row in table.rows %}<tr>{% for cell in row %}{% if loop.first %}<th scope="row">{{ cell }}</th>{% else %}<td>{{ cell }}</td>{% endif %}{% endfor %}</tr>{% else %}<tr><td colspan="{{ table.headers|length }}">{{ 'No aggregate records match these filters.'|t }}</td></tr>{% endfor %}</tbody></table></div>
+  {% endfor %}
+</div>

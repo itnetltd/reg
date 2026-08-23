@@ -1,0 +1,67 @@
+{% set view_event = item.bundle == 'reg_tender' ? 'tender_view' : (item.bundle == 'reg_job' ? 'job_view' : 'publication_view') %}
+<article class="reg-pi reg-pi-detail" data-reg-analytics-event="{{ view_event }}" data-reg-analytics-id="{{ item.id }}">
+  {% set detail_eyebrow = item.category ?: item.kind %}
+  {% if item.status %}{% set detail_eyebrow = detail_eyebrow ~ ' · ' ~ item.status %}{% endif %}
+  {% set detail_hero = section_hero|merge({eyebrow: detail_eyebrow, title: item.title, description: item.summary, meta: 'Last updated'|t ~ ': ' ~ item.last_updated, back_url: back_url, back_label: back_label}) %}
+  {% include '@reg_core/reg-section-hero.html.twig' with {hero: detail_hero} only %}
+
+  <div class="reg-container reg-pi__body reg-pi-detail__layout">
+    <div class="reg-pi-detail__main">
+      {% if item.cover_url %}<img class="reg-pi-cover" src="{{ item.cover_url }}" alt="">{% endif %}
+      {% if item.description %}<section><h2>{{ 'Overview'|t }}</h2><p>{{ item.description|nl2br }}</p></section>{% endif %}
+      {% if item.eligibility %}<section><h2>{{ 'Eligibility'|t }}</h2><p>{{ item.eligibility|nl2br }}</p></section>{% endif %}
+      {% if item.requirements %}<section><h2>{{ 'Qualifications and requirements'|t }}</h2><p>{{ item.requirements|nl2br }}</p></section>{% endif %}
+      {% if item.instructions %}<section><h2>{{ 'Application instructions'|t }}</h2><p>{{ item.instructions|nl2br }}</p></section>{% endif %}
+      {% if item.result_summary %}<section><h2>{{ 'Recruitment result'|t }}</h2><p>{{ item.result_summary|nl2br }}</p></section>{% endif %}
+
+      <section class="reg-pi-documents" aria-labelledby="reg-pi-documents">
+        <h2 id="reg-pi-documents">{{ 'Official documents'|t }}</h2>
+        {% if item.documents %}
+          <ul>
+            {% for document in item.documents %}
+              <li>
+                <div><span>{{ document.group }}</span><strong>{{ document.label }}</strong><small>{{ document.filename }} · {{ document.extension|upper }} · {{ document.size }}{% if document.date %} · {{ document.date }}{% endif %}{% if document.version %} · {{ 'Version'|t }} {{ document.version }}{% endif %}</small></div>
+                <a href="{{ document.url }}">{{ 'Download'|t }} <span class="visually-hidden">{{ document.label }}</span></a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="reg-pi-empty"><p>{{ 'No downloadable files are attached to this published record.'|t }}</p></div>
+        {% endif %}
+      </section>
+
+      {% if item.related %}
+        <section><h2>{{ 'Related publications'|t }}</h2><ul class="reg-pi-related">{% for related in item.related %}<li><a href="{{ related.url }}">{{ related.title }}</a></li>{% endfor %}</ul></section>
+      {% endif %}
+    </div>
+
+    <aside class="reg-pi-detail__side" aria-label="{{ 'Key information'|t }}">
+      <h2>{{ 'Key information'|t }}</h2>
+      <dl class="reg-pi-meta reg-pi-meta--stacked">
+        {% if item.reference %}<div><dt>{{ 'Reference'|t }}</dt><dd>{{ item.reference }}</dd></div>{% endif %}
+        {% if item.entity %}<div><dt>{{ 'Company'|t }}</dt><dd>{{ item.entity }}</dd></div>{% endif %}
+        {% if item.category %}<div><dt>{{ 'Category'|t }}</dt><dd>{{ item.category }}</dd></div>{% endif %}
+        {% if item.procurement_method %}<div><dt>{{ 'Procurement method'|t }}</dt><dd>{{ item.procurement_method }}</dd></div>{% endif %}
+        {% if item.procurement_plan %}<div><dt>{{ 'Procurement plan'|t }}</dt><dd>{{ item.procurement_plan }}</dd></div>{% endif %}
+        {% if item.department %}<div><dt>{{ 'Department'|t }}</dt><dd>{{ item.department }}</dd></div>{% endif %}
+        {% if item.job_type %}<div><dt>{{ 'Employment type'|t }}</dt><dd>{{ item.job_type }}</dd></div>{% endif %}
+        {% if item.location %}<div><dt>{{ 'Location'|t }}</dt><dd>{{ item.location }}</dd></div>{% endif %}
+        {% if item.vacancies %}<div><dt>{{ 'Positions'|t }}</dt><dd>{{ item.vacancies }}</dd></div>{% endif %}
+        {% if item.date %}<div><dt>{{ 'Published'|t }}</dt><dd>{{ item.date }}</dd></div>{% endif %}
+        {% if item.closing_date %}<div><dt>{{ 'Deadline'|t }}</dt><dd>{{ item.closing_date }}</dd></div>{% endif %}
+        {% if item.opening_date %}<div><dt>{{ 'Opening'|t }}</dt><dd>{{ item.opening_date }}</dd></div>{% endif %}
+        {% if item.award_date %}<div><dt>{{ 'Award date'|t }}</dt><dd>{{ item.award_date }}</dd></div>{% endif %}
+        {% if item.awarded_supplier %}<div><dt>{{ 'Awarded supplier'|t }}</dt><dd>{{ item.awarded_supplier }}</dd></div>{% endif %}
+        {% if item.language %}<div><dt>{{ 'Official file language'|t }}</dt><dd>{{ item.language }}</dd></div>{% endif %}
+      </dl>
+      {% if item.closes_in_days is not null %}<p class="reg-pi-deadline">{% if item.closes_in_days == 0 %}{{ 'Closes today'|t }}{% else %}{{ 'Closes in @days days'|t({'@days': item.closes_in_days}) }}{% endif %}</p>{% endif %}
+      {% if item.contact %}<div class="reg-pi-contact"><h3>{{ 'Official contact'|t }}</h3><p>{{ item.contact|nl2br }}</p></div>{% endif %}
+
+      {% if item.bundle == 'reg_tender' %}
+        <div class="reg-pi-action-note"><strong>{{ 'Bids are not accepted on this website.'|t }}</strong><p>{{ 'Follow the official notice and procurement-system instructions.'|t }}</p>{% if handoff.procurement_url %}<a class="reg-pi-button" href="{{ handoff.procurement_url }}">{{ 'Open procurement system'|t }}</a>{% endif %}</div>
+      {% elseif item.bundle == 'reg_job' %}
+        <div class="reg-pi-action-note"><strong>{{ item.application_method ?: 'Use only the published application instructions.'|t }}</strong><p>{{ item.application_method_key == 'reg_online' ? 'This vacancy uses the authenticated REG candidate workflow.'|t : 'The configured external platform is the authoritative application system; REG does not collect a duplicate application.'|t }}</p>{% if item.action.enabled and item.action.url %}<a class="reg-pi-button" href="{{ item.action.url }}"{% if item.action.external %} rel="noopener noreferrer"{% endif %} data-reg-analytics-event="job_apply_click" data-reg-analytics-id="{{ item.id }}">{{ item.action.label }}{% if item.action.external %} ↗{% endif %}</a>{% elseif not item.is_open %}<strong>{{ 'Applications are closed.'|t }}</strong>{% endif %}</div>
+      {% endif %}
+    </aside>
+  </div>
+</article>

@@ -1,0 +1,51 @@
+<main class="reg-support reg-branches">
+  {% include '@reg_core/reg-section-hero.html.twig' with {hero: section_hero} only %}
+  <div class="reg-container">
+    <form class="reg-branch-filters" method="get" data-reg-analytics-submit="branch_search">
+      <label><span>{{ 'Search'|t }}</span><input name="q" type="search" maxlength="120" value="{{ filters.query }}" placeholder="{{ 'Branch, manager, email, district or entity'|t }}"></label>
+      <label><span>{{ 'Province'|t }}</span><select name="province"><option value="0">{{ 'All provinces'|t }}</option>{% for id, label in provinces %}<option value="{{ id }}"{{ filters.province == id ? ' selected' : '' }}>{{ label }}</option>{% endfor %}</select></label>
+      <label><span>{{ 'District'|t }}</span><select name="district"><option value="0">{{ 'All districts'|t }}</option>{% for id, label in districts %}<option value="{{ id }}"{{ filters.district == id ? ' selected' : '' }}>{{ label }}</option>{% endfor %}</select></label>
+      <label><span>{{ 'REG entity'|t }}</span><select name="entity"><option value="">{{ 'All entities'|t }}</option>{% for id, label in entities %}<option value="{{ id }}"{{ filters.entity == id ? ' selected' : '' }}>{{ label }}</option>{% endfor %}</select></label>
+      <label><span>{{ 'Service'|t }}</span><select name="service"><option value="0">{{ 'All services'|t }}</option>{% for id, label in services %}<option value="{{ id }}"{{ filters.service == id ? ' selected' : '' }}>{{ label }}</option>{% endfor %}</select></label>
+      <button type="submit">{{ 'Find branches'|t }}</button>
+    </form>
+
+    <div class="reg-branch-toolbar">
+      <p>{{ '@count active branches found'|t({'@count': count}) }}</p>
+      <div role="group" aria-label="{{ 'Branch view'|t }}">
+        <button type="button" data-reg-branch-view="list" aria-pressed="true">{{ 'List'|t }}</button>
+        {% if mapped_count %}<button type="button" data-reg-branch-view="map" aria-pressed="false">{{ 'Map'|t }}</button><button type="button" data-reg-use-location>{{ 'Use my location'|t }}</button>{% endif %}
+      </div>
+    </div>
+    {% if pending_count %}<p class="reg-branch-map-status">{{ '@count branch location(s) are listed without map markers because approved coordinates are pending.'|t({'@count': pending_count}) }}</p>{% endif %}
+    <div class="reg-branch-location-status" data-reg-location-status aria-live="polite"></div>
+    {% if mapped_count %}<section class="reg-branch-map" data-reg-branch-map hidden aria-label="{{ 'Branch map'|t }}"><div data-reg-map-canvas></div><noscript><p>{{ 'Enable JavaScript to use the map view. The full accessible branch list remains available.'|t }}</p></noscript></section>{% endif %}
+
+    <section class="reg-branch-list" data-reg-branch-list aria-label="{{ 'Branch results'|t }}">
+      {% if items %}
+        {% for branch in items %}
+          <article class="reg-branch-card" data-reg-branch-id="{{ branch.id }}">
+            <header>
+              {% if branch.entity or branch.branch_type %}<span>{{ [branch.entity, branch.branch_type]|filter(v => v)|join(' · ') }}</span>{% endif %}
+              <h2>{{ branch.title }}</h2>
+              {% if branch.district %}<p>{{ branch.district }}{% if branch.sector %}, {{ branch.sector }}{% endif %}</p>{% endif %}
+            </header>
+            <dl class="reg-branch-contact-list">
+              {% if branch.manager %}<div><dt>{{ 'Manager'|t }}</dt><dd>{{ branch.manager }}</dd></div>{% endif %}
+              {% if branch.ph_uri %}<div><dt>{{ 'PH'|t }}</dt><dd><a href="{{ branch.ph_uri }}" data-reg-analytics-event="branch_phone_click" data-reg-analytics-id="{{ branch.id }}">{{ branch.ph }}</a></dd></div>{% endif %}
+              {% if branch.te_uri %}<div><dt>{{ 'TE'|t }}</dt><dd><a href="{{ branch.te_uri }}" data-reg-analytics-event="branch_phone_click" data-reg-analytics-id="{{ branch.id }}">{{ branch.te }}</a></dd></div>{% endif %}
+              {% if branch.email_uri %}<div><dt>{{ 'Email'|t }}</dt><dd><a href="{{ branch.email_uri }}" data-reg-analytics-event="branch_email_click" data-reg-analytics-id="{{ branch.id }}">{{ branch.email }}</a></dd></div>{% endif %}
+            </dl>
+            <footer>
+              <span class="reg-branch-location-label">{{ branch.location_status|t }}</span>
+              <a class="reg-branch-card__details" href="{{ branch.url }}" data-reg-analytics-event="branch_view" data-reg-analytics-id="{{ branch.id }}">{{ 'View details'|t }} →</a>
+            </footer>
+          </article>
+        {% endfor %}
+      {% else %}
+        <div class="reg-support-empty"><h2>{{ 'No branches matched these filters'|t }}</h2><p>{{ 'Try a wider search or call @number for assistance.'|t({'@number': call_center}) }}</p></div>
+      {% endif %}
+    </section>
+    {{ pager }}
+  </div>
+</main>

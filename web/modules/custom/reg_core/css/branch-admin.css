@@ -1,0 +1,15 @@
+.reg-branch-admin__intro,
+.reg-branch-admin__filters,
+.reg-branch-admin__filter-actions {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.reg-branch-admin__intro { justify-content: space-between; margin-block-end: 1rem; }
+.reg-branch-admin__filters { background: #f3f4f5; margin-block-end: 1.5rem; padding: 1rem; }
+.reg-branch-admin__filters label { display: grid; flex: 1 1 12rem; font-weight: 700; gap: .35rem; }
+.reg-branch-admin__filters input,
+.reg-branch-admin__filters select { min-height: 2.5rem; }
+.reg-branch-admin__table-wrap { overflow-x: auto; }
+.reg-branch-admin table { min-width: 72rem; width: 100%; }

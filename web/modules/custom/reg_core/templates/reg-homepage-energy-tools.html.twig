@@ -1,0 +1,14 @@
+<section class="section energy-awareness-section" aria-labelledby="energy-awareness-title" data-reg-analytics-event="energy_tool_view" data-reg-analytics-type="homepage">
+  <div class="reg-container">
+    <div class="section-heading energy-awareness-section__heading">
+      <span class="section-kicker">{{ 'Energy awareness'|t }}</span>
+      <h2 id="energy-awareness-title">{{ 'Understand and manage your electricity use'|t }}</h2>
+      <p>{{ 'Practical tools and guidance to help customers understand electricity costs, environmental impact and safe energy use.'|t }}</p>
+    </div>
+    <div class="energy-tools-grid">
+      {% for tool in tools %}
+        {{ include('reg_theme:energy-tool-card', {tool: tool}, with_context = false) }}
+      {% endfor %}
+    </div>
+  </div>
+</section>

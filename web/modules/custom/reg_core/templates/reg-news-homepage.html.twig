@@ -1,0 +1,36 @@
+{% if content.primary %}
+  <div class="reg-news-homepage">
+    <article class="reg-news-lead">
+      <a class="reg-news-lead__media" href="{{ content.primary.url }}" aria-label="{{ 'Read @title'|t({'@title': content.primary.title}) }}">
+        {% if content.primary.image.render %}
+          {{ content.primary.image.render }}
+        {% else %}
+          <span class="reg-news-image-fallback reg-news-image-fallback--lead" aria-hidden="true"><span>REG</span><strong>{{ 'News & Insights'|t }}</strong></span>
+        {% endif %}
+      </a>
+      <div class="reg-news-lead__body">
+        <div class="reg-news-card__meta">
+          {% if content.primary.category.label %}<span>{{ content.primary.category.label }}</span>{% endif %}
+          {% if content.primary.date %}<time datetime="{{ content.primary.date_iso }}">{{ content.primary.date }}</time>{% endif %}
+        </div>
+        <h3><a href="{{ content.primary.url }}">{{ content.primary.title }}</a></h3>
+        {% if content.primary.summary %}<p>{{ content.primary.summary }}</p>{% endif %}
+        <a class="reg-news-card__action" href="{{ content.primary.url }}">{{ 'Read story'|t }} <span aria-hidden="true">→</span></a>
+      </div>
+    </article>
+
+    {% if content.secondary %}
+      <div class="reg-news-homepage__secondary">
+        {% for item in content.secondary %}
+          {% include '@reg_core/reg-news-card.html.twig' with {item: item, variant: 'compact'} only %}
+        {% endfor %}
+        {% if content.x_feed %}
+          {{ attach_library('reg_core/x_feed') }}
+          {% include '@reg_core/reg-x-feed.html.twig' with {feed: content.x_feed} only %}
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+{% else %}
+  <div class="reg-news-empty"><p>{{ 'No News & Insights stories are currently published.'|t }}</p></div>
+{% endif %}

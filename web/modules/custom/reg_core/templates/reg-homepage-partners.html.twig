@@ -1,0 +1,16 @@
+{% if partners %}
+  <div class="partner-grid">
+    {% for partner in partners %}
+      {% set element = partner.url ? 'a' : 'div' %}
+      <{{ element }} class="partner-card"{% if partner.url %} href="{{ partner.url }}"{% if partner.external %} target="_blank" rel="noopener noreferrer external"{% endif %}{% endif %}>
+        {% if partner.logo %}
+          <img src="{{ partner.logo.url }}" alt="{{ partner.logo.alt }}" loading="lazy">
+          <span class="visually-hidden">{{ partner.name }}</span>
+        {% else %}
+          <span class="partner-card__name">{{ partner.name }}</span>
+        {% endif %}
+        {% if partner.description %}<span class="visually-hidden">{{ partner.description }}</span>{% endif %}
+      </{{ element }}>
+    {% endfor %}
+  </div>
+{% endif %}

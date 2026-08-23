@@ -1,0 +1,16 @@
+{% if reg_language_links %}
+  <nav class="language-switcher" aria-label="{{ 'Language selection'|t }}">
+    <span class="visually-hidden">{{ 'Language'|t }}:</span>
+    {% for language in reg_language_links %}
+      <a href="{{ language.url }}"
+         lang="{{ language.langcode }}"
+         hreflang="{{ language.langcode }}"
+         data-reg-analytics-event="language_switch"
+         data-reg-analytics-language="{{ language.langcode }}"
+         {% if language.active %}class="is-active" aria-current="page"{% endif %}>
+        <span class="language-switcher__short" aria-hidden="true">{{ language.short_label }}</span>
+        <span class="visually-hidden">{{ language.label|t }}</span>
+      </a>
+    {% endfor %}
+  </nav>
+{% endif %}

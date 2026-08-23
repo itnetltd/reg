@@ -1,0 +1,44 @@
+{% if heroes %}
+  {% set slide_count = heroes|length %}
+  {% set is_carousel = slide_count > 1 %}
+  <div class="reg-hero-carousel{{ is_carousel ? ' reg-hero-carousel--multiple' }}"{% if is_carousel %} data-reg-hero-carousel aria-roledescription="{{ 'carousel'|t }}"{% endif %} role="region" aria-label="{{ 'Homepage highlights'|t }}">
+    <div class="reg-hero-carousel__track">
+      {% for hero in heroes %}
+        {% set slide_id = 'reg-hero-slide-' ~ hero.id %}
+        <article id="{{ slide_id }}" class="hero__slide hero__slide--align-{{ hero.alignment }} hero__slide--text-{{ hero.text_theme }}{{ loop.first ? ' is-active' }}" role="group" aria-roledescription="{{ 'slide'|t }}" aria-label="{{ '@current of @total'|t({'@current': loop.index, '@total': slide_count}) }}" aria-hidden="{{ loop.first ? 'false' : 'true' }}"{% if not loop.first %} inert{% endif %} data-reg-hero-slide>
+          {% if hero.desktop_image %}
+            <picture class="hero__media">
+              {% if hero.mobile_image %}<source media="(max-width: 47.5rem)" srcset="{{ hero.mobile_image.url }}">{% endif %}
+              <img src="{{ hero.desktop_image.url }}" alt="{{ hero.desktop_image.alt }}" loading="{{ loop.first ? 'eager' : 'lazy' }}" fetchpriority="{{ loop.first ? 'high' : 'low' }}">
+            </picture>
+          {% else %}
+            <div class="hero__media" aria-hidden="true"></div>
+          {% endif %}
+          <div class="hero__overlay hero__overlay--{{ hero.overlay }}" aria-hidden="true"></div>
+          <div class="reg-container hero__content">
+            {% if hero.eyebrow %}<p class="hero__eyebrow">{{ hero.eyebrow }}</p>{% endif %}
+            {% if hero.title %}<h1>{{ hero.title }}</h1>{% endif %}
+            {% if hero.subtitle %}<p class="hero__summary">{{ hero.subtitle }}</p>{% endif %}
+            {% if hero.primary_cta or hero.secondary_cta %}
+              <div class="hero__actions">
+                {% if hero.primary_cta %}<a class="button button--primary" href="{{ hero.primary_cta.url }}"{% if hero.primary_cta.external %} target="_blank" rel="noopener noreferrer external"{% endif %}>{{ hero.primary_cta.label }}</a>{% endif %}
+                {% if hero.secondary_cta %}<a class="button button--ghost" href="{{ hero.secondary_cta.url }}"{% if hero.secondary_cta.external %} target="_blank" rel="noopener noreferrer external"{% endif %}>{{ hero.secondary_cta.label }}</a>{% endif %}
+              </div>
+            {% endif %}
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+    {% if is_carousel %}
+      <div class="reg-hero-carousel__controls">
+        <button type="button" class="reg-hero-carousel__arrow" data-reg-hero-prev aria-label="{{ 'Previous slide'|t }}"><span aria-hidden="true">&larr;</span></button>
+        <div class="reg-hero-carousel__indicators" aria-label="{{ 'Choose slide'|t }}">
+          {% for hero in heroes %}<button type="button" data-reg-hero-indicator data-slide-index="{{ loop.index0 }}" aria-label="{{ 'Go to slide @number'|t({'@number': loop.index}) }}" aria-controls="reg-hero-slide-{{ hero.id }}" aria-current="{{ loop.first ? 'true' : 'false' }}"></button>{% endfor %}
+        </div>
+        <button type="button" class="reg-hero-carousel__arrow" data-reg-hero-next aria-label="{{ 'Next slide'|t }}"><span aria-hidden="true">&rarr;</span></button>
+        <button type="button" class="reg-hero-carousel__pause" data-reg-hero-pause data-label-pause="{{ 'Pause slideshow'|t }}" data-label-play="{{ 'Play slideshow'|t }}" aria-label="{{ 'Pause slideshow'|t }}"><span aria-hidden="true">&#10074;&#10074;</span></button>
+      </div>
+      <p class="visually-hidden" aria-live="polite" aria-atomic="true" data-reg-hero-status></p>
+    {% endif %}
+  </div>
+{% endif %}

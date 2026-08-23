@@ -1,0 +1,16 @@
+REG logo + FAQ floating action hotfix
+
+1. Extract this ZIP into C:\Sites\reg-drupal and allow overwrite.
+2. From CMD run:
+
+   cd /d C:\Sites\reg-drupal
+   ddev drush cr
+
+3. Reload the browser with Ctrl+Shift+R.
+
+Changes:
+- Adds web/themes/custom/reg_theme/assets/images/reg-logo.svg
+- Uses the logo in front-page and internal-page headers
+- Removes the Whistle Blow floating button
+- Keeps the FAQ assistant supplied by reg_core
+- Keeps the small Back to Top button

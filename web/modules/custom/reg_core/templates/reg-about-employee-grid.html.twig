@@ -1,0 +1,12 @@
+{% if employees %}
+  <div class="reg-about-employees">
+    {% for employee in employees %}
+      <article class="reg-about-employee">
+        <div class="reg-about-employee__portrait">{% if employee.portrait.url %}<img src="{{ employee.portrait.url }}" alt="{{ employee.portrait.alt }}" loading="lazy" width="640" height="760">{% else %}<span aria-hidden="true">{{ employee.initials }}</span>{% endif %}</div>
+        <div><span>{{ employee.recognition }}{% if employee.period %} · {{ employee.period }}{% endif %}</span><h3>{{ employee.name }}</h3><p>{{ employee.role }}{% if employee.entity %} / {{ employee.entity }}{% endif %}</p></div>
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="reg-about-empty">{{ 'No employee-recognition records are currently published.'|t }}</p>
+{% endif %}

@@ -1,0 +1,13 @@
+reg_theme.mobile:
+  label: Mobile
+  mediaQuery: '(min-width: 0)'
+  weight: 0
+  multipliers:
+    - 1x
+
+reg_theme.desktop:
+  label: Desktop
+  mediaQuery: '(min-width: 64rem)'
+  weight: 1
+  multipliers:
+    - 1x

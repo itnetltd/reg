@@ -1,0 +1,31 @@
+<article class="reg-support reg-branch-detail" data-reg-analytics-event="branch_view" data-reg-analytics-id="{{ branch.id }}">
+  {% set branch_hero = section_hero|merge({eyebrow: [branch.entity, branch.branch_type]|filter(v => v)|join(' · '), title: branch.title, description: [branch.district, branch.sector]|filter(v => v)|join(', '), back_url: back_url, back_label: 'All branches'|t}) %}
+  {% include '@reg_core/reg-section-hero.html.twig' with {hero: branch_hero} only %}
+  <div class="reg-container reg-branch-detail__layout">
+    <main>
+      <section>
+        <h2>{{ 'Branch contact'|t }}</h2>
+        <dl class="reg-branch-contact-list reg-branch-contact-list--detail">
+          {% if branch.manager %}<div><dt>{{ 'Manager'|t }}</dt><dd>{{ branch.manager }}</dd></div>{% endif %}
+          {% if branch.ph_uri %}<div><dt>{{ 'PH'|t }}</dt><dd><a href="{{ branch.ph_uri }}" data-reg-analytics-event="branch_phone_click" data-reg-analytics-id="{{ branch.id }}">{{ branch.ph }}</a></dd></div>{% endif %}
+          {% if branch.te_uri %}<div><dt>{{ 'TE'|t }}</dt><dd><a href="{{ branch.te_uri }}" data-reg-analytics-event="branch_phone_click" data-reg-analytics-id="{{ branch.id }}">{{ branch.te }}</a></dd></div>{% endif %}
+          {% if branch.email_uri %}<div><dt>{{ 'Email'|t }}</dt><dd><a href="{{ branch.email_uri }}" data-reg-analytics-event="branch_email_click" data-reg-analytics-id="{{ branch.id }}">{{ branch.email }}</a></dd></div>{% endif %}
+        </dl>
+        {% if branch.address %}<h3>{{ 'Address'|t }}</h3><p>{{ branch.address }}</p>{% endif %}
+        {% if branch.opening_hours %}<h3>{{ 'Opening hours'|t }}</h3><p>{{ branch.opening_hours|nl2br }}</p>{% endif %}
+        {% if branch.services %}<h3>{{ 'Services offered'|t }}</h3><ul>{% for service in branch.services %}<li>{{ service }}</li>{% endfor %}</ul>{% endif %}
+        {% if branch.accessibility %}<h3>{{ 'Accessibility'|t }}</h3><p>{{ branch.accessibility|nl2br }}</p>{% endif %}
+        {% if branch.notes %}<h3>{{ 'Public notes'|t }}</h3><p>{{ branch.notes|nl2br }}</p>{% endif %}
+      </section>
+      {% if marker %}<section class="reg-branch-map" data-reg-branch-map aria-label="{{ 'Branch map'|t }}"><div data-reg-map-canvas></div></section>{% else %}<section class="reg-branch-map-status"><h2>{{ 'Map location'|t }}</h2><p>{{ 'Location coordinates pending. No map marker is shown until approved coordinates are available.'|t }}</p></section>{% endif %}
+    </main>
+    <aside>
+      <h2>{{ 'Contact this branch'|t }}</h2>
+      {% if branch.ph_uri %}<a href="{{ branch.ph_uri }}">{{ 'PH'|t }}: {{ branch.ph }}</a>{% endif %}
+      {% if branch.te_uri %}<a href="{{ branch.te_uri }}">{{ 'TE'|t }}: {{ branch.te }}</a>{% endif %}
+      {% if branch.email_uri %}<a href="{{ branch.email_uri }}">{{ branch.email }}</a>{% endif %}
+      {% if branch.directions_url %}<a class="reg-support__button" href="{{ branch.directions_url }}" data-reg-analytics-event="branch_directions_click" data-reg-analytics-id="{{ branch.id }}">{{ 'Get directions'|t }}</a>{% endif %}
+      <small>{{ 'Last updated: @date'|t({'@date': branch.last_updated}) }}</small>
+    </aside>
+  </div>
+</article>

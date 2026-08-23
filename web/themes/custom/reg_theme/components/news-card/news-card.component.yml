@@ -1,0 +1,8 @@
+name: News card
+status: stable
+props:
+  type: object
+  properties:
+    item:
+      type: object
+      required: [category, date, title, summary]

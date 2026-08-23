@@ -1,0 +1,8 @@
+name: Status item
+status: stable
+props:
+  type: object
+  properties:
+    item:
+      type: object
+      required: [title, description, date]

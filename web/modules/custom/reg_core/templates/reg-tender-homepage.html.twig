@@ -1,0 +1,33 @@
+{{ attach_library('reg_core/tenders') }}
+{% if items %}
+  {% set tender_count = items|length > 3 ? 3 : items|length %}
+  <div class="reg-tender-feature-grid reg-tender-feature-grid--count-{{ tender_count }}">
+    {% for item in items %}
+      <article class="reg-tender-feature-card">
+        <div class="reg-tender-feature-card__top">
+          <span class="reg-tender-feature-card__entity">{{ item.entity_short ?: item.entity }}</span>
+          <span class="reg-tender-status reg-tender-status--{{ item.status_key|clean_class }}">{{ item.status_short ?: item.status }}</span>
+          {% if item.publication_channel %}<span class="reg-pi-channel">{{ item.publication_channel }}</span>{% endif %}
+        </div>
+        <h3><a href="{{ item.url }}">{{ item.title }}</a></h3>
+        <dl class="reg-tender-feature-card__meta">
+          {% if item.reference %}<div><dt>{{ 'Reference'|t }}</dt><dd>{{ item.reference }}</dd></div>{% endif %}
+          {% if item.category %}<div><dt>{{ 'Category'|t }}</dt><dd>{{ item.category }}</dd></div>{% endif %}
+          {% if item.closing_date %}<div><dt>{{ 'Closing date'|t }}</dt><dd>{{ item.closing_date }}</dd></div>{% endif %}
+        </dl>
+        <div class="reg-tender-feature-card__actions">
+          <a class="reg-tender-link" href="{{ item.url }}">{{ 'View tender'|t }} <span aria-hidden="true">→</span></a>
+          {% if item.action.enabled and item.action.url %}<a class="reg-tender-link" href="{{ item.action.url }}"{% if item.action.external %} rel="noopener noreferrer"{% endif %}>{{ item.action.label }}{% if item.action.external %} ↗{% endif %}</a>{% endif %}
+          {% if item.primary_document.url %}
+            <a class="reg-tender-download" href="{{ item.primary_document.url }}">{{ item.primary_document.type_key == 'terms_of_reference' ? 'Download TOR'|t : 'Download tender document'|t }} <span aria-hidden="true">↓</span></a>
+          {% endif %}
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+  <a class="text-link reg-tender-view-all" href="{{ view_all_url }}">{{ 'View all tenders'|t }} <span aria-hidden="true">→</span></a>
+{% else %}
+  <div class="reg-tender-homepage-empty" role="status">
+    <p>{{ 'No current tenders are published.'|t }}</p>
+  </div>
+{% endif %}

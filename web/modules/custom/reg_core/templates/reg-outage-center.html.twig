@@ -1,0 +1,49 @@
+<div class="outage-center">
+  {% set outage_hero = section_hero|merge({eyebrow: 'Outage Center'|t, title: 'Service Status'|t, description: 'Current and planned electricity interruptions published by Rwanda Energy Group.'|t}) %}
+  {% include '@reg_core/reg-section-hero.html.twig' with {hero: outage_hero} only %}
+
+  <div class="reg-container outage-center__content">
+    <nav class="outage-tabs" aria-label="{{ 'Outage categories'|t }}">
+      {% for key, tab in tabs %}<a href="{{ tab.url }}" class="outage-tabs__link{{ mode == key ? ' is-active' }}"{% if mode == key %} aria-current="page"{% endif %}>{{ tab.label }}</a>{% endfor %}
+    </nav>
+
+    <form class="outage-filters" action="{{ tabs[mode].url }}" method="get" data-reg-analytics-submit="outage_search">
+      <div class="outage-filters__field outage-filters__field--search">
+        <label for="outage-search">{{ 'Search'|t }}</label>
+        <input id="outage-search" name="search" type="search" value="{{ filters.search }}" placeholder="{{ 'Search district, sector, feeder or area'|t }}">
+      </div>
+      <div class="outage-filters__field"><label for="outage-district">{{ 'District'|t }}</label><select id="outage-district" name="district"><option value="">{{ 'All districts'|t }}</option>{% for district in districts %}<option value="{{ district }}"{{ filters.district == district ? ' selected' }}>{{ district }}</option>{% endfor %}</select></div>
+      <div class="outage-filters__field"><label for="outage-sector">{{ 'Sector'|t }}</label><select id="outage-sector" name="sector"><option value="">{{ 'All sectors'|t }}</option>{% for sector in sectors %}<option value="{{ sector }}"{{ filters.sector == sector ? ' selected' }}>{{ sector }}</option>{% endfor %}</select></div>
+      <div class="outage-filters__field"><label for="outage-date">{{ 'Date'|t }}</label><input id="outage-date" name="date" type="date" value="{{ filters.date }}"></div>
+      <div class="outage-filters__field"><label for="outage-status">{{ 'Status'|t }}</label><select id="outage-status" name="status"><option value="">{{ 'Any status'|t }}</option>{% for key, label in statuses %}<option value="{{ key }}"{{ filters.status == key ? ' selected' }}>{{ label }}</option>{% endfor %}</select></div>
+      <details class="outage-filters__more"><summary>{{ 'More filters'|t }}</summary><div><label for="outage-type">{{ 'Outage type'|t }}</label><select id="outage-type" name="type"><option value="">{{ 'Any type'|t }}</option>{% for key, label in types %}<option value="{{ key }}"{{ filters.type == key ? ' selected' }}>{{ label }}</option>{% endfor %}</select></div></details>
+      <button type="submit">{{ 'Apply filters'|t }}</button>
+      {% if filters.search or filters.district or filters.sector or filters.date or filters.status or filters.type %}<a class="outage-filters__clear" href="{{ tabs[mode].url }}">{{ 'Clear'|t }}</a>{% endif %}
+    </form>
+
+    <div class="outage-center__summary"><p>{{ '@count outage notice(s)'|t({'@count': results_count}) }}</p>{% if last_updated %}<p>{{ 'Last updated: @time'|t({'@time': last_updated}) }}</p>{% endif %}</div>
+
+    {% if outages %}
+      <div class="outage-list">
+        {% for outage in outages %}
+          <article class="outage-card outage-card--{{ outage.status_class }}">
+            <div class="outage-card__topline"><span class="outage-badge outage-badge--{{ outage.status_class }}">{{ outage.status_label }}</span><span>{{ outage.outage_type_label }}</span></div>
+            <h2><a href="{{ outage.detail_url }}" data-reg-analytics-event="outage_view">{{ outage.title }}</a></h2>
+            {% if outage.segment_count > 1 %}<p class="outage-card__windows">{{ '@count scheduled interruption windows'|t({'@count': outage.segment_count}) }}</p>{% endif %}
+            {% if outage.public_reason %}<p>{{ outage.public_reason }}</p>{% endif %}
+            <dl class="outage-card__facts">
+              {% if outage.start_time_formatted %}<div><dt>{{ 'Starts'|t }}</dt><dd>{{ outage.start_time_formatted }}</dd></div>{% endif %}
+              {% if outage.expected_restoration_formatted %}<div><dt>{{ outage.segment_count > 1 ? 'Overall end'|t : 'Scheduled end'|t }}</dt><dd>{{ outage.expected_restoration_formatted }}</dd></div>{% endif %}
+              {% if outage.network_element %}<div><dt>{{ 'Network element'|t }}</dt><dd>{{ outage.network_element }}</dd></div>{% endif %}
+              {% if outage.districts %}<div><dt>{{ 'Districts'|t }}</dt><dd>{{ outage.districts|join(' · ') }}</dd></div>{% endif %}
+            </dl>
+            {% if outage.status_note %}<p class="outage-card__status-note"><strong>{{ outage.status_label }}:</strong> {{ outage.status_note }}</p>{% endif %}
+            <div class="outage-card__footer"><a href="{{ outage.detail_url }}">{{ outage.segment_count > 1 ? 'View schedule'|t : 'View details'|t }} <span aria-hidden="true">&rarr;</span></a>{% if outage.documents %}<a href="{{ outage.documents[0].url }}" download>{{ 'Download announcement'|t }} <span aria-hidden="true">&darr;</span></a>{% endif %}</div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="outage-empty"><span aria-hidden="true">&#10003;</span><div><h2>{{ mode == 'current' ? 'No current outages published'|t : 'No outage notices found'|t }}</h2><p>{{ mode == 'current' ? 'There are no active interruption notices at this time.'|t : 'No published outage records match this view and the selected filters.'|t }}</p><a href="{{ tabs.current.url }}">{{ 'View Outage Center'|t }}</a></div></div>
+    {% endif %}
+  </div>
+</div>

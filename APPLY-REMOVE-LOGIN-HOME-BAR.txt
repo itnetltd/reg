@@ -1,0 +1,15 @@
+REG public header cleanup
+
+This hotfix:
+- removes the Drupal Home / Log in / My account / Log out strip from the public theme;
+- prevents account-menu blocks from being rendered in the REG header;
+- keeps the REG logo, primary navigation, search and Figma-style utility links;
+- keeps /user/login available for administrators by direct URL.
+
+Apply from Windows CMD:
+
+  cd /d C:\Sites\reg-drupal
+  powershell -NoProfile -Command "Expand-Archive -Path '%USERPROFILE%\Downloads\reg-remove-login-home-bar-hotfix.zip' -DestinationPath 'C:\Sites\reg-drupal' -Force"
+  ddev drush cr
+
+Then refresh the browser with Ctrl+Shift+R.

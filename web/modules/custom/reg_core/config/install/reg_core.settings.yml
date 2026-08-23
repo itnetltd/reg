@@ -1,0 +1,83 @@
+support:
+  call_center: '2727'
+  complaint_mode: external
+  complaint_url: ''
+  fault_reporting_url: ''
+  complaint_email: ''
+  complaint_api_endpoint: ''
+  complaint_integration_enabled: false
+  organization_name: 'Rwanda Energy Group'
+  address_lines:
+    - 'KN82 ST3'
+    - 'Nyarugenge District'
+    - 'Kigali City'
+  postal_address: 'P.O. Box 537 Kigali, Rwanda'
+  general_email: 'info@reg.rw'
+  general_telephone: '(+250)(0)788385025'
+  reg_emails:
+    - 'info@reg.rw'
+  eucl_emails:
+    - 'info@eucl.reg.rw'
+    - 'eucl@reg.rw'
+  edcl_emails:
+    - 'info@edcl.reg.rw'
+    - 'edcl@reg.rw'
+  contact_source_url: 'https://www.reg.rw/about-us/branches-and-managers-contacts/'
+links:
+  online_services: ''
+  new_connection: ''
+  payments: ''
+  gis: ''
+  outage_source: ''
+  recruitment: ''
+  procurement: ''
+  branch_contacts: ''
+dms:
+  driver: mock
+  api_base_url: ''
+  outages_path: '/outages'
+  authentication_method: none
+  client_id: ''
+  credential_environment_variable: 'REG_GE_DMS_CREDENTIAL'
+  request_timeout: 10
+  synchronization_interval: 300
+  cache_lifetime: 300
+public_information:
+  enable_tender_submission: false
+  job_application_mode: external
+  enable_tender_sms: false
+  allow_zip_uploads: false
+  results_per_page: 12
+sports:
+  data_source: cms
+  statistics_api_base_url: ''
+  social_embed_enabled: false
+  results_per_page: 12
+branches:
+  map_provider: none
+  results_per_page: 12
+outages:
+  source: manual
+  default_safety_message: 'For safety purposes, customers should remain cautious around electrical installations because electricity may be restored before the scheduled time.'
+  default_customer_message: 'If your power supply has not been restored by the scheduled time, contact REG through the toll-free customer service line 2727.'
+governance:
+  branch_review_days: 180
+  faq_review_days: 180
+  service_review_days: 180
+analytics:
+  enabled: false
+  provider: none
+  measurement_id: ''
+  privacy_mode: strict
+  local_aggregate_enabled: true
+  dashboard_cache_seconds: 300
+tariffs:
+  approved_schedule_effective: '2025-10-01'
+  residential: 0.0
+  commercial: 0.0
+  industrial: 0.0
+  fixed_charge: 0.0
+  updated: ''
+carbon:
+  emission_factor: 0.0
+  updated: ''

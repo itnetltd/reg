@@ -1,0 +1,181 @@
+<div class="reg-about reg-about--{{ page.key|clean_class }}">
+  {% include '@reg_core/reg-section-hero.html.twig' with {hero: section_hero} only %}
+
+  <nav class="reg-about-breadcrumbs" aria-label="{{ 'Breadcrumb'|t }}">
+    <div class="reg-container">
+      <ol>
+        {% for item in breadcrumbs %}
+          <li>{% if item.url %}<a href="{{ item.url }}">{{ item.label }}</a>{% else %}<span aria-current="page">{{ item.label }}</span>{% endif %}</li>
+        {% endfor %}
+      </ol>
+    </div>
+  </nav>
+
+  <main class="reg-container reg-about__main">
+    {% if page.historical_review %}
+      <aside class="reg-about-review-note" aria-label="{{ 'Historical context'|t }}">
+        <strong>{{ 'Historical context'|t }}</strong>
+        <p>{{ 'This page preserves official legacy wording and dated policy references for the public record. REG Communications should confirm any time-bound targets before they are reused as current commitments.'|t }}</p>
+      </aside>
+    {% endif %}
+
+    {% if page.key == 'about' %}
+      <section class="reg-about-intro reg-about-section" aria-labelledby="reg-about-who">
+        <div class="reg-about-heading">
+          <span>{{ 'Who we are'|t }}</span>
+          <h2 id="reg-about-who">{{ page.title }}</h2>
+        </div>
+        <div class="reg-about-prose">{{ page.body }}</div>
+      </section>
+
+      {% if vision_page %}
+        <section class="reg-about-section" aria-labelledby="reg-about-purpose">
+          <div class="reg-about-heading reg-about-heading--split">
+            <div><span>{{ 'Our purpose'|t }}</span><h2 id="reg-about-purpose">{{ 'Vision and mission'|t }}</h2></div>
+            <a href="{{ links.vision_mission_values }}">{{ 'Explore our purpose'|t }} <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="reg-about-purpose-grid">
+            <article><span>{{ 'Vision'|t }}</span><p>{{ vision_page.vision }}</p></article>
+            <article><span>{{ 'Mission'|t }}</span><p>{{ vision_page.mission }}</p></article>
+          </div>
+        </section>
+      {% endif %}
+
+      {% if values %}
+        <section class="reg-about-section" aria-labelledby="reg-about-values">
+          <div class="reg-about-heading"><span>{{ 'What guides us'|t }}</span><h2 id="reg-about-values">{{ 'Our values'|t }}</h2></div>
+          {% include '@reg_core/reg-about-values.html.twig' with {values: values} only %}
+        </section>
+      {% endif %}
+
+      <section class="reg-about-section reg-about-group-preview" aria-labelledby="reg-about-group">
+        <div class="reg-about-heading reg-about-heading--split">
+          <div><span>{{ 'One group'|t }}</span><h2 id="reg-about-group">{{ 'REG, EDCL and EUCL'|t }}</h2></div>
+          <a href="{{ links.group }}">{{ 'Understand the group'|t }} <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="reg-about-group-diagram">
+          <article class="reg-about-group-diagram__holding"><span>{{ 'Holding company'|t }}</span><strong>REG</strong><p>{{ group_page.summary }}</p></article>
+          <div class="reg-about-group-diagram__line" aria-hidden="true"></div>
+          <div class="reg-about-group-diagram__children">
+            {% for subsidiary in subsidiaries %}
+              <a href="{{ attribute(links, subsidiary.key) }}"><span>{{ 'Subsidiary'|t }}</span><strong>{{ subsidiary.title }}</strong><p>{{ subsidiary.summary }}</p></a>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+
+      <section class="reg-about-section" aria-labelledby="reg-about-leadership">
+        <div class="reg-about-heading reg-about-heading--split">
+          <div><span>{{ 'Governance'|t }}</span><h2 id="reg-about-leadership">{{ 'Leadership'|t }}</h2></div>
+          <a href="{{ links.leadership }}">{{ 'Meet REG leadership'|t }} <span aria-hidden="true">→</span></a>
+        </div>
+        {% include '@reg_core/reg-about-leader-grid.html.twig' with {leaders: executives|slice(0, 3), compact: true} only %}
+      </section>
+
+      <section class="reg-about-presence reg-about-section" aria-labelledby="reg-about-presence">
+        <div><span>{{ 'National presence'|t }}</span><strong>{{ branch_count }}</strong><h2 id="reg-about-presence">{{ 'Published branch service areas'|t }}</h2><p>{{ 'Find the nearest published REG/EUCL branch contact and service information.'|t }}</p></div>
+        <a class="reg-about-button" href="{{ links.branches }}">{{ 'Open Branch Locator'|t }} <span aria-hidden="true">→</span></a>
+      </section>
+
+      {% if stakeholders or development_partners %}
+        <section class="reg-about-section" aria-labelledby="reg-about-partners">
+          <div class="reg-about-heading reg-about-heading--split">
+            <div><span>{{ 'Working together'|t }}</span><h2 id="reg-about-partners">{{ 'Partners and stakeholders'|t }}</h2></div>
+            <a href="{{ links.partners }}">{{ 'View all partners'|t }} <span aria-hidden="true">→</span></a>
+          </div>
+          {% include '@reg_core/reg-about-partners.html.twig' with {partners: stakeholders|merge(development_partners)|slice(0, 8)} only %}
+        </section>
+      {% endif %}
+
+      {% if employees %}
+        <section class="reg-about-section" aria-labelledby="reg-about-people">
+          <div class="reg-about-heading reg-about-heading--split">
+            <div><span>{{ 'Our people'|t }}</span><h2 id="reg-about-people">{{ 'Employee recognition'|t }}</h2></div>
+            <a href="{{ links.our_people }}">{{ 'Meet our recognized employees'|t }} <span aria-hidden="true">→</span></a>
+          </div>
+          {% include '@reg_core/reg-about-employee-grid.html.twig' with {employees: employees} only %}
+        </section>
+      {% endif %}
+
+      <section class="reg-about-section" aria-labelledby="reg-about-explore">
+        <div class="reg-about-heading"><span>{{ 'Explore'|t }}</span><h2 id="reg-about-explore">{{ 'More about REG'|t }}</h2></div>
+        <div class="reg-about-explore-grid">
+          <a href="{{ links.history }}"><strong>{{ 'Our history'|t }}</strong><span>{{ 'How REG and its subsidiaries were established'|t }}</span></a>
+          <a href="{{ links.vision_mission_values }}"><strong>{{ 'Vision, mission and values'|t }}</strong><span>{{ 'The purpose and principles guiding REG'|t }}</span></a>
+          <a href="{{ links.group }}"><strong>{{ 'REG Group'|t }}</strong><span>{{ 'Roles of the holding company, EDCL and EUCL'|t }}</span></a>
+          <a href="{{ links.leadership }}"><strong>{{ 'Leadership'|t }}</strong><span>{{ 'Board and executive management'|t }}</span></a>
+        </div>
+      </section>
+
+    {% elseif page.key == 'vision_mission_values' %}
+      <section class="reg-about-section" aria-labelledby="reg-about-purpose-page">
+        <div class="reg-about-heading"><span>{{ 'Our purpose'|t }}</span><h2 id="reg-about-purpose-page">{{ page.title }}</h2></div>
+        <div class="reg-about-purpose-grid">
+          <article><span>{{ 'Vision'|t }}</span><p>{{ page.vision }}</p></article>
+          <article><span>{{ 'Mission'|t }}</span><p>{{ page.mission }}</p></article>
+        </div>
+      </section>
+      <section class="reg-about-section" aria-labelledby="reg-about-values-page">
+        <div class="reg-about-heading"><span>{{ 'How we work'|t }}</span><h2 id="reg-about-values-page">{{ 'Core values of REG'|t }}</h2></div>
+        {% include '@reg_core/reg-about-values.html.twig' with {values: values} only %}
+      </section>
+
+    {% elseif page.key == 'group' %}
+      <section class="reg-about-section reg-about-prose" aria-labelledby="reg-about-group-story"><h2 id="reg-about-group-story" class="visually-hidden">{{ page.title }}</h2>{{ page.body }}</section>
+      <section class="reg-about-section" aria-labelledby="reg-about-group-companies">
+        <div class="reg-about-heading"><span>{{ 'Group structure'|t }}</span><h2 id="reg-about-group-companies">{{ 'REG and its subsidiaries'|t }}</h2></div>
+        <div class="reg-about-group-diagram">
+          <article class="reg-about-group-diagram__holding"><span>{{ 'Holding company'|t }}</span><strong>REG</strong><p>{{ page.summary }}</p></article>
+          <div class="reg-about-group-diagram__line" aria-hidden="true"></div>
+          <div class="reg-about-group-diagram__children">
+            {% for subsidiary in subsidiaries %}<a href="{{ attribute(links, subsidiary.key) }}"><span>{{ 'Subsidiary'|t }}</span><strong>{{ subsidiary.title }}</strong><p>{{ subsidiary.summary }}</p></a>{% endfor %}
+          </div>
+        </div>
+      </section>
+
+    {% elseif page.key in ['edcl', 'eucl'] %}
+      <article class="reg-about-story reg-about-section">
+        <span class="reg-about-entity-badge">{{ 'REG subsidiary'|t }}</span>
+        <div class="reg-about-prose">{{ page.body }}</div>
+        <a class="reg-about-text-link" href="{{ links.group }}">{{ 'Back to REG Group'|t }} <span aria-hidden="true">→</span></a>
+      </article>
+
+    {% elseif page.key == 'leadership' %}
+      <section class="reg-about-section reg-about-prose">{{ page.body }}</section>
+      <section class="reg-about-section" aria-labelledby="reg-about-board-preview">
+        <div class="reg-about-heading reg-about-heading--split"><div><span>{{ 'Governance'|t }}</span><h2 id="reg-about-board-preview">{{ 'Board of Directors'|t }}</h2></div><a href="{{ links.board }}">{{ 'View the full Board'|t }} <span aria-hidden="true">→</span></a></div>
+        {% include '@reg_core/reg-about-leader-grid.html.twig' with {leaders: board|slice(0, 3), compact: true} only %}
+      </section>
+      <section class="reg-about-section" aria-labelledby="reg-about-executive-preview">
+        <div class="reg-about-heading reg-about-heading--split"><div><span>{{ 'Management'|t }}</span><h2 id="reg-about-executive-preview">{{ 'Executive Management'|t }}</h2></div><a href="{{ links.executive_management }}">{{ 'View Executive Management'|t }} <span aria-hidden="true">→</span></a></div>
+        {% include '@reg_core/reg-about-leader-grid.html.twig' with {leaders: executives, compact: true} only %}
+      </section>
+
+    {% elseif page.key in ['board', 'executive_management'] %}
+      <section class="reg-about-section">
+        <div class="reg-about-heading"><span>{{ page.key == 'board' ? 'Governance'|t : 'Management'|t }}</span><h2>{{ page.title }}</h2><p>{{ page.summary }}</p></div>
+        {% include '@reg_core/reg-about-leader-grid.html.twig' with {leaders: page.key == 'board' ? board : executives, compact: false} only %}
+      </section>
+
+    {% elseif page.key == 'partners' %}
+      {% if page.body %}<section class="reg-about-section reg-about-prose">{{ page.body }}</section>{% endif %}
+      <section class="reg-about-section" aria-labelledby="reg-about-stakeholders">
+        <div class="reg-about-heading"><span>{{ 'Public institutions'|t }}</span><h2 id="reg-about-stakeholders">{{ 'Stakeholders'|t }}</h2></div>
+        {% include '@reg_core/reg-about-partners.html.twig' with {partners: stakeholders} only %}
+      </section>
+      <section class="reg-about-section" aria-labelledby="reg-about-development-partners">
+        <div class="reg-about-heading"><span>{{ 'Energy development'|t }}</span><h2 id="reg-about-development-partners">{{ 'Development partners'|t }}</h2></div>
+        {% include '@reg_core/reg-about-partners.html.twig' with {partners: development_partners} only %}
+      </section>
+
+    {% elseif page.key == 'our_people' %}
+      <section class="reg-about-section">
+        <div class="reg-about-heading"><span>{{ 'Recognition'|t }}</span><h2>{{ page.title }}</h2><p>{{ page.summary }}</p></div>
+        {% include '@reg_core/reg-about-employee-grid.html.twig' with {employees: employees} only %}
+      </section>
+
+    {% else %}
+      <article class="reg-about-story reg-about-section"><div class="reg-about-prose">{{ page.body }}</div></article>
+    {% endif %}
+  </main>
+</div>

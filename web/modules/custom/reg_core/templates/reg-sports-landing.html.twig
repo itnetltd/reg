@@ -1,0 +1,119 @@
+{% set hero = content.hero %}
+<div class="reg-sports">
+  {% if hero.image.url %}
+  <section class="reg-sports-hero{% if hero.image.url %} reg-sports-hero--image{% endif %}">
+    {% if hero.image.url %}
+      <img class="reg-sports-hero__backdrop" src="{{ hero.image.url }}" alt="" aria-hidden="true">
+      <div class="reg-sports-hero__media"><img class="reg-sports-hero__image" src="{{ hero.image.url }}" alt="{{ hero.image.alt }}" fetchpriority="high"></div>
+    {% endif %}
+    <div class="reg-container reg-sports-hero__inner">
+      <div class="reg-sports-hero__content">
+        <span class="reg-sports-kicker">{{ 'REG Sports'|t }}</span>
+        <h1>{{ 'REG Sports'|t }}</h1>
+
+        {% if hero and hero.bundle == 'reg_sports_fixture' and hero.status_key == 'completed' %}
+          <article class="reg-sports-hero-result" aria-label="{{ (hero.result_label ?: hero.status) ~ ': ' ~ hero.score_label }}">
+            <span class="reg-sports-hero-result__status">{{ hero.result_label ?: hero.status }}</span>
+            <div class="reg-sports-hero-result__score">
+              <div><span>{{ hero.home_team }}</span><strong>{{ hero.home_score }}</strong></div>
+              <span class="reg-sports-hero-result__divider" aria-hidden="true">–</span>
+              <div><span>{{ hero.away_team }}</span><strong>{{ hero.away_score }}</strong></div>
+            </div>
+            <a class="reg-sports-hero-result__cta" href="{{ hero.url }}" data-reg-analytics-event="result_view" data-reg-analytics-id="{{ hero.id }}">{{ 'View match result'|t }} <span aria-hidden="true">→</span></a>
+          </article>
+        {% elseif hero and hero.bundle == 'reg_sports_fixture' %}
+          <article class="reg-sports-hero-result" aria-label="{{ hero.status ~ ': ' ~ hero.matchup }}">
+            <span class="reg-sports-hero-result__status">{{ hero.status }}</span>
+            <h2>{{ hero.matchup }}</h2>
+            {% if hero.date %}<time datetime="{{ hero.date_iso }}">{{ hero.date }}</time>{% endif %}
+            <a class="reg-sports-hero-result__cta" href="{{ hero.url }}" data-reg-analytics-event="fixture_view" data-reg-analytics-id="{{ hero.id }}">{{ 'View match details'|t }} <span aria-hidden="true">→</span></a>
+          </article>
+        {% elseif hero %}
+          <article class="reg-sports-hero-result">
+            <span class="reg-sports-hero-result__status">{{ 'Latest story'|t }}</span>
+            <h2>{{ hero.title }}</h2>
+            <a class="reg-sports-hero-result__cta" href="{{ hero.url }}" data-reg-analytics-event="sports_article_view" data-reg-analytics-id="{{ hero.id }}">{{ 'Read latest story'|t }} <span aria-hidden="true">→</span></a>
+          </article>
+        {% else %}
+          <p>{{ 'Official fixtures, results, teams and stories from REG Sports.'|t }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+  {% else %}
+    {% include '@reg_core/reg-section-hero.html.twig' with {hero: section_hero} only %}
+  {% endif %}
+
+  <nav class="reg-sports-nav" aria-label="{{ 'Sports Portal navigation'|t }}"><div class="reg-container">{% for link in links %}<a href="{{ link.url }}">{{ link.label }}</a>{% endfor %}</div></nav>
+
+  <main class="reg-container reg-sports__body">
+    <section class="reg-sports-scoreboard" aria-labelledby="reg-sports-matches">
+      <div class="reg-sports-heading"><span class="reg-sports-kicker">{{ 'Match centre'|t }}</span><h2 id="reg-sports-matches">{{ 'Fixtures and results'|t }}</h2></div>
+      <div class="reg-sports-scoreboard__grid">
+        <article class="reg-sports-match reg-sports-match--next">
+          <h3>{{ 'Upcoming fixtures'|t }}</h3>
+          {% if content.next_match %}
+            <strong>{{ content.next_match.matchup }}</strong>
+            {% if content.next_match.date %}<time datetime="{{ content.next_match.date_iso }}">{{ content.next_match.date }}</time>{% endif %}
+            {% if content.next_match.competition or content.next_match.venue %}<p>{{ content.next_match.competition }}{% if content.next_match.competition and content.next_match.venue %} · {% endif %}{{ content.next_match.venue }}</p>{% endif %}
+            <a href="{{ content.next_match.url }}" data-reg-analytics-event="fixture_view" data-reg-analytics-id="{{ content.next_match.id }}">{{ 'Match details'|t }} <span aria-hidden="true">→</span></a>
+          {% else %}<p class="reg-sports-empty-inline">{{ 'No upcoming fixtures currently published.'|t }}</p>{% endif %}
+        </article>
+        <article class="reg-sports-match reg-sports-match--result">
+          <h3>{{ 'Latest results'|t }}</h3>
+          {% if content.latest_result %}
+            <span class="reg-sports-badge reg-sports-badge--{{ content.latest_result.status_key|clean_class }}">{{ content.latest_result.result_label ?: content.latest_result.status }}</span>
+            <strong class="reg-sports-score-label">{{ content.latest_result.score_label }}</strong>
+            {% if content.latest_result.date %}<time datetime="{{ content.latest_result.date_iso }}">{{ content.latest_result.date }}</time>{% endif %}
+            <a href="{{ content.latest_result.url }}" data-reg-analytics-event="result_view" data-reg-analytics-id="{{ content.latest_result.id }}">{{ 'View match result'|t }} <span aria-hidden="true">→</span></a>
+          {% else %}<p class="reg-sports-empty-inline">{{ 'No results currently available.'|t }}</p>{% endif %}
+        </article>
+      </div>
+      <div class="reg-sports-actions"><a href="{{ path('reg_core.sports_fixtures') }}">{{ 'All fixtures'|t }}</a><a href="{{ path('reg_core.sports_results') }}">{{ 'All results'|t }}</a></div>
+    </section>
+
+    <section aria-labelledby="reg-sports-teams">
+      <div class="reg-sports-heading"><span class="reg-sports-kicker">{{ 'Teams'|t }}</span><h2 id="reg-sports-teams">{{ 'REG teams'|t }}</h2></div>
+      <div class="reg-sports-team-grid">
+        {% for team in content.teams %}
+          <a class="reg-sports-team-card" href="{{ team.url }}" data-reg-analytics-event="team_page_view" data-reg-analytics-id="{{ team.id }}">
+            {% if team.image.url %}<img src="{{ team.image.url }}"{% if team.image.srcset %} srcset="{{ team.image.srcset }}" sizes="{{ team.image.sizes }}"{% endif %} alt="{{ team.image.alt }}" loading="lazy">{% endif %}
+            <div>{% if team.logo.url %}<img class="reg-sports-team-card__logo" src="{{ team.logo.url }}"{% if team.logo.srcset %} srcset="{{ team.logo.srcset }}" sizes="{{ team.logo.sizes }}"{% endif %} alt="{{ team.logo.alt }}" loading="lazy">{% endif %}<span>{{ team.sport }}</span><h3>{{ team.title }}</h3><strong>{{ 'Open team page'|t }} <span aria-hidden="true">→</span></strong></div>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section aria-labelledby="reg-sports-standings-home">
+      <div class="reg-sports-heading reg-sports-heading--split"><div><span class="reg-sports-kicker">{{ 'Current table'|t }}</span><h2 id="reg-sports-standings-home">{{ 'Standings'|t }}</h2></div><a href="{{ path('reg_core.sports_standings') }}">{{ 'View full standings'|t }} <span aria-hidden="true">→</span></a></div>
+      {% if content.standings %}
+        <div class="reg-sports-table-wrap"><table class="reg-sports-table"><caption class="visually-hidden">{{ 'Current published sports standings'|t }}</caption><thead><tr><th scope="col">#</th><th scope="col">{{ 'Team'|t }}</th><th scope="col">{{ 'Played'|t }}</th><th scope="col">{{ 'Won'|t }}</th><th scope="col">{{ 'Lost'|t }}</th><th scope="col">{{ 'Points'|t }}</th></tr></thead><tbody>{% for row in content.standings %}<tr><td>{{ row.standing.table_position }}</td><th scope="row">{{ row.standing.team }}</th><td>{{ row.standing.played }}</td><td>{{ row.standing.wins }}</td><td>{{ row.standing.losses }}</td><td>{{ row.standing.league_points }}</td></tr>{% endfor %}</tbody></table></div>
+      {% else %}<div class="reg-sports-empty"><p>{{ 'Standings will be published when confirmed.'|t }}</p></div>{% endif %}
+    </section>
+
+    <section aria-labelledby="reg-sports-news-home">
+      <div class="reg-sports-heading reg-sports-heading--split"><div><span class="reg-sports-kicker">{{ 'Latest news'|t }}</span><h2 id="reg-sports-news-home">{{ 'Sports news'|t }}</h2></div><a href="{{ path('reg_core.sports_news') }}">{{ 'All sports news'|t }} <span aria-hidden="true">→</span></a></div>
+      {% if content.news %}<div class="reg-sports-card-grid">{% for item in content.news %}<article class="reg-sports-content-card">{% if item.image.url %}<img src="{{ item.image.url }}"{% if item.image.srcset %} srcset="{{ item.image.srcset }}" sizes="{{ item.image.sizes }}"{% endif %} alt="{{ item.image.alt }}" loading="lazy">{% endif %}<div><span>{{ item.category ?: 'Sports news'|t }}</span><h3><a href="{{ item.url }}" data-reg-analytics-event="sports_article_view" data-reg-analytics-id="{{ item.id }}">{{ item.title }}</a></h3><p>{{ item.summary }}</p>{% if item.date %}<time datetime="{{ item.date_iso }}">{{ item.date }}</time>{% endif %}</div></article>{% endfor %}</div>{% else %}<div class="reg-sports-empty"><p>{{ 'No sports news is currently published.'|t }}</p></div>{% endif %}
+    </section>
+
+    <section aria-labelledby="reg-sports-athletes-home">
+      <div class="reg-sports-heading reg-sports-heading--split"><div><span class="reg-sports-kicker">{{ 'Featured players'|t }}</span><h2 id="reg-sports-athletes-home">{{ 'Featured players'|t }}</h2></div><a href="{{ path('reg_core.sports_players') }}">{{ 'Player directory'|t }} <span aria-hidden="true">→</span></a></div>
+      {% if content.players %}<div class="reg-sports-player-grid">{% for player in content.players %}<a class="reg-sports-player-card" href="{{ player.url }}" data-reg-analytics-event="player_profile_view" data-reg-analytics-id="{{ player.id }}">{% if player.image.url %}<img src="{{ player.image.url }}"{% if player.image.srcset %} srcset="{{ player.image.srcset }}" sizes="{{ player.image.sizes }}"{% endif %} alt="{{ player.image.alt }}" loading="lazy">{% endif %}<span>{% if player.jersey %}#{{ player.jersey }} · {% endif %}{{ player.position }}</span><h3>{{ player.title }}</h3><small>{{ player.team }}</small></a>{% endfor %}</div>{% else %}<div class="reg-sports-empty"><p>{{ 'Featured athletes will appear when approved profiles are published.'|t }}</p></div>{% endif %}
+    </section>
+
+    <section aria-labelledby="reg-sports-gallery-home">
+      <div class="reg-sports-heading reg-sports-heading--split"><div><span class="reg-sports-kicker">{{ 'Gallery'|t }}</span><h2 id="reg-sports-gallery-home">{{ 'Latest galleries'|t }}</h2></div><a href="{{ path('reg_core.sports_gallery') }}">{{ 'All galleries'|t }} <span aria-hidden="true">→</span></a></div>
+      {% if content.galleries %}<div class="reg-sports-media-grid">{% for gallery in content.galleries %}<a href="{{ gallery.url }}" data-reg-analytics-event="gallery_view" data-reg-analytics-id="{{ gallery.id }}">{% if gallery.image.url %}<img src="{{ gallery.image.url }}"{% if gallery.image.srcset %} srcset="{{ gallery.image.srcset }}" sizes="{{ gallery.image.sizes }}"{% endif %} alt="{{ gallery.image.alt }}" loading="lazy">{% endif %}<strong>{{ gallery.title }}</strong>{% if gallery.date %}<small>{{ gallery.date }}</small>{% endif %}</a>{% endfor %}</div>{% else %}<div class="reg-sports-empty"><p>{{ 'No galleries are currently published.'|t }}</p></div>{% endif %}
+    </section>
+
+    <section aria-labelledby="reg-sports-videos-home">
+      <div class="reg-sports-heading reg-sports-heading--split"><div><span class="reg-sports-kicker">{{ 'Videos'|t }}</span><h2 id="reg-sports-videos-home">{{ 'Video highlights'|t }}</h2></div><a href="{{ path('reg_core.sports_videos') }}">{{ 'All videos'|t }} <span aria-hidden="true">→</span></a></div>
+      {% if content.videos %}<div class="reg-sports-media-grid">{% for video in content.videos %}<a href="{{ video.video_url ?: path('reg_core.sports_videos') }}" data-reg-analytics-event="video_click" data-reg-analytics-id="{{ video.id }}">{% if video.image.url %}<img src="{{ video.image.url }}"{% if video.image.srcset %} srcset="{{ video.image.srcset }}" sizes="{{ video.image.sizes }}"{% endif %} alt="{{ video.image.alt }}" loading="lazy">{% endif %}<strong>{{ video.title }}</strong>{% if video.date %}<small>{{ video.date }}</small>{% endif %}</a>{% endfor %}</div>{% else %}<div class="reg-sports-empty"><p>{{ 'No approved video highlights are currently published.'|t }}</p></div>{% endif %}
+    </section>
+
+    <section class="reg-sports-social" aria-labelledby="reg-sports-social">
+      <div><span class="reg-sports-kicker">{{ 'Official channels'|t }}</span><h2 id="reg-sports-social">{{ 'Follow REG Sports'|t }}</h2><p>{{ 'Only approved team links and platform integrations are shown. The portal does not scrape social networks.'|t }}</p></div>
+      {% if content.social_links %}<div class="reg-sports-social__links">{% for social in content.social_links %}<a href="{{ social.url }}">{{ social.title }}</a>{% endfor %}</div>{% else %}<p class="reg-sports-empty-inline">{{ 'Official sports social links will appear when configured.'|t }}</p>{% endif %}
+    </section>
+  </main>
+</div>

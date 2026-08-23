@@ -1,0 +1,32 @@
+{{ attach_library('reg_core/section_hero') }}
+{% if hero %}
+  {% set alignment = hero.text_alignment in ['left', 'center', 'right'] ? hero.text_alignment : 'left' %}
+  {% set theme = hero.text_theme == 'dark_background' ? 'dark' : 'light' %}
+  {% set overlay = hero.overlay in ['none', 'light', 'medium', 'strong'] ? hero.overlay : 'light' %}
+  {% set size = hero.size in ['landing', 'standard', 'compact'] ? hero.size : 'standard' %}
+  {% set long_title = hero.title|length > 80 %}
+  <section class="reg-section-hero {{ hero.section_class|clean_class }} reg-section-hero--{{ size }} reg-section-hero--align-{{ alignment }} reg-section-hero--theme-{{ theme }} reg-section-hero--overlay-{{ overlay }}{{ long_title ? ' reg-section-hero--long-title' }}">
+    {% if hero.background_image %}
+      <picture class="reg-section-hero__media" aria-hidden="true">
+        {% if hero.mobile_background_image %}<source media="(max-width: 48rem)" srcset="{{ hero.mobile_background_image }}">{% endif %}
+        <img src="{{ hero.background_image }}" alt="" width="1920" height="640" loading="eager" fetchpriority="high">
+      </picture>
+    {% endif %}
+    <div class="reg-section-hero__overlay" aria-hidden="true"></div>
+    <div class="reg-container reg-section-hero__inner">
+      <div class="reg-section-hero__content">
+        {% if hero.back_url and hero.back_label %}<a class="reg-section-hero__back" href="{{ hero.back_url }}">← {{ hero.back_label }}</a>{% endif %}
+        {% if hero.eyebrow %}<span class="reg-section-hero__eyebrow">{{ hero.eyebrow }}</span>{% endif %}
+        <h1>{{ hero.title }}</h1>
+        {% if hero.description %}<p>{{ hero.description }}</p>{% endif %}
+        {% if hero.meta %}<small class="reg-section-hero__meta">{{ hero.meta }}</small>{% endif %}
+        {% if hero.primary_cta or hero.secondary_cta %}
+          <div class="reg-section-hero__actions">
+            {% if hero.primary_cta %}<a class="reg-section-hero__button" href="{{ hero.primary_cta.url }}">{{ hero.primary_cta.label }}</a>{% endif %}
+            {% if hero.secondary_cta %}<a class="reg-section-hero__button reg-section-hero__button--secondary" href="{{ hero.secondary_cta.url }}">{{ hero.secondary_cta.label }}</a>{% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+{% endif %}

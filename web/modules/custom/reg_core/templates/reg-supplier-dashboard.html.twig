@@ -1,0 +1,10 @@
+<section class="reg-supplier-shell">
+  <nav class="reg-supplier-nav" aria-label="{{ 'Supplier workspace'|t }}">{% for link in links %}<a href="{{ link.url }}">{{ link.label }}</a>{% endfor %}</nav>
+  <header><p class="reg-supplier-kicker">{{ 'REG ONLINE TENDERS'|t }}</p><h1>{{ 'Supplier dashboard'|t }}</h1></header>
+  {% if organization %}
+    <div class="reg-supplier-card"><h2>{{ organization.label }}</h2><p><span class="reg-supplier-badge">{{ organization.field_reg_supplier_status.value|replace({'_':' '})|title }}</span> · {{ organization_role|replace({'_':' '})|title }}</p></div>
+    {% if organization.field_reg_review_reason.value %}<div class="messages messages--warning"><strong>{{ 'REG review note'|t }}</strong><p>{{ organization.field_reg_review_reason.value }}</p></div>{% endif %}
+    {% if completeness %}<div class="reg-supplier-card"><h2>{{ 'Onboarding progress'|t }}</h2><progress value="{{ completeness.complete_count }}" max="{{ completeness.total }}">{{ completeness.complete_count }}/{{ completeness.total }}</progress><ul><li>{{ completeness.email ? '✓' : '○' }} {{ 'Email verified'|t }}</li><li>{{ completeness.company ? '✓' : '○' }} {{ 'Company information'|t }}</li><li>{{ completeness.documents ? '✓' : '○' }} {{ 'Registration documents'|t }}</li><li>{{ completeness.verified ? '✓' : '○' }} {{ 'REG verification decision'|t }}</li></ul></div>{% endif %}
+    <div class="reg-supplier-stats"><a href="{{ path('reg_core.supplier_tenders') }}"><strong>{{ counts.tenders }}</strong><span>{{ 'Open tenders'|t }}</span></a><a href="{{ path('reg_core.supplier_bids') }}"><strong>{{ counts.bids }}</strong><span>{{ 'Organization bids'|t }}</span></a><a href="{{ path('reg_core.supplier_team') }}"><strong>{{ counts.team }}</strong><span>{{ 'Team members'|t }}</span></a></div>
+  {% else %}<div class="reg-supplier-card"><h2>{{ 'Create your supplier organization'|t }}</h2><p>{{ 'Add the legal entity, categories, contacts, and private registration documents used for REG online tender verification.'|t }}</p><a class="reg-supplier-button" href="{{ path('reg_core.supplier_profile') }}">{{ 'START ONBOARDING'|t }}</a></div>{% endif %}
+</section>

@@ -1,0 +1,21 @@
+<main class="reg-support" data-reg-analytics-event="complaint_start">
+  {% set complaints_hero = section_hero|merge({eyebrow: 'Faults and complaints'|t, title: 'Report a problem'|t, description: 'Drupal does not store complaint submissions by default. Use only the approved handoff or contact channels shown below.'|t}) %}
+  {% include '@reg_core/reg-section-hero.html.twig' with {hero: complaints_hero} only %}
+  <div class="reg-container">
+  <section aria-labelledby="reg-complaint-types"><h2 id="reg-complaint-types">{{ 'Choose the issue type'|t }}</h2><ul class="reg-complaint-types">{% for category in categories %}<li>{{ category.label }}</li>{% endfor %}</ul></section>
+  <section class="reg-handoff" aria-live="polite">
+    {% if routing.mode == 'external' and routing.complaint_url %}
+      <h2>{{ 'Continue to the official complaint service'|t }}</h2><p>{{ 'Your complaint will be handled by the approved source system, not stored on this Drupal website.'|t }}</p><a class="reg-support__button" href="{{ routing.complaint_url }}" data-reg-analytics-event="complaint_external_handoff">{{ 'Open complaint service'|t }} →</a>
+    {% elseif routing.mode == 'api' and routing.available %}
+      <h2>{{ 'Approved API integration configured'|t }}</h2><p>{{ 'Public submission remains unavailable until REG approves the minimum-data form and privacy controls.'|t }}</p>
+    {% elseif routing.mode == 'cms' %}
+      <h2>{{ 'Local complaint storage is not enabled'|t }}</h2><p>{{ 'REG policy approval, a private entity design, restricted access, retention rules, and security review are required before CMS storage can be activated.'|t }}</p>
+    {% else %}
+      <h2>{{ 'Use an approved contact channel'|t }}</h2><p>{{ 'Online complaint submission is not currently available on this website.'|t }}</p>
+    {% endif %}
+    {% if routing.fault_url %}<a class="reg-support__button reg-support__button--dark" href="{{ routing.fault_url }}" data-reg-analytics-event="fault_report_handoff">{{ 'Report an electricity fault'|t }} →</a>{% endif %}
+    <div class="reg-handoff__alternatives"><a href="tel:{{ routing.call_center|replace({' ': '', '-': ''}) }}">{{ 'Call Center: @number'|t({'@number': routing.call_center}) }}</a><a href="{{ branches_url }}">{{ 'Find a branch'|t }}</a>{% if routing.support_email %}<a href="mailto:{{ routing.support_email }}">{{ routing.support_email }}</a>{% endif %}</div>
+  </section>
+  <aside class="reg-privacy-note"><h2>{{ 'Privacy notice'|t }}</h2><p>{{ 'Do not enter account numbers, telephone numbers, names, billing information, or complaint details unless an approved secure source-system form explicitly requests them.'|t }}</p></aside>
+  </div>
+</main>

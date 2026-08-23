@@ -1,0 +1,75 @@
+<div class="faq-page">
+  {% set faq_hero = section_hero|merge({eyebrow: 'Customer support'|t, title: 'Help & Frequently Asked Questions'|t, description: 'Search answers published and approved by REG. Results are shown in the current site language when an approved translation is available.'|t, meta: 'Viewing: @language'|t({'@language': language_name})}) %}
+  {% include '@reg_core/reg-section-hero.html.twig' with {hero: faq_hero} only %}
+
+  <div class="reg-container faq-page__content">
+    <nav class="faq-quick" aria-label="{{ 'Quick FAQ categories'|t }}">
+      {% for category in quick_categories %}
+        <a href="{{ category.url }}"{{ category.active ? ' aria-current="page"' }}>{{ category.label }}</a>
+      {% endfor %}
+    </nav>
+
+    <form class="faq-search" method="get" action="{{ clear_url }}" role="search">
+      <div class="faq-search__query">
+        <label for="faq-query">{{ 'Search approved FAQs'|t }}</label>
+        <input id="faq-query" name="q" type="search" value="{{ query }}" maxlength="120" placeholder="{{ 'For example: check a power outage'|t }}">
+      </div>
+      <div>
+        <label for="faq-category">{{ 'Category'|t }}</label>
+        <select id="faq-category" name="category">
+          <option value="">{{ 'All categories'|t }}</option>
+          {% for category in category_links %}
+            <option value="{{ category.id }}"{{ category.active ? ' selected' }}>{{ category.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit">{{ 'Search FAQs'|t }}</button>
+      {% if query or current_category %}<a class="faq-search__clear" href="{{ clear_url }}">{{ 'Clear'|t }}</a>{% endif %}
+    </form>
+
+    <nav class="faq-categories" aria-label="{{ 'All FAQ categories'|t }}">
+      {% for category in category_links %}
+        <a class="{{ category.active ? 'is-active' }}" href="{{ category.url }}"{{ category.active ? ' aria-current="page"' }}>{{ category.label }}</a>
+      {% endfor %}
+    </nav>
+
+    <div class="faq-page__summary" aria-live="polite">
+      <p>{{ '@count approved answer(s)'|t({'@count': results_count}) }}</p>
+    </div>
+
+    {% if items %}
+      <div class="faq-accordion">
+        {% for item in items %}
+          <details id="faq-{{ item.id }}" class="faq-item"{% if query and loop.first %} open{% endif %}>
+            <summary>
+              <span>{{ item.question }}</span>
+              <small>{{ item.category_label }}</small>
+            </summary>
+            <div class="faq-item__answer">
+              <p>{{ item.answer }}</p>
+              <div class="faq-item__actions">
+                {% for related_link in item.related_links %}
+                  <a href="{{ related_link.url }}"{% if related_link.external %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ related_link.label }}</a>
+                {% endfor %}
+                {% if item.escalation_option %}<a href="{{ item.escalation_option.url }}">{{ item.escalation_option.label }}</a>{% endif %}
+              </div>
+            </div>
+          </details>
+        {% endfor %}
+      </div>
+    {% else %}
+      <section class="faq-empty" aria-labelledby="faq-empty-title">
+        <span aria-hidden="true">?</span>
+        <div>
+          <h2 id="faq-empty-title">{{ rate_limited ? 'Too many searches'|t : (query ? 'No approved answer matched your search'|t : 'No approved FAQs are published in this view'|t) }}</h2>
+          {% if rate_limited %}<p>{{ 'Please wait a moment before searching again.'|t }}</p>{% endif %}
+          <p>{{ 'Do not enter an account number, telephone number, email address, or other personal information. Use an approved support option below.'|t }}</p>
+          <div class="faq-escalation">
+            <a href="{{ escalation.call_center.url }}">{{ escalation.call_center.label }}</a>
+            {% for link in escalation.links %}<a href="{{ link.url }}">{{ link.label }}</a>{% endfor %}
+          </div>
+        </div>
+      </section>
+    {% endif %}
+  </div>
+</div>

@@ -1,0 +1,6 @@
+<article class="news-card">
+  <a class="news-card__image {{ item.image_class|default('') }}" href="{{ item.url|default('#') }}" aria-label="{{ item.title }}"></a>
+  <div class="news-card__meta"><span>{{ item.category }}</span><time>{{ item.date }}</time></div>
+  <h3><a href="{{ item.url|default('#') }}">{{ item.title }}</a></h3>
+  <p>{{ item.summary }}</p>
+</article>

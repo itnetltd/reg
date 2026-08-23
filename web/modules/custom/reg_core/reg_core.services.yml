@@ -1,0 +1,347 @@
+services:
+  Drupal\reg_core\About\AboutRepositoryInterface:
+    alias: reg_core.about_repository
+
+  reg_core.about_repository:
+    class: Drupal\reg_core\About\AboutRepository
+    arguments:
+      - '@entity_type.manager'
+      - '@language_manager'
+      - '@file_url_generator'
+      - '@cache.data'
+      - '@datetime.time'
+
+  Drupal\reg_core\Alert\PublicAlertRepositoryInterface:
+    alias: reg_core.public_alert_repository
+
+  reg_core.public_alert_repository:
+    class: Drupal\reg_core\Alert\PublicAlertRepository
+    arguments:
+      - '@entity_type.manager'
+      - '@language_manager'
+      - '@cache.data'
+      - '@datetime.time'
+      - '@string_translation'
+
+  logger.channel.reg_faq:
+    parent: logger.channel_base
+    arguments: ['reg_faq']
+
+  reg_core.official_faq_importer:
+    class: Drupal\reg_core\Content\OfficialFaqImporter
+    arguments:
+      - '@entity_type.manager'
+      - '@config.factory'
+      - '@datetime.time'
+
+  reg_core.official_branch_importer:
+    class: Drupal\reg_core\Content\OfficialBranchImporter
+    arguments:
+      - '@entity_type.manager'
+      - '@config.factory'
+      - '@datetime.time'
+
+  reg_core.what_we_do_importer:
+    class: Drupal\reg_core\Content\WhatWeDoImporter
+    arguments:
+      - '@entity_type.manager'
+      - '@http_client'
+      - '@datetime.time'
+      - '@file.repository'
+      - '@file_system'
+
+  logger.channel.reg_dms:
+    parent: logger.channel_base
+    arguments: ['reg_dms']
+
+  logger.channel.reg_analytics:
+    parent: logger.channel_base
+    arguments: ['reg_analytics']
+
+  logger.channel.reg_section_hero:
+    parent: logger.channel_base
+    arguments: ['reg_section_hero']
+
+  Drupal\reg_core\Service\SectionHeroResolverInterface:
+    alias: reg_core.section_hero_resolver
+
+  reg_core.section_hero_resolver:
+    class: Drupal\reg_core\Service\SectionHeroResolver
+    arguments:
+      - '@entity_type.manager'
+      - '@language_manager'
+      - '@file_url_generator'
+      - '@cache.data'
+      - '@request_stack'
+      - '@current_route_match'
+      - '@extension.path.resolver'
+      - '@logger.channel.reg_section_hero'
+
+  Drupal\reg_core\Analytics\AnalyticsEventTrackerInterface:
+    alias: reg_core.analytics_event_tracker
+
+  reg_core.analytics_event_tracker:
+    class: Drupal\reg_core\Analytics\AnalyticsEventTracker
+    arguments:
+      - '@database'
+      - '@datetime.time'
+      - '@language_manager'
+      - '@config.factory'
+      - '@cache_tags.invalidator'
+      - '@logger.channel.reg_analytics'
+
+  Drupal\reg_core\Analytics\AnalyticsProviderInterface:
+    alias: reg_core.analytics_provider
+
+  reg_core.analytics_provider:
+    class: Drupal\reg_core\Analytics\ConfiguredAnalyticsProvider
+    arguments:
+      - '@config.factory'
+
+  Drupal\reg_core\Dms\DmsClientInterface:
+    alias: reg_core.dms_client
+
+  reg_core.ge_dms_client:
+    class: Drupal\reg_core\Dms\GeDmsClient
+    arguments:
+      - '@http_client'
+      - '@config.factory'
+      - '@logger.channel.reg_dms'
+
+  reg_core.mock_dms_client:
+    class: Drupal\reg_core\Dms\MockDmsClient
+    arguments:
+      - '@datetime.time'
+
+  reg_core.dms_client_factory:
+    class: Drupal\reg_core\Dms\DmsClientFactory
+    arguments:
+      - '@config.factory'
+      - '@reg_core.ge_dms_client'
+      - '@reg_core.mock_dms_client'
+
+  reg_core.dms_client:
+    class: Drupal\reg_core\Dms\DmsClientInterface
+    factory: ['@reg_core.dms_client_factory', 'create']
+
+  reg_core.dms_outage_normalizer:
+    class: Drupal\reg_core\Dms\DmsOutageNormalizer
+
+  Drupal\reg_core\Outage\OutageRepositoryInterface:
+    alias: reg_core.dms_outage_repository
+
+  reg_core.dms_outage_repository:
+    class: Drupal\reg_core\Outage\OutageRepository
+    arguments:
+      - '@cache.default'
+      - '@cache_tags.invalidator'
+      - '@entity_type.manager'
+      - '@config.factory'
+      - '@datetime.time'
+      - '@file_url_generator'
+      - '@logger.channel.reg_dms'
+
+  reg_core.dms_outage_synchronizer:
+    class: Drupal\reg_core\Outage\DmsOutageSynchronizer
+    arguments:
+      - '@reg_core.dms_outage_repository'
+      - '@config.factory'
+      - '@state'
+      - '@datetime.time'
+      - '@logger.channel.reg_dms'
+
+  Drupal\reg_core\Service\FaqSearchInterface:
+    alias: reg_core.faq_search
+
+  reg_core.faq_search:
+    class: Drupal\reg_core\Service\FaqSearch
+    arguments:
+      - '@entity_type.manager'
+      - '@language_manager'
+
+  Drupal\reg_core\Service\FaqUnansweredLoggerInterface:
+    alias: reg_core.faq_unanswered_logger
+
+  reg_core.faq_unanswered_logger:
+    class: Drupal\reg_core\Service\FaqUnansweredLogger
+    arguments:
+      - '@database'
+      - '@datetime.time'
+      - '@logger.channel.reg_faq'
+
+  Drupal\reg_core\PublicInformation\PublicInformationRepositoryInterface:
+    alias: reg_core.public_information_repository
+
+  reg_core.public_information_repository:
+    class: Drupal\reg_core\PublicInformation\PublicInformationRepository
+    arguments:
+      - '@entity_type.manager'
+      - '@language_manager'
+      - '@date.formatter'
+      - '@file_url_generator'
+      - '@cache.data'
+      - '@datetime.time'
+
+  Drupal\reg_core\PublicInformation\DocumentDownloadTrackerInterface:
+    alias: reg_core.document_download_tracker
+
+  reg_core.document_download_tracker:
+    class: Drupal\reg_core\PublicInformation\DocumentDownloadTracker
+    arguments:
+      - '@database'
+      - '@datetime.time'
+      - '@reg_core.analytics_event_tracker'
+
+  Drupal\reg_core\Sports\SportsRepositoryInterface:
+    alias: reg_core.sports_repository
+
+  reg_core.sports_repository:
+    class: Drupal\reg_core\Sports\SportsRepository
+    arguments:
+      - '@entity_type.manager'
+      - '@language_manager'
+      - '@date.formatter'
+      - '@file_url_generator'
+      - '@cache.data'
+      - '@datetime.time'
+
+  Drupal\reg_core\Branch\BranchRepositoryInterface:
+    alias: reg_core.branch_repository
+
+  reg_core.branch_repository:
+    class: Drupal\reg_core\Branch\BranchRepository
+    arguments:
+      - '@entity_type.manager'
+      - '@language_manager'
+      - '@date.formatter'
+      - '@cache.data'
+      - '@datetime.time'
+
+  reg_core.branch_map_normalizer:
+    class: Drupal\reg_core\Branch\BranchMapNormalizer
+
+  reg_core.complaint_router:
+    class: Drupal\reg_core\Service\ComplaintRouter
+    arguments:
+      - '@config.factory'
+
+  reg_core.translation_status_repository:
+    class: Drupal\reg_core\Translation\TranslationStatusRepository
+    arguments:
+      - '@entity_type.manager'
+      - '@date.formatter'
+
+  reg_core.dashboard_repository:
+    class: Drupal\reg_core\Dashboard\DashboardRepository
+    arguments:
+      - '@database'
+      - '@entity_type.manager'
+      - '@reg_core.translation_status_repository'
+      - '@config.factory'
+      - '@state'
+      - '@cache.data'
+      - '@cache.default'
+      - '@datetime.time'
+      - '@date.formatter'
+
+  reg_core.public_number_formatter:
+    class: Drupal\reg_core\Formatting\PublicNumberFormatter
+    arguments:
+      - '@language_manager'
+
+  Drupal\reg_core\Homepage\HomepageRepositoryInterface:
+    alias: reg_core.homepage_repository
+
+  reg_core.homepage_repository:
+    class: Drupal\reg_core\Homepage\HomepageRepository
+    arguments:
+      - '@entity_type.manager'
+      - '@language_manager'
+      - '@cache.data'
+      - '@datetime.time'
+
+  Drupal\reg_core\Energy\EnergyToolStatusResolverInterface:
+    alias: reg_core.energy_tool_status_resolver
+
+  reg_core.energy_tool_status_resolver:
+    class: Drupal\reg_core\Energy\EnergyToolStatusResolver
+    arguments:
+      - '@config.factory'
+      - '@router.route_provider'
+
+  Drupal\reg_core\Energy\EnergyToolRepositoryInterface:
+    alias: reg_core.energy_tool_repository
+
+  reg_core.energy_tool_repository:
+    class: Drupal\reg_core\Energy\EnergyToolRepository
+    arguments:
+      - '@entity_type.manager'
+      - '@language_manager'
+      - '@cache.data'
+      - '@datetime.time'
+      - '@reg_core.energy_tool_status_resolver'
+      - '@string_translation'
+
+  Drupal\reg_core\Video\VideoProviderManagerInterface:
+    alias: reg_core.video_provider_manager
+
+  reg_core.video_provider_manager:
+    class: Drupal\reg_core\Video\VideoProviderManager
+
+  reg_core.social_media_manager:
+    class: Drupal\reg_core\Social\SocialMediaManager
+    arguments:
+      - '@config.factory'
+
+  reg_core.supplier_manager:
+    class: Drupal\reg_core\Supplier\SupplierManager
+    arguments:
+      - '@entity_type.manager'
+      - '@current_user'
+      - '@datetime.time'
+      - '@database'
+
+  Drupal\reg_core\Supplier\SupplierDocumentScannerInterface:
+    alias: reg_core.supplier_document_scanner
+
+  reg_core.supplier_document_scanner:
+    class: Drupal\reg_core\Supplier\PendingSupplierDocumentScanner
+
+  Drupal\reg_core\News\NewsRepositoryInterface:
+    alias: reg_core.news_repository
+
+  reg_core.news_repository:
+    class: Drupal\reg_core\News\NewsRepository
+    arguments:
+      - '@entity_type.manager'
+      - '@language_manager'
+      - '@date.formatter'
+      - '@file_url_generator'
+      - '@cache.data'
+      - '@datetime.time'
+
+  Drupal\reg_core\Social\SocialPostRepositoryInterface:
+    alias: reg_core.social_post_repository
+
+  reg_core.social_post_repository:
+    class: Drupal\reg_core\Social\SocialPostRepository
+    arguments:
+      - '@entity_type.manager'
+      - '@language_manager'
+      - '@date.formatter'
+      - '@config.factory'
+
+  Drupal\reg_core\Video\VideoRepositoryInterface:
+    alias: reg_core.video_repository
+
+  reg_core.video_repository:
+    class: Drupal\reg_core\Video\VideoRepository
+    arguments:
+      - '@entity_type.manager'
+      - '@language_manager'
+      - '@date.formatter'
+      - '@extension.list.module'
+      - '@string_translation'
+      - '@reg_core.video_provider_manager'
+      - '@cache.data'
+      - '@datetime.time'

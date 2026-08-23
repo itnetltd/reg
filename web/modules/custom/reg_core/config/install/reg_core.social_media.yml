@@ -1,0 +1,28 @@
+platforms:
+  x:
+    url: ''
+    display_name: 'Rwanda Energy Group'
+    enabled: false
+    show_utility: true
+    show_footer: true
+    show_homepage_feed: true
+  facebook:
+    url: ''
+    enabled: false
+    show_utility: true
+    show_footer: true
+  youtube:
+    url: ''
+    enabled: false
+    show_utility: true
+    show_footer: true
+  instagram:
+    url: ''
+    enabled: false
+    show_utility: false
+    show_footer: true
+  linkedin:
+    url: ''
+    enabled: false
+    show_utility: false
+    show_footer: true

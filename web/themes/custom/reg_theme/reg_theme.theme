@@ -1,0 +1,491 @@
+<?php
+
+/**
+ * @file
+ * Theme hooks and preprocessors for REG Theme.
+ */
+
+use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\Url;
+use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_preprocess_html().
+ */
+function reg_theme_preprocess_html(array &$variables): void {
+  $variables['attributes']['class'][] = 'reg-site';
+  $route_node = \Drupal::routeMatch()->getParameter('node');
+  if ($route_node instanceof NodeInterface && $route_node->bundle() === 'reg_news' && \Drupal::hasService('reg_core.news_repository')) {
+    $news = \Drupal::service('reg_core.news_repository')->article($route_node);
+    if (!empty($news['seo']['title'])) {
+      $variables['head_title']['title'] = $news['seo']['title'];
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_page().
+ */
+function reg_theme_preprocess_page(array &$variables): void {
+  $variables['reg_year'] = date('Y');
+  $variables['page']['#cache']['contexts'][] = 'url.query_args';
+  $variables['page']['#cache']['tags'][] = 'config:system.theme.global';
+  $variables['page']['#cache']['tags'][] = 'config:reg_theme.settings';
+
+  $configured_logo = theme_get_setting('logo.url');
+  $use_default_logo = (bool) theme_get_setting('logo.use_default');
+  $base_path = (string) ($variables['base_path'] ?? base_path());
+  $theme_directory = (string) ($variables['directory'] ?? 'themes/custom/reg_theme');
+  $fallback_logo = rtrim($base_path, '/') . '/' . trim($theme_directory, '/') . '/assets/images/reg-logo.svg';
+  $variables['reg_logo_url'] = !$use_default_logo && is_string($configured_logo) && trim($configured_logo) !== ''
+    ? $configured_logo
+    : $fallback_logo;
+
+  $language_manager = \Drupal::languageManager();
+  $current_language = $language_manager->getCurrentLanguage();
+  $route_match = \Drupal::routeMatch();
+  $route_name = $route_match->getRouteName();
+  $route_parameters = $route_match->getRawParameters()->all();
+  $query = \Drupal::request()->query->all();
+  $variables['reg_language_links'] = [];
+  foreach (['en', 'rw'] as $langcode) {
+    $language = $language_manager->getLanguage($langcode);
+    if (!$language) {
+      continue;
+    }
+    try {
+      $url = $route_name
+        ? Url::fromRoute($route_name, $route_parameters, ['language' => $language, 'query' => $query])->toString()
+        : Url::fromRoute('<front>', [], ['language' => $language])->toString();
+    }
+    catch (\Exception) {
+      $url = Url::fromRoute('<front>', [], ['language' => $language])->toString();
+    }
+    $variables['reg_language_links'][] = [
+      'langcode' => $langcode,
+      'label' => $langcode === 'rw' ? 'Kinyarwanda' : 'English',
+      'short_label' => $langcode === 'rw' ? 'RW' : 'EN',
+      'url' => $url,
+      'active' => $current_language->getId() === $langcode,
+    ];
+  }
+
+  $settings = \Drupal::config('reg_core.settings');
+  $translation = \Drupal::translation();
+    $variables['reg_main_menu'] = reg_theme_build_menu('main', 4);
+  $variables['reg_utility_menu'] = reg_theme_build_menu('reg-utility-menu', 1);
+  $variables['reg_utility_menu_mobile'] = reg_theme_build_menu('reg-utility-menu', 1);
+  $variables['reg_utility_menu_footer'] = reg_theme_build_menu('reg-utility-menu', 1);
+  $social_media = \Drupal::service('reg_core.social_media_manager');
+  $variables['reg_social_links'] = [
+    'utility' => $social_media->linksForPlacement('utility'),
+    'footer' => $social_media->linksForPlacement('footer'),
+  ];
+  $variables['page']['#cache']['tags'][] = 'config:reg_core.social_media';
+  $variables['reg_search_url'] = reg_theme_route('search.view_node_search', '/search/node');
+  $variables['reg_call_center'] = trim((string) ($settings->get('support.call_center') ?: '2727'));
+  $variables['reg_call_center_uri'] = preg_replace('/[^0-9+]/', '', $variables['reg_call_center']) ?: '2727';
+  $variables['reg_links'] = [
+    'services' => reg_theme_route('reg_core.services', '/online-services'),
+    'outages' => reg_theme_route('reg_core.outages', '/outages'),
+    'faq' => reg_theme_route('reg_core.faq', '/help/faq'),
+    'bill_estimator' => reg_theme_route('reg_core.bill_estimator', '/tools/bill-estimator'),
+    'carbon_calculator' => reg_theme_route('reg_core.carbon_calculator', '/tools/carbon-footprint'),
+    'online_services' => $settings->get('links.online_services') ?: reg_theme_route('reg_core.services', '/online-services'),
+    'new_connection' => $settings->get('links.new_connection') ?: reg_theme_route('reg_core.services', '/online-services'),
+    'payments' => $settings->get('links.payments') ?: reg_theme_route('reg_core.services', '/online-services'),
+    'complaints' => reg_theme_route('reg_core.complaints', '/complaints'),
+    'branches' => reg_theme_route('reg_core.branches', '/branches'),
+    'contact' => reg_theme_route('reg_core.contact', '/contact'),
+    'customer_services' => reg_theme_route('reg_core.customer_services', '/customer-services'),
+    'gis' => $settings->get('links.gis') ?: reg_theme_route('reg_core.outages', '/outages'),
+  ];
+
+  $fallback_services = [
+    ['eyebrow' => $translation->translate('Digital services'), 'title' => $translation->translate('Online Services'), 'description' => $translation->translate('Open the official service gateway.'), 'url' => $variables['reg_links']['online_services']],
+    ['eyebrow' => $translation->translate('Connection'), 'title' => $translation->translate('New Connection'), 'description' => $translation->translate('Start the electricity connection process.'), 'url' => $variables['reg_links']['new_connection']],
+    ['eyebrow' => $translation->translate('Billing'), 'title' => $translation->translate('Pay Bill'), 'description' => $translation->translate('Access approved payment channels.'), 'url' => $variables['reg_links']['payments']],
+    ['eyebrow' => $translation->translate('Outages'), 'title' => $translation->translate('Check Outages'), 'description' => $translation->translate('Search current and planned interruptions.'), 'url' => $variables['reg_links']['outages']],
+    ['eyebrow' => $translation->translate('Pricing'), 'title' => $translation->translate('Bill Estimator'), 'description' => $translation->translate('Estimate cost using validated assumptions.'), 'url' => $variables['reg_links']['bill_estimator']],
+    ['eyebrow' => $translation->translate('Support'), 'title' => $translation->translate('Report a Problem'), 'description' => $translation->translate('Use an official complaint or fault channel.'), 'url' => $variables['reg_links']['complaints']],
+    ['eyebrow' => $translation->translate('Contacts'), 'title' => $translation->translate('Branch Locator'), 'description' => $translation->translate('Find a REG, EUCL or EDCL service point.'), 'url' => $variables['reg_links']['branches']],
+    ['eyebrow' => $translation->translate('Knowledge'), 'title' => $translation->translate('Help & FAQs'), 'description' => $translation->translate('Read approved customer-support answers.'), 'url' => $variables['reg_links']['faq']],
+  ];
+
+  $variables['reg_fallback'] = [
+    'services' => reg_theme_service_items($fallback_services),
+    'status' => reg_theme_outage_items(),
+    'news' => reg_theme_news_items(),
+    'tenders' => reg_theme_tender_items(),
+    'sports' => reg_theme_sports_items(),
+  ];
+  $variables['reg_fallback']['news']['x_feed'] = $social_media->homepageXFeed();
+  if ($variables['reg_fallback']['news']['x_feed'] !== [] && \Drupal::hasService('reg_core.social_post_repository')) {
+    $social_posts = \Drupal::service('reg_core.social_post_repository')->homepageXPosts(2);
+    $variables['reg_fallback']['news']['x_feed']['posts'] = $social_posts['items'];
+    $variables['page']['#cache']['tags'] = array_merge($variables['page']['#cache']['tags'], $social_posts['cache_tags']);
+  }
+
+}
+
+/**
+ * Implements hook_preprocess_menu().
+ */
+function reg_theme_preprocess_menu(array &$variables): void {
+  if (($variables['menu_name'] ?? '') === 'main' || ($variables['menu_name'] ?? '') === 'reg-utility-menu') {
+    $route_name = \Drupal::routeMatch()->getRouteName() ?: '';
+    $active_section = ($variables['menu_name'] ?? '') === 'main'
+      ? reg_theme_main_active_section($route_name)
+      : '';
+    $langcode = \Drupal::languageManager()->getCurrentLanguage('language_url')->getId();
+    $current_path = \Drupal::request()->getPathInfo();
+    reg_theme_navigation_item_attributes($variables['items'], $langcode, $current_path, $active_section);
+  }
+}
+
+/**
+ * Adds presentation classes from trusted menu-link options.
+ */
+function reg_theme_navigation_item_attributes(
+  array &$items,
+  string $langcode,
+  string $current_path,
+  string $active_section = '',
+  bool $branch_allowed = TRUE,
+  int $level = 0,
+): bool {
+  $any_active = FALSE;
+  foreach ($items as &$item) {
+    $options = $item['url']->getOptions();
+    $navigation_id = (string) ($options['reg_core_navigation_id'] ?? '');
+    if (str_starts_with($navigation_id, 'main:')) {
+      $item['attributes']->addClass('menu-item--nav-' . str_replace('_', '-', substr($navigation_id, 5)));
+    }
+    if ($navigation_id === 'main:what-we-do') {
+      $item['attributes']->addClass(['menu-item--mega', 'menu-item--what-we-do']);
+    }
+    if (($options['reg_menu_layout'] ?? '') === 'mega') {
+      $item['attributes']->addClass('menu-item--mega');
+    }
+    $priority = (int) ($options['reg_mobile_priority'] ?? 0);
+    if ($priority >= 1 && $priority <= 3) {
+      $item['attributes']->addClass('menu-item--mobile-priority-' . $priority);
+    }
+
+    $original_link = $item['original_link'] ?? NULL;
+    if ($original_link && method_exists($original_link, 'getEntity')) {
+      try {
+        $entity = $original_link->getEntity()->getUntranslated();
+        if ($entity->hasTranslation($langcode)) {
+          $item['title'] = $entity->getTranslation($langcode)->label();
+        }
+      }
+      catch (\Exception) {
+        // Retain Drupal's resolved menu title if an entity is unavailable.
+      }
+    }
+
+    $item_branch_allowed = $level === 0 && $active_section !== ''
+      ? $navigation_id === $active_section
+      : $branch_allowed;
+    $is_active = !empty($item['in_active_trail']);
+    if ($active_section !== '') {
+      $is_active = $level === 0 && $navigation_id === $active_section;
+    }
+    $item_path = parse_url($item['url']->toString(), PHP_URL_PATH) ?: '';
+    if (
+      $item_branch_allowed
+      && $item_path !== ''
+      && (rtrim($item_path, '/') ?: '/') === (rtrim($current_path, '/') ?: '/')
+    ) {
+      $is_active = TRUE;
+    }
+    if (!empty($item['below'])) {
+      $is_active = reg_theme_navigation_item_attributes(
+        $item['below'],
+        $langcode,
+        $current_path,
+        $active_section,
+        $item_branch_allowed,
+        $level + 1,
+      ) || $is_active;
+    }
+    if ($is_active) {
+      $item['in_active_trail'] = TRUE;
+      $item['attributes']->addClass('menu-item--active-trail');
+      $any_active = TRUE;
+    }
+  }
+  return $any_active;
+}
+
+/**
+ * Maps implemented routes to one unambiguous main-navigation section.
+ */
+function reg_theme_main_active_section(string $route_name): string {
+  if (
+    str_starts_with($route_name, 'reg_core.outage')
+    || in_array($route_name, [
+      'reg_core.services',
+      'reg_core.customer_services',
+      'reg_core.report_problem',
+      'reg_core.branches',
+      'reg_core.branch_detail',
+      'reg_core.faq',
+      'reg_core.bill_estimator',
+      'reg_core.carbon_calculator',
+    ], TRUE)
+  ) {
+    return 'main:customer-services';
+  }
+  if (
+    str_starts_with($route_name, 'reg_core.public_information')
+    || str_starts_with($route_name, 'reg_core.tender')
+    || str_starts_with($route_name, 'reg_core.job')
+    || str_starts_with($route_name, 'reg_core.publication')
+  ) {
+    return 'main:public-information';
+  }
+  if (str_starts_with($route_name, 'reg_core.sports')) {
+    return 'main:sports';
+  }
+  if (str_starts_with($route_name, 'reg_core.video')) {
+    return 'main:media-center';
+  }
+  if (in_array($route_name, ['reg_core.contact', 'reg_core.complaints'], TRUE)) {
+    return 'main:contact';
+  }
+  return '';
+}
+
+/**
+ * Builds an administrator-managed menu with access and active-trail handling.
+ */
+function reg_theme_build_menu(string $menu_name, int $max_depth): array {
+  try {
+    $menu_tree = \Drupal::menuTree();
+    $parameters = $menu_tree->getCurrentRouteMenuTreeParameters($menu_name)
+      ->setMinDepth(1)
+      ->setMaxDepth($max_depth);
+    $tree = $menu_tree->load($menu_name, $parameters);
+    $tree = $menu_tree->transform($tree, [
+      ['callable' => 'menu.default_tree_manipulators:checkAccess'],
+      ['callable' => 'menu.default_tree_manipulators:generateIndexAndSort'],
+    ]);
+    $build = $menu_tree->build($tree);
+  }
+  catch (\Exception) {
+    $build = [];
+  }
+  $build['#cache']['contexts'][] = 'languages:language_interface';
+  $build['#cache']['contexts'][] = 'route.menu_active_trails:' . $menu_name;
+  $build['#cache']['tags'][] = 'config:system.menu.' . $menu_name;
+  return $build;
+}
+
+/**
+ * Loads homepage service items from structured content when available.
+ */
+function reg_theme_service_items(array $fallback): array {
+  $nodes = reg_theme_load_nodes('reg_service', 8, 'field_reg_order', 'ASC');
+  if (!$nodes) {
+    return $fallback;
+  }
+
+  $items = [];
+  $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+  foreach ($nodes as $node) {
+    if ($node->hasTranslation($langcode) && $node->getTranslation($langcode)->isPublished()) {
+      $node = $node->getTranslation($langcode);
+    }
+    $items[] = [
+      'eyebrow' => reg_theme_field($node, 'field_reg_service_category') ?: 'Service',
+      'title' => $node->label(),
+      'description' => reg_theme_field($node, 'field_reg_summary'),
+      'url' => reg_theme_link_field($node, 'field_reg_url') ?: $node->toUrl()->toString(),
+    ];
+  }
+  return $items;
+}
+
+/**
+ * Loads outage items from structured content.
+ */
+function reg_theme_outage_items(): array {
+  $result = ['current' => [], 'planned' => []];
+  try {
+    $repository = \Drupal::service(\Drupal\reg_core\Outage\OutageRepositoryInterface::class);
+    foreach (['current', 'planned'] as $mode) {
+      foreach (array_slice($repository->getOutages(['mode' => $mode])->outages, 0, 3) as $outage) {
+        $start = !empty($outage['start_time']) ? new \DateTimeImmutable($outage['start_time']) : NULL;
+        $end = !empty($outage['expected_restoration']) ? new \DateTimeImmutable($outage['expected_restoration']) : NULL;
+        $result[$mode][] = [
+          'title' => $outage['network_element'] ?: $outage['title'],
+          'description' => implode(' · ', array_slice($outage['districts'] ?? [], 0, 3)),
+          'date' => $start ? strtoupper($start->format('d M')) . ($end ? ' · ' . $start->format('H:i') . '–' . $end->format('H:i') : '') : '',
+          'url' => \Drupal\Core\Url::fromRoute('reg_core.outage_detail', ['outage_id' => $outage['outage_id']])->toString(),
+        ];
+      }
+    }
+  }
+  catch (\Throwable) {
+    // Keep the homepage available during database updates.
+  }
+  return $result;
+}
+
+/**
+ * Loads news items from structured content.
+ */
+function reg_theme_news_items(): array {
+  try {
+    if (\Drupal::hasService('reg_core.news_repository')) {
+      return \Drupal::service('reg_core.news_repository')->homepage();
+    }
+  }
+  catch (\Exception) {
+    // Keep the homepage available while database updates are pending.
+  }
+  return ['primary' => [], 'secondary' => [], 'cache_tags' => ['node_list:reg_news']];
+}
+
+/**
+ * Implements hook_preprocess_node().
+ */
+function reg_theme_preprocess_node(array &$variables): void {
+  $node = $variables['node'] ?? NULL;
+  if (!$node instanceof NodeInterface || $node->bundle() !== 'reg_news' || ($variables['view_mode'] ?? '') !== 'full') {
+    return;
+  }
+
+  /** @var \Drupal\reg_core\News\NewsRepositoryInterface $repository */
+  $repository = \Drupal::service('reg_core.news_repository');
+  $news = $repository->article($node);
+  $variables['news'] = $news;
+  $variables['#cache']['contexts'][] = 'languages:language_content';
+  $variables['#cache']['contexts'][] = 'user.node_grants:view';
+  $variables['#cache']['tags'] = array_values(array_unique(array_merge($variables['#cache']['tags'] ?? [], $news['cache_tags'])));
+}
+
+/**
+ * Loads tender items from structured content.
+ */
+function reg_theme_tender_items(): array {
+  try {
+    if (\Drupal::hasService('reg_core.public_information_repository')) {
+      return \Drupal::service('reg_core.public_information_repository')->homepageTenders(3);
+    }
+  }
+  catch (\Exception) {
+    // Keep the completed homepage available during updates or cache rebuilds.
+  }
+  return [];
+}
+
+/**
+ * Loads sports items from structured content.
+ */
+function reg_theme_sports_items(): array {
+  try {
+    if (\Drupal::hasService('reg_core.sports_repository')) {
+      return \Drupal::service('reg_core.sports_repository')->homepageHighlights();
+    }
+  }
+  catch (\Exception) {
+    // Keep the completed homepage available during updates or cache rebuilds.
+  }
+  return [];
+}
+
+/**
+ * Loads published nodes when a structured bundle exists.
+ *
+ * @return \Drupal\node\NodeInterface[]
+ */
+function reg_theme_load_nodes(string $bundle, int $limit, string $sort, string $direction): array {
+  $type = \Drupal::entityTypeManager()->getStorage('node_type')->load($bundle);
+  if (!$type) {
+    return [];
+  }
+
+  try {
+    $storage = \Drupal::entityTypeManager()->getStorage('node');
+    $query = $storage->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('type', $bundle)
+      ->condition('status', NodeInterface::PUBLISHED)
+      ->sort($sort, $direction)
+      ->range(0, $limit);
+    $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+    $nodes = [];
+    foreach ($storage->loadMultiple($query->execute()) as $node) {
+      if ($node->hasTranslation($langcode) && $node->getTranslation($langcode)->isPublished()) {
+        $node = $node->getTranslation($langcode);
+      }
+      $nodes[] = $node;
+    }
+    return $nodes;
+  }
+  catch (\Exception) {
+    return [];
+  }
+}
+
+/**
+ * Returns a plain text field value.
+ */
+function reg_theme_field(NodeInterface $node, string $field_name): string {
+  if (!$node->hasField($field_name) || $node->get($field_name)->isEmpty()) {
+    return '';
+  }
+  $value = $node->get($field_name)->first()?->get('value')->getValue();
+  return trim(strip_tags((string) $value));
+}
+
+/**
+ * Returns a formatted datetime field value.
+ */
+function reg_theme_date_field(NodeInterface $node, string $field_name): string {
+  $value = reg_theme_field($node, $field_name);
+  if ($value === '') {
+    return '';
+  }
+  try {
+    $date = new DrupalDateTime($value, 'UTC');
+    return \Drupal::service('date.formatter')->format($date->getTimestamp(), 'medium');
+  }
+  catch (\Exception) {
+    return $value;
+  }
+}
+
+/**
+ * Returns a link field as a URL string.
+ */
+function reg_theme_link_field(NodeInterface $node, string $field_name): string {
+  if (!$node->hasField($field_name) || $node->get($field_name)->isEmpty()) {
+    return '';
+  }
+  $uri = (string) $node->get($field_name)->first()?->get('uri')->getValue();
+  if ($uri === '') {
+    return '';
+  }
+  try {
+    return Url::fromUri($uri)->toString();
+  }
+  catch (\Exception) {
+    return $uri;
+  }
+}
+
+/**
+ * Returns a route URL, with a path fallback during early installation.
+ */
+function reg_theme_route(string $route_name, string $fallback): string {
+  try {
+    return Url::fromRoute($route_name)->toString();
+  }
+  catch (\Exception) {
+    return $fallback;
+  }
+}

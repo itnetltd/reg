@@ -1,0 +1,28 @@
+.reg-tender-admin-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.reg-tender-admin-filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(12rem, 1fr));
+  align-items: end;
+  gap: 1rem;
+  margin-block: 1rem 1.5rem;
+  padding: 1.25rem;
+  border: 1px solid #d7d7d7;
+  border-radius: .4rem;
+  background: #f7f7f7;
+}
+
+.reg-tender-admin-filters .form-item { margin: 0; }
+.reg-tender-admin-filters .form-actions { display: flex; align-items: center; gap: .5rem; margin: 0; }
+
+@media (max-width: 1100px) {
+  .reg-tender-admin-filters { grid-template-columns: repeat(2, minmax(12rem, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  .reg-tender-admin-filters { grid-template-columns: 1fr; }
+}

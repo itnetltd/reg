@@ -1,0 +1,68 @@
+<div class="reg-faq-admin">
+  <div class="reg-faq-admin__intro">
+    <p>{{ 'Manage approved answers, translations, source traceability, review flags, related actions, and publication state.'|t }}</p>
+    <a class="button button--primary" href="{{ add_url }}">{{ 'Add FAQ'|t }}</a>
+  </div>
+
+  <form class="reg-faq-admin__filters" action="{{ clear_url }}" method="get">
+    <div>
+      <label for="faq-admin-query">{{ 'Question'|t }}</label>
+      <input id="faq-admin-query" name="q" type="search" value="{{ filters.q }}">
+    </div>
+    <div>
+      <label for="faq-admin-category">{{ 'Category'|t }}</label>
+      <select id="faq-admin-category" name="category">
+        <option value="">{{ 'All categories'|t }}</option>
+        {% for id, label in categories %}<option value="{{ id }}"{{ filters.category == id ? ' selected' }}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="faq-admin-review">{{ 'Review status'|t }}</label>
+      <select id="faq-admin-review" name="review_status">
+        <option value="">{{ 'All review statuses'|t }}</option>
+        {% for id, label in review_statuses %}<option value="{{ id }}"{{ filters.review_status == id ? ' selected' }}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="faq-admin-language">{{ 'Language'|t }}</label>
+      <select id="faq-admin-language" name="langcode">
+        <option value="">{{ 'All languages'|t }}</option>
+        {% for id, label in languages %}<option value="{{ id }}"{{ filters.langcode == id ? ' selected' }}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="faq-admin-published">{{ 'Publication'|t }}</label>
+      <select id="faq-admin-published" name="published">
+        <option value="">{{ 'Published and draft'|t }}</option>
+        <option value="published"{{ filters.published == 'published' ? ' selected' }}>{{ 'Published'|t }}</option>
+        <option value="draft"{{ filters.published == 'draft' ? ' selected' }}>{{ 'Draft / unpublished'|t }}</option>
+      </select>
+    </div>
+    <div class="reg-faq-admin__filter-actions">
+      <button class="button" type="submit">{{ 'Filter'|t }}</button>
+      <a href="{{ clear_url }}">{{ 'Clear'|t }}</a>
+    </div>
+  </form>
+
+  <p>{{ '@count FAQ translation row(s)'|t({'@count': rows|length}) }}</p>
+  <div class="reg-faq-admin__table-wrap">
+    <table>
+      <thead><tr><th>{{ 'Question'|t }}</th><th>{{ 'Category'|t }}</th><th>{{ 'Language'|t }}</th><th>{{ 'Review Status'|t }}</th><th>{{ 'Last Updated'|t }}</th><th>{{ 'Published'|t }}</th><th>{{ 'Edit'|t }}</th></tr></thead>
+      <tbody>
+        {% for row in rows %}
+          <tr>
+            <td><a href="{{ row.question_url }}">{{ row.question }}</a></td>
+            <td>{{ row.category }}</td>
+            <td>{{ row.language }}</td>
+            <td><span class="reg-faq-admin__review reg-faq-admin__review--{{ row.review_status_id }}">{{ row.review_status }}</span></td>
+            <td>{{ row.changed }}</td>
+            <td>{{ row.published ? 'Yes'|t : 'No'|t }}</td>
+            <td><a href="{{ row.edit_url }}">{{ 'Edit'|t }}</a></td>
+          </tr>
+        {% else %}
+          <tr><td colspan="7">{{ 'No FAQs match the selected filters.'|t }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>

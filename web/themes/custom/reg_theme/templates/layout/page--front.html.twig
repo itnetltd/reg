@@ -1,0 +1,119 @@
+<div class="site-shell site-shell--front">
+  {% include '@reg_theme/partials/header.html.twig' with {reg_header_front: true} %}
+
+  {{ page.public_alert }}
+
+  <main id="main-content" tabindex="-1">
+    <section class="hero">
+      {{ page.hero }}
+    </section>
+
+    {{ page.homepage_stats }}
+
+    <section class="outage-lookup" aria-labelledby="outage-lookup-title">
+      <div class="reg-container outage-lookup__inner">
+        <div>
+          <span class="section-kicker">{{ 'Customer service'|t }}</span>
+          <h2 id="outage-lookup-title">{{ 'Check an outage in your area'|t }}</h2>
+          <p>{{ 'Search current and planned electricity interruption notices by location.'|t }}</p>
+        </div>
+        <form action="{{ reg_links.outages }}" method="get" class="outage-lookup__form">
+          <label class="visually-hidden" for="homepage-outage-location">{{ 'District, sector or area'|t }}</label>
+          <input id="homepage-outage-location" name="search" type="search" placeholder="{{ 'District, sector, feeder or area'|t }}">
+          <button type="submit">{{ 'Search outages'|t }}</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="section section--services">
+      <div class="reg-container">
+        <div class="section-heading"><span class="section-kicker">{{ 'Immediate actions'|t }}</span><h2>{{ 'Quick Services'|t }}</h2><p>{{ 'Access the most requested REG and EUCL services through one consistent gateway.'|t }}</p></div>
+        {% if page.quick_services %}{{ page.quick_services }}{% else %}
+          <div class="service-grid">
+            {% for item in reg_fallback.services %}
+              {{ include('reg_theme:service-card', {item: item}, with_context = false) }}
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="section section--status">
+      <div class="reg-container">
+        <div class="section-heading section-heading--split"><div><span class="section-kicker">{{ 'Outage Center'|t }}</span><h2>{{ 'Service Status'|t }}</h2><p>{{ 'Latest published electricity interruption notices from Rwanda Energy Group.'|t }}</p></div><div class="tabs" role="tablist"><button type="button" class="is-active" data-reg-tab="current">{{ 'Current outages'|t }}</button><button type="button" data-reg-tab="planned">{{ 'Planned outages'|t }}</button></div></div>
+        {% if page.service_status %}{{ page.service_status }}{% else %}
+          <div class="status-list" data-reg-tab-panel="current">
+            {% for item in reg_fallback.status.current %}{{ include('reg_theme:status-item', {item: item}, with_context = false) }}{% else %}<div class="outage-home-empty"><strong>{{ 'No current outages published'|t }}</strong><p>{{ 'There are no active interruption notices at this time.'|t }}</p><a href="{{ reg_links.outages }}">{{ 'View Outage Center'|t }}</a></div>{% endfor %}
+          </div>
+          <div class="status-list" data-reg-tab-panel="planned" hidden>{% for item in reg_fallback.status.planned %}{{ include('reg_theme:status-item', {item: item}, with_context = false) }}{% else %}<div class="outage-home-empty"><strong>{{ 'No planned outages published'|t }}</strong><p>{{ 'There are no future interruption notices at this time.'|t }}</p></div>{% endfor %}</div>
+          <a class="text-link" href="{{ reg_links.outages }}">{{ 'View the Outage Center'|t }} <span aria-hidden="true">→</span></a>
+        {% endif %}
+      </div>
+    </section>
+
+    {{ page.energy_awareness }}
+
+    <section class="section section--news">
+      <div class="reg-container">
+        <div class="section-heading section-heading--split section-heading--homepage-compact"><div><span class="section-kicker">{{ 'Public communication'|t }}</span><h2>{{ 'News & Insights'|t }}</h2><p>{{ 'Latest approved updates, developments and corporate announcements.'|t }}</p></div><a class="text-link" href="{{ path('reg_core.news') }}">{{ 'View all news'|t }} <span aria-hidden="true">→</span></a></div>
+        {% if page.news %}{{ page.news }}{% else %}
+          {% include '@reg_core/reg-news-homepage.html.twig' with {content: reg_fallback.news, view_all_url: path('reg_core.news')} only %}
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="section section--tenders">
+      <div class="reg-container">
+        <div class="section-heading"><span class="section-kicker">{{ 'Procurement'|t }}</span><h2>{{ 'Tenders'|t }}</h2><p>{{ 'Latest procurement opportunities, clarifications and official links.'|t }}</p></div>
+        {% if page.tenders %}{{ page.tenders }}{% else %}
+          {% include '@reg_core/reg-tender-homepage.html.twig' with {items: reg_fallback.tenders, view_all_url: path('reg_core.tenders')} only %}
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="section sports-section">
+      <div class="reg-container">
+        <div class="section-heading section-heading--split"><div><span class="section-kicker section-kicker--light">{{ 'REG Sports'|t }}</span><h2>{{ 'Powering the game'|t }}</h2><p>{{ 'Dedicated coverage for REG Basketball Men, Basketball Women and Volleyball.'|t }}</p></div><a class="button button--ghost" href="/sports">{{ 'Open Sports Portal'|t }}</a></div>
+        <div class="sports-grid">
+          {% if reg_fallback.sports %}
+            {% for item in reg_fallback.sports %}
+              <a class="sports-card{{ item.image.url ? ' sports-card--image' }}{{ item.kind == 'result' ? ' sports-card--result sports-result-card' }}" href="{{ item.url|default('/sports') }}">
+                {% if item.image.url %}
+                  <img class="sports-card__image sports-result-card__image" src="{{ item.image.url }}"{% if item.image.srcset %} srcset="{{ item.image.srcset }}" sizes="{{ item.image.sizes }}"{% endif %} alt="{{ item.image.alt }}" loading="lazy">
+                  <span class="sports-card__overlay sports-result-card__overlay" aria-hidden="true"></span>
+                {% endif %}
+                <span class="sports-card__content sports-result-card__content">
+                  <span class="sports-card__kicker">{{ item.team }}</span>
+                  <h3>{{ item.title }}</h3>
+                  {% if item.result_label %}<strong class="sports-card__status">{{ item.result_label }}</strong>{% endif %}
+                  {% if item.meta %}<small>{{ item.meta }}</small>{% endif %}
+                  {% if item.kind == 'result' %}<span class="sports-card__link">{{ 'View result'|t }} <span aria-hidden="true">→</span></span>{% endif %}
+                </span>
+              </a>
+            {% endfor %}
+          {% else %}
+            <div class="empty-state">{{ 'Sports highlights will appear when approved fixtures, results or stories are published.'|t }}</div>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+    {{ page.featured_video }}
+
+    <section class="section partners-section">
+      <div class="reg-container">
+        <div class="section-heading section-heading--center"><span class="section-kicker">{{ 'Institutional ecosystem'|t }}</span><h2>{{ 'Our Partners'|t }}</h2><p>{{ 'Organizations working with REG to advance Rwanda’s energy sector.'|t }}</p></div>
+        {{ page.partners }}
+      </div>
+    </section>
+
+    <section class="section contact-cta">
+      <div class="reg-container contact-cta__inner"><div><span class="section-kicker section-kicker--light">{{ 'Need assistance?'|t }}</span><h2>{{ 'Use an official REG support channel'|t }}</h2><p>{{ 'Browse approved FAQs, find a branch or contact the call center for unresolved customer-service questions.'|t }}</p></div><div><a class="button button--light" href="{{ reg_links.faq }}">{{ 'Browse FAQs'|t }}</a><a class="button button--ghost" href="/contact">{{ 'Contact REG'|t }}</a></div></div>
+    </section>
+
+    <div class="front-system-content">{{ page.content }}</div>
+  </main>
+
+  {% include '@reg_theme/partials/footer.html.twig' %}
+  <div class="floating-actions"><button class="back-to-top" type="button" data-reg-back-to-top aria-label="{{ 'Back to top'|t }}">↑</button></div>
+</div>

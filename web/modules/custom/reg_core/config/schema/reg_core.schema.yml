@@ -1,0 +1,239 @@
+reg_core.settings:
+  type: config_object
+  label: 'REG website settings'
+  mapping:
+    support:
+      type: mapping
+      label: 'Customer support'
+      mapping:
+        call_center:
+          type: string
+          label: 'Call center number'
+        complaint_mode:
+          type: string
+          label: 'Complaint routing mode'
+        complaint_url:
+          type: uri
+          label: 'Complaint URL'
+        fault_reporting_url:
+          type: uri
+          label: 'Fault reporting URL'
+        complaint_email:
+          type: email
+          label: 'Complaint support email'
+        complaint_api_endpoint:
+          type: uri
+          label: 'Approved complaint API endpoint placeholder'
+        complaint_integration_enabled:
+          type: boolean
+          label: 'Enable approved complaint integration'
+        general_email:
+          type: email
+          label: 'General contact email'
+        general_telephone:
+          type: string
+          label: 'General contact telephone'
+        organization_name:
+          type: string
+          label: 'Contact organization name'
+        address_lines:
+          type: sequence
+          label: 'Head office address lines'
+          sequence:
+            type: string
+        postal_address:
+          type: string
+          label: 'Postal address'
+        reg_emails:
+          type: sequence
+          label: 'REG contact emails'
+          sequence:
+            type: email
+        eucl_emails:
+          type: sequence
+          label: 'EUCL contact emails'
+          sequence:
+            type: email
+        edcl_emails:
+          type: sequence
+          label: 'EDCL contact emails'
+          sequence:
+            type: email
+        contact_source_url:
+          type: uri
+          label: 'Official contact source URL'
+    links:
+      type: mapping
+      label: 'Official service links'
+      mapping:
+        online_services: { type: uri, label: 'Online services URL' }
+        new_connection: { type: uri, label: 'New connection URL' }
+        payments: { type: uri, label: 'Payments URL' }
+        gis: { type: uri, label: 'GIS URL' }
+        outage_source: { type: uri, label: 'Outage source URL' }
+        recruitment: { type: uri, label: 'Recruitment URL' }
+        procurement: { type: uri, label: 'Procurement URL' }
+        branch_contacts: { type: uri, label: 'Branch contacts URL' }
+    dms:
+      type: mapping
+      label: 'GE Distribution Management System integration'
+      mapping:
+        driver:
+          type: string
+          label: 'DMS client driver'
+        api_base_url:
+          type: uri
+          label: 'DMS API base URL'
+        outages_path:
+          type: string
+          label: 'DMS outages endpoint path'
+        authentication_method:
+          type: string
+          label: 'Authentication method'
+        client_id:
+          type: string
+          label: 'Client ID placeholder'
+        credential_environment_variable:
+          type: string
+          label: 'Credential environment variable name'
+        request_timeout:
+          type: integer
+          label: 'Request timeout in seconds'
+        synchronization_interval:
+          type: integer
+          label: 'Synchronization interval in seconds'
+        cache_lifetime:
+          type: integer
+          label: 'Outage cache lifetime in seconds'
+    outages:
+      type: mapping
+      label: 'Manual outage announcements'
+      mapping:
+        source: { type: string, label: 'Current internal source adapter' }
+        default_safety_message: { type: text, label: 'Default public safety message' }
+        default_customer_message: { type: text, label: 'Default customer support message' }
+    public_information:
+      type: mapping
+      label: 'Public Information Hub settings'
+      mapping:
+        enable_tender_submission:
+          type: boolean
+          label: 'Enable tender submission handoff'
+        job_application_mode:
+          type: string
+          label: 'Job application mode'
+        enable_tender_sms:
+          type: boolean
+          label: 'Enable approved tender SMS collection'
+        allow_zip_uploads:
+          type: boolean
+          label: 'Allow ZIP official documents'
+        results_per_page:
+          type: integer
+          label: 'Public Information Hub results per page'
+    sports:
+      type: mapping
+      label: 'REG Sports Portal settings'
+      mapping:
+        data_source:
+          type: string
+          label: 'Sports data source'
+        statistics_api_base_url:
+          type: uri
+          label: 'Future approved sports statistics API base URL'
+        social_embed_enabled:
+          type: boolean
+          label: 'Enable approved sports social embeds'
+        results_per_page:
+          type: integer
+          label: 'Sports results per page'
+    branches:
+      type: mapping
+      label: 'Branch Locator settings'
+      mapping:
+        map_provider:
+          type: string
+          label: 'Approved map provider adapter'
+        results_per_page:
+          type: integer
+          label: 'Branches per page'
+    governance:
+      type: mapping
+      label: 'Content governance review periods'
+      mapping:
+        branch_review_days: { type: integer, label: 'Branch review period in days' }
+        faq_review_days: { type: integer, label: 'FAQ review period in days' }
+        service_review_days: { type: integer, label: 'Service review period in days' }
+    analytics:
+      type: mapping
+      label: 'Privacy-preserving analytics'
+      mapping:
+        enabled: { type: boolean, label: 'Enable approved external analytics adapter' }
+        provider: { type: string, label: 'Analytics provider adapter' }
+        measurement_id: { type: string, label: 'Provider measurement identifier placeholder' }
+        privacy_mode: { type: string, label: 'Analytics privacy mode' }
+        local_aggregate_enabled: { type: boolean, label: 'Enable local application-event aggregates' }
+        dashboard_cache_seconds: { type: integer, label: 'Dashboard cache lifetime in seconds' }
+    tariffs:
+      type: mapping
+      label: 'Bill estimator assumptions'
+      mapping:
+        approved_schedule_effective: { type: string, label: 'Approved tariff schedule effective date' }
+        residential: { type: float, label: 'Residential rate' }
+        commercial: { type: float, label: 'Commercial rate' }
+        industrial: { type: float, label: 'Industrial rate' }
+        fixed_charge: { type: float, label: 'Fixed charge' }
+        updated: { type: string, label: 'Tariff validation date' }
+    carbon:
+      type: mapping
+      label: 'Carbon calculator assumptions'
+      mapping:
+        emission_factor: { type: float, label: 'Emission factor' }
+        updated: { type: string, label: 'Emission factor validation date' }
+
+reg_core.social_media:
+  type: config_object
+  label: 'REG social media settings'
+  mapping:
+    platforms:
+      type: mapping
+      label: 'Official social media platforms'
+      mapping:
+        x:
+          type: reg_core.social_media_platform
+          label: 'X'
+        facebook:
+          type: reg_core.social_media_platform
+          label: 'Facebook'
+        youtube:
+          type: reg_core.social_media_platform
+          label: 'YouTube'
+        instagram:
+          type: reg_core.social_media_platform
+          label: 'Instagram'
+        linkedin:
+          type: reg_core.social_media_platform
+          label: 'LinkedIn'
+
+reg_core.social_media_platform:
+  type: mapping
+  label: 'Social media platform'
+  mapping:
+    url:
+      type: uri
+      label: 'Official profile URL'
+    display_name:
+      type: label
+      label: 'Official display name'
+    enabled:
+      type: boolean
+      label: 'Enabled'
+    show_utility:
+      type: boolean
+      label: 'Show in utility bar'
+    show_footer:
+      type: boolean
+      label: 'Show in footer'
+    show_homepage_feed:
+      type: boolean
+      label: 'Show feed on homepage'

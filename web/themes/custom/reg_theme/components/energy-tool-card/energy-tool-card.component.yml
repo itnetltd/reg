@@ -1,0 +1,8 @@
+name: Energy tool card
+status: stable
+props:
+  type: object
+  required: [tool]
+  properties:
+    tool:
+      type: object

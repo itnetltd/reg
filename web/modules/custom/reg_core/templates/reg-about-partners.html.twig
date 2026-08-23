@@ -1,0 +1,15 @@
+{% if partners %}
+  <div class="reg-about-partners">
+    {% for partner in partners %}
+      {% set tag = partner.url.url ? 'a' : 'article' %}
+      <{{ tag }} class="reg-about-partner"{% if partner.url.url %} href="{{ partner.url.url }}"{% if partner.url.external %} target="_blank" rel="noopener noreferrer"{% endif %}{% endif %}>
+        {% if partner.logo.url %}<img src="{{ partner.logo.url }}" alt="{{ partner.logo.alt }}" loading="lazy">{% else %}<span class="reg-about-partner__monogram" aria-hidden="true">{{ partner.name|slice(0, 3)|upper }}</span>{% endif %}
+        <strong>{{ partner.name }}</strong>
+        {% if partner.description %}<small>{{ partner.description }}</small>{% endif %}
+        {% if partner.url.url %}<span class="visually-hidden">{{ 'Visit partner website'|t }}</span>{% endif %}
+      </{{ tag }}>
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="reg-about-empty">{{ 'No approved partner records are currently published in this group.'|t }}</p>
+{% endif %}

@@ -1,0 +1,72 @@
+<header class="site-header{{ reg_header_front ? ' site-header--front' }}" data-reg-header>
+  <div class="topbar">
+    <div class="reg-container topbar__inner">
+      <nav class="utility-navigation" aria-label="{{ 'Utility navigation'|t }}">
+        {{ reg_utility_menu }}
+      </nav>
+
+      <div class="topbar__actions">
+        {% if reg_social_links.utility %}
+          {% include '@reg_core/reg-social-links.html.twig' with {
+            items: reg_social_links.utility,
+            variant: 'utility'
+          } only %}
+        {% endif %}
+        {% include '@reg_theme/partials/header-search.html.twig' with {
+          search_id: 'reg-utility-search',
+          search_variant: 'utility',
+          reg_search_url: reg_search_url
+        } only %}
+        <div class="topbar__language">
+          {% include '@reg_theme/partials/language-switcher.html.twig' %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mainbar">
+    <div class="reg-container mainbar__inner">
+      <div class="site-branding">
+        <a class="site-branding__link" href="{{ path('<front>') }}" aria-label="{{ 'Rwanda Energy Group home'|t }}">
+          <img class="site-branding__logo" src="{{ reg_logo_url }}" alt="{{ 'Rwanda Energy Group'|t }}" width="104" height="48">
+        </a>
+      </div>
+
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="reg-primary-nav" data-reg-menu-toggle>
+        <span class="menu-toggle__label">{{ 'Menu'|t }}</span>
+        <span class="menu-toggle__bars" aria-hidden="true"></span>
+      </button>
+
+      <button class="nav-scrim" type="button" tabindex="-1" aria-label="{{ 'Close menu'|t }}" data-reg-nav-scrim></button>
+
+      <div id="reg-primary-nav" class="primary-nav-wrap" data-reg-menu>
+        <div class="mobile-nav__tools">
+          {% include '@reg_theme/partials/header-search.html.twig' with {
+            search_id: 'reg-mobile-search',
+            search_variant: 'mobile',
+            reg_search_url: reg_search_url
+          } only %}
+          <div class="mobile-nav__language">
+            {% include '@reg_theme/partials/language-switcher.html.twig' %}
+          </div>
+        </div>
+
+        <nav class="primary-navigation" aria-label="{{ 'Primary navigation'|t }}" data-reg-primary-navigation>
+          {{ reg_main_menu }}
+        </nav>
+
+        <div class="mobile-nav__utility">
+          <span class="mobile-nav__label">{{ 'Quick links'|t }}</span>
+          <nav aria-label="{{ 'Mobile utility navigation'|t }}">
+            {{ reg_utility_menu_mobile }}
+          </nav>
+        </div>
+
+        <a class="mobile-nav__call" href="tel:{{ reg_call_center_uri }}">
+          <span>{{ 'Call REG'|t }}</span>
+          <strong>{{ reg_call_center }}</strong>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>

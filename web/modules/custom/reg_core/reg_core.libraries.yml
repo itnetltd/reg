@@ -1,0 +1,211 @@
+portal:
+  version: 2.x
+  css:
+    component:
+      css/reg-core.css: {}
+
+homepage_statistics:
+  version: 2.x
+  css:
+    component:
+      css/homepage-statistics.css: {}
+  js:
+    js/homepage-statistics.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+energy_at_glance:
+  version: 1.x
+  css:
+    component:
+      css/energy-at-glance.css: {}
+  dependencies:
+    - reg_core/homepage_statistics
+
+homepage_hero:
+  version: 2.x
+  css:
+    component:
+      css/homepage-hero.css: {}
+  js:
+    js/homepage-hero.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+about:
+  version: 1.x
+  css:
+    component:
+      css/about.css: {}
+  dependencies:
+    - reg_core/section_hero
+
+faq_assistant:
+  version: 2.x
+  css:
+    component:
+      css/faq-assistant.css: {}
+  js:
+    js/faq-assistant.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+faq_page:
+  version: 1.x
+  css:
+    component:
+      css/faq-page.css: {}
+
+faq_admin:
+  version: 1.x
+  css:
+    component:
+      css/faq-admin.css: {}
+
+branch_admin:
+  version: 1.x
+  css:
+    component:
+      css/branch-admin.css: {}
+
+outage_center:
+  version: 1.x
+  css:
+    component:
+      css/outage-center.css: {}
+
+public_information:
+  version: 1.x
+  css:
+    component:
+      css/public-information.css: {}
+
+plans:
+  version: 1.x
+  css:
+    component:
+      css/plans.css: {}
+
+tenders:
+  version: 1.x
+  css:
+    component:
+      css/tenders.css: {}
+  dependencies:
+    - reg_core/public_information
+
+tenders_admin:
+  version: 1.x
+  css:
+    component:
+      css/tenders-admin.css: {}
+
+sports_portal:
+  version: 1.x
+  css:
+    component:
+      css/sports-portal.css: {}
+
+customer_support:
+  version: 1.x
+  css:
+    component:
+      css/customer-support.css: {}
+  js:
+    js/branches.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/once
+
+admin_dashboard:
+  version: 1.x
+  css:
+    component:
+      css/admin-dashboard.css: {}
+
+analytics:
+  version: 1.x
+  js:
+    js/analytics.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/once
+
+featured_videos:
+  version: 1.x
+  css:
+    component:
+      css/featured-videos.css: {}
+  js:
+    js/featured-videos.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+section_hero:
+  version: 1.x
+  css:
+    component:
+      css/section-hero.css: {}
+
+newsroom:
+  version: 1.x
+  css:
+    component:
+      css/newsroom.css: {}
+  js:
+    js/newsroom.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+x_feed:
+  version: 1.x
+  css:
+    component:
+      css/x-feed.css: {}
+      css/x-feed-layout.css: {}
+
+newsroom_admin:
+  version: 1.x
+  css:
+    component:
+      css/newsroom-admin.css: {}
+public_alert:
+  version: 2.x
+  css:
+    component:
+      css/public-alert.css: {}
+  js:
+    js/public-alert.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+public_alert_admin:
+  css:
+    component:
+      css/public-alert-admin.css: {}
+
+what_we_do:
+  version: 1.x
+  css:
+    component:
+      css/what-we-do.css: {}
+  js:
+    js/what-we-do.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+supplier_portal:
+  version: 1.x
+  css:
+    component:
+      css/supplier-portal.css: {}
+      css/supplier-dashboard.css: {}

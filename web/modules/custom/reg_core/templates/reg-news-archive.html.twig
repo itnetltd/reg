@@ -1,0 +1,72 @@
+<div class="reg-newsroom" data-reg-newsroom>
+  {% set newsroom_hero = section_hero|default({})|merge({
+    eyebrow: 'Media Center'|t,
+    title: archive_heading|t,
+    description: archive_description|t
+  }) %}
+  {% include '@reg_core/reg-section-hero.html.twig' with {hero: newsroom_hero} only %}
+
+  <div class="reg-container reg-newsroom__body">
+    <form class="reg-news-filters" action="{{ path('reg_core.news') }}" method="get" data-reg-news-filter-form>
+      <label>
+        <span>{{ 'Search news'|t }}</span>
+        <input type="search" name="search" value="{{ filters.search }}" placeholder="{{ 'Search by title or topic'|t }}">
+      </label>
+      <label>
+        <span>{{ 'Category'|t }}</span>
+        <select name="category">
+          <option value="0">{{ 'All categories'|t }}</option>
+          {% for category in categories %}<option value="{{ category.id }}"{{ filters.category == category.id ? ' selected' }}>{{ category.label }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>
+        <span>{{ 'Year'|t }}</span>
+        <select name="year">
+          <option value="">{{ 'All years'|t }}</option>
+          {% for year in years %}<option value="{{ year }}"{{ filters.year == year ? ' selected' }}>{{ year }}</option>{% endfor %}
+        </select>
+      </label>
+      {% if departments %}
+        <label>
+          <span>{{ 'REG department'|t }}</span>
+          <select name="department">
+            <option value="">{{ 'All departments'|t }}</option>
+            {% for department in departments %}<option value="{{ department }}"{{ filters.department == department ? ' selected' }}>{{ department }}</option>{% endfor %}
+          </select>
+        </label>
+      {% endif %}
+      <div class="reg-news-filters__actions">
+        <button type="submit">{{ 'Apply filters'|t }}</button>
+        {% if filters.search or filters.category or filters.year or filters.department %}<a href="{{ path('reg_core.news') }}">{{ 'Clear filters'|t }}</a>{% endif %}
+      </div>
+    </form>
+
+    <p class="reg-newsroom__count" role="status">{{ '@count stories'|t({'@count': results_count}) }}</p>
+
+    {% if lead %}
+      <section class="reg-newsroom__featured" aria-labelledby="reg-newsroom-featured-title">
+        <span class="reg-newsroom__eyebrow">{{ 'Latest story'|t }}</span>
+        <article class="reg-news-lead reg-news-lead--archive">
+          <a class="reg-news-lead__media" href="{{ lead.url }}" aria-label="{{ 'Read @title'|t({'@title': lead.title}) }}">
+            {% if lead.image.render %}{{ lead.image.render }}{% else %}<span class="reg-news-image-fallback reg-news-image-fallback--lead" aria-hidden="true"><span>REG</span><strong>{{ 'News & Insights'|t }}</strong></span>{% endif %}
+          </a>
+          <div class="reg-news-lead__body">
+            <div class="reg-news-card__meta">{% if lead.category.label %}<span>{{ lead.category.label }}</span>{% endif %}{% if lead.date %}<time datetime="{{ lead.date_iso }}">{{ lead.date }}</time>{% endif %}</div>
+            <h2 id="reg-newsroom-featured-title"><a href="{{ lead.url }}">{{ lead.title }}</a></h2>
+            {% if lead.summary %}<p>{{ lead.summary }}</p>{% endif %}
+            <a class="reg-news-card__action" href="{{ lead.url }}">{{ 'Read story'|t }} <span aria-hidden="true">→</span></a>
+          </div>
+        </article>
+      </section>
+    {% endif %}
+
+    {% if items %}
+      <div class="reg-news-grid">
+        {% for item in items %}{% include '@reg_core/reg-news-card.html.twig' with {item: item, variant: 'card'} only %}{% endfor %}
+      </div>
+      {{ pager }}
+    {% elseif not lead %}
+      <div class="reg-news-empty"><h2>{{ 'No news found'|t }}</h2><p>{{ 'Try changing the filters or return later for published REG updates.'|t }}</p></div>
+    {% endif %}
+  </div>
+</div>

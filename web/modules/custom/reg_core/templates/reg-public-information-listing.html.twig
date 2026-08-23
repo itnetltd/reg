@@ -1,0 +1,147 @@
+{% if bundle == 'reg_tender' %}{{ attach_library('reg_core/tenders') }}{% endif %}
+<div class="reg-pi">
+  {% set listing_hero = section_hero|merge({eyebrow: 'Public Information'|t, title: heading, description: intro}) %}
+  {% if subscribe_url %}{% set listing_hero = listing_hero|merge({primary_cta: {label: 'Get tender alerts'|t, url: subscribe_url}}) %}{% endif %}
+  {% include '@reg_core/reg-section-hero.html.twig' with {hero: listing_hero} only %}
+
+  <div class="reg-container reg-pi__body">
+    {% if tabs %}
+      <nav class="reg-pi-tabs" aria-label="{{ heading }}">
+        {% for tab in tabs %}
+          <a href="{{ tab.url }}"{% if tab.active %} class="is-active" aria-current="page"{% endif %}>{{ tab.label }}</a>
+        {% endfor %}
+      </nav>
+    {% endif %}
+
+    <form class="reg-pi-filter" method="get" role="search">
+      <div class="reg-pi-filter__search">
+        <label for="reg-pi-q">{{ bundle == 'reg_tender' ? 'Keyword'|t : 'Search'|t }}</label>
+        <input id="reg-pi-q" name="q" type="search" maxlength="120" value="{{ filters.query }}" placeholder="{{ 'Title, reference or keyword'|t }}">
+      </div>
+      <div>
+        <label for="reg-pi-entity">{{ bundle == 'reg_tender' ? 'Entity'|t : 'Company'|t }}</label>
+        <select id="reg-pi-entity" name="entity">
+          <option value="">{{ 'All companies'|t }}</option>
+          {% for value, label in entity_options %}<option value="{{ value }}"{% if filters.entity == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      {% if category_options %}
+        <div>
+          <label for="reg-pi-category">{{ bundle == 'reg_tender' ? 'Category'|t : 'Publication type'|t }}</label>
+          <select id="reg-pi-category" name="category">
+            <option value="">{{ 'All types'|t }}</option>
+            {% for value, label in category_options %}<option value="{{ value }}"{% if filters.category == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+        </div>
+      {% endif %}
+      {% if status_options %}
+        <div>
+          <label for="reg-pi-status">{{ 'Status'|t }}</label>
+          <select id="reg-pi-status" name="status">
+            <option value="">{{ 'Route default'|t }}</option>
+            {% for value, label in status_options %}<option value="{{ value }}"{% if filters.status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+        </div>
+      {% endif %}
+      {% if bundle == 'reg_publication' or bundle == 'reg_tender' %}
+        <div>
+          <label for="reg-pi-year">{{ bundle == 'reg_tender' ? 'Publication year'|t : 'Year'|t }}</label>
+          <select id="reg-pi-year" name="year">
+            <option value="">{{ 'All years'|t }}</option>
+            {% for year in years %}<option value="{{ year }}"{% if filters.year == year %} selected{% endif %}>{{ year }}</option>{% endfor %}
+          </select>
+        </div>
+        {% if bundle == 'reg_tender' %}
+          <div>
+            <label for="reg-pi-closing">{{ 'Closing on or after'|t }}</label>
+            <input id="reg-pi-closing" name="closing" type="date" value="{{ filters.closing }}">
+          </div>
+        {% endif %}
+      {% else %}
+        <div>
+          <label for="reg-pi-from">{{ 'Published from'|t }}</label>
+          <input id="reg-pi-from" name="from" type="date" value="{{ filters.from }}">
+        </div>
+        <div>
+          <label for="reg-pi-to">{{ 'Published to'|t }}</label>
+          <input id="reg-pi-to" name="to" type="date" value="{{ filters.to }}">
+        </div>
+      {% endif %}
+      <div>
+        <label for="reg-pi-language">{{ 'File language'|t }}</label>
+        <select id="reg-pi-language" name="language">
+          <option value="">{{ 'All languages'|t }}</option>
+          {% for value, label in language_options %}<option value="{{ value }}"{% if filters.language == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="reg-pi-sort">{{ 'Sort by'|t }}</label>
+        <select id="reg-pi-sort" name="sort">
+          <option value="newest"{% if filters.sort == 'newest' %} selected{% endif %}>{{ 'Newest first'|t }}</option>
+          {% if bundle != 'reg_publication' %}<option value="deadline"{% if filters.sort == 'deadline' %} selected{% endif %}>{{ 'Deadline soonest'|t }}</option>{% endif %}
+          <option value="oldest"{% if filters.sort == 'oldest' %} selected{% endif %}>{{ 'Oldest first'|t }}</option>
+          <option value="title"{% if filters.sort == 'title' %} selected{% endif %}>{{ 'Title A–Z'|t }}</option>
+        </select>
+      </div>
+      <button type="submit">{{ 'Apply filters'|t }}</button>
+    </form>
+
+    <div class="reg-pi-results-heading" aria-live="polite">
+      <strong>{{ results_count }} {{ results_count == 1 ? 'result'|t : 'results'|t }}</strong>
+      {% if filters.query or filters.entity or filters.category or filters.status or filters.language or filters.from or filters.to or filters.year or filters.closing %}
+        <a href="?">{{ 'Clear filters'|t }}</a>
+      {% endif %}
+    </div>
+
+    {% if items %}
+      <div class="reg-pi-list">
+        {% for item in items %}
+          <article class="reg-pi-card">
+            <div class="reg-pi-card__top">
+              <span class="reg-pi-type">{{ item.category ?: item.kind }}</span>
+              {% if item.status %}<span class="reg-pi-badge reg-pi-badge--{{ item.status_key|clean_class }}">{{ item.status }}</span>{% endif %}
+              {% if bundle == 'reg_tender' and item.publication_channel %}<span class="reg-pi-channel">{{ item.publication_channel }}</span>{% elseif bundle == 'reg_job' and item.application_method %}<span class="reg-pi-channel">{{ item.application_method }}</span>{% endif %}
+            </div>
+            <h2><a href="{{ item.url }}">{{ item.title }}</a></h2>
+            <p>{{ item.summary }}</p>
+            <dl class="reg-pi-meta">
+              {% if item.reference %}<div><dt>{{ 'Reference'|t }}</dt><dd>{{ item.reference }}</dd></div>{% endif %}
+              {% if item.entity %}<div><dt>{{ 'Company'|t }}</dt><dd>{{ item.entity }}</dd></div>{% endif %}
+              {% if item.project and bundle == 'reg_tender' %}<div><dt>{{ 'Project'|t }}</dt><dd>{{ item.project }}</dd></div>{% endif %}
+              {% if item.date %}<div><dt>{{ bundle == 'reg_publication' ? 'Published'|t : 'Publication date'|t }}</dt><dd>{{ item.date }}</dd></div>{% endif %}
+              {% if item.closing_date %}<div><dt>{{ 'Deadline'|t }}</dt><dd>{{ item.closing_date }}</dd></div>{% endif %}
+            </dl>
+            {% if item.closes_in_days is not null %}
+              <p class="reg-pi-deadline">{% if item.closes_in_days == 0 %}{{ 'Closes today'|t }}{% else %}{{ 'Closes in @days days'|t({'@days': item.closes_in_days}) }}{% endif %}</p>
+            {% endif %}
+            <a class="reg-pi-card__link" href="{{ item.url }}">{{ bundle == 'reg_tender' ? 'View tender'|t : 'View details'|t }} <span aria-hidden="true">→</span></a>
+            {% if item.action.enabled and item.action.url %}<a class="reg-pi-card__action" href="{{ item.action.url }}"{% if item.action.external %} rel="noopener noreferrer"{% endif %}>{{ item.action.label }}{% if item.action.external %} ↗{% endif %}</a>{% endif %}
+            {% if item.supplier_ctas %}<div class="reg-pi-card__supplier"><a href="{{ item.supplier_ctas.register_url }}">{{ 'Register as supplier'|t }}</a> · <a href="{{ item.supplier_ctas.login_url }}">{{ 'Supplier login'|t }}</a></div>{% endif %}
+            {% if bundle == 'reg_tender' and item.primary_document.url %}<a class="reg-pi-card__download" href="{{ item.primary_document.url }}">{{ item.primary_document.type_key == 'terms_of_reference' ? 'Download Terms of Reference'|t : 'Download tender document'|t }}</a>{% endif %}
+          </article>
+        {% endfor %}
+      </div>
+      {{ pager }}
+    {% else %}
+      <div class="reg-pi-empty" role="status">
+        <h2>{{ 'Nothing matched yet'|t }}</h2>
+        <p>{{ empty_message }}</p>
+        <a href="?">{{ 'Clear filters'|t }}</a>
+      </div>
+    {% endif %}
+
+    {% if bundle == 'reg_tender' %}
+      <aside class="reg-pi-handoff">
+        <div><span class="reg-pi-kicker">{{ 'Bid submission'|t }}</span><h2>{{ 'Use the official procurement process'|t }}</h2></div>
+        <p>{{ 'Each notice identifies its authoritative submission channel. REG Online tenders use the authenticated supplier workspace; UMUCYO and other external tenders remain on their named platform.'|t }}</p>
+        {% if handoff.procurement_url %}<a class="reg-pi-button" href="{{ handoff.procurement_url }}">{{ 'Open official procurement system'|t }}</a>{% endif %}
+      </aside>
+    {% elseif bundle == 'reg_job' %}
+      <aside class="reg-pi-handoff">
+        <div><span class="reg-pi-kicker">{{ 'Applications'|t }}</span><h2>{{ 'Follow each official vacancy notice'|t }}</h2></div>
+        <p>{% if handoff.job_mode == 'disabled' %}{{ 'Online applications are currently disabled. Use only the contact and instructions in the published notice.'|t }}{% else %}{{ 'This website does not maintain a full applicant database. Follow the approved external application instructions for each vacancy.'|t }}{% endif %}</p>
+        {% if handoff.job_mode != 'disabled' and handoff.recruitment_url %}<a class="reg-pi-button" href="{{ handoff.recruitment_url }}">{{ 'Open recruitment system'|t }}</a>{% endif %}
+      </aside>
+    {% endif %}
+  </div>
+</div>

@@ -1,0 +1,133 @@
+administer reg website settings:
+  title: 'Administer REG website settings'
+  description: 'Manage REG service links, calculator assumptions and public support contacts.'
+  restrict access: true
+
+view reg faq unanswered report:
+  title: 'View unanswered REG FAQ searches'
+  description: 'Review aggregated, privacy-filtered FAQ searches that returned no approved answer.'
+  restrict access: true
+
+view reg public information reports:
+  title: 'View REG public information reports'
+  description: 'Review aggregate tender and publication document download counts.'
+  restrict access: true
+
+view reg translation report:
+  title: 'View REG translation status report'
+  description: 'Review missing, outdated, and pending public-content translations.'
+  restrict access: true
+
+view reg analytics dashboard:
+  title: 'View REG analytics dashboard'
+  description: 'View the aggregate REG website analytics overview.'
+  restrict access: true
+
+view reg customer service dashboard:
+  title: 'View REG customer-service dashboard'
+  restrict access: true
+
+view reg content dashboard:
+  title: 'View REG content-governance dashboard'
+  restrict access: true
+
+view reg procurement dashboard:
+  title: 'View REG procurement dashboard'
+  restrict access: true
+
+view reg recruitment dashboard:
+  title: 'View REG recruitment dashboard'
+  restrict access: true
+
+view reg publications dashboard:
+  title: 'View REG publications dashboard'
+  restrict access: true
+
+view reg sports dashboard:
+  title: 'View REG sports dashboard'
+  restrict access: true
+
+view reg operations dashboard:
+  title: 'View REG operational-integration dashboard'
+  restrict access: true
+
+export reg analytics reports:
+  title: 'Export REG aggregate analytics reports'
+  description: 'Export approved aggregate reports without visitor identifiers.'
+  restrict access: true
+
+administer reg procurement plans:
+  title: 'Administer REG procurement plans'
+  restrict access: true
+
+administer reg recruitment plans:
+  title: 'Administer REG recruitment plans'
+  restrict access: true
+
+override reg procurement plan defaults:
+  title: 'Override procurement plan defaults on new tenders'
+  restrict access: true
+
+override reg recruitment plan defaults:
+  title: 'Override recruitment plan defaults on new vacancies'
+  restrict access: true
+
+access reg supplier portal:
+  title: 'Access REG supplier portal'
+  restrict access: true
+
+submit reg bids:
+  title: 'Create and submit REG online bids'
+  restrict access: true
+
+review reg suppliers:
+  title: 'Review and verify supplier organizations'
+  restrict access: true
+
+access reg candidate portal:
+  title: 'Access REG candidate portal'
+  restrict access: true
+
+submit reg applications:
+  title: 'Create and submit REG online job applications'
+  restrict access: true
+
+access reg sports administration:
+  title: 'Access REG sports administration'
+  restrict access: true
+
+access reg communications administration:
+  title: 'Access REG communications administration'
+  restrict access: true
+
+access reg procurement administration:
+  title: 'Access REG procurement administration'
+  restrict access: true
+
+access reg hr administration:
+  title: 'Access REG HR administration'
+  restrict access: true
+
+access reg outage administration:
+  title: 'Access REG outage administration'
+  restrict access: true
+
+access reg customer service administration:
+  title: 'Access REG customer-service administration'
+  restrict access: true
+
+access reg energy administration:
+  title: 'Access REG energy-content administration'
+  restrict access: true
+
+change reg outage operational status:
+  title: 'Change REG outage operational status'
+  restrict access: true
+
+change reg procurement lifecycle:
+  title: 'Change REG procurement lifecycle status'
+  restrict access: true
+
+change reg recruitment lifecycle:
+  title: 'Change REG recruitment lifecycle status'
+  restrict access: true

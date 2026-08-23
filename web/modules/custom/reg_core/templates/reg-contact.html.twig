@@ -1,0 +1,30 @@
+<main class="reg-support reg-contact">
+  {% set contact_hero = section_hero|merge({description: 'Choose an official support channel. For urgent electricity support, call the REG contact centre.'|t, primary_cta: {label: 'Call @number'|t({'@number': call_center}), url: 'tel:' ~ call_center|replace({' ': '', '-': ''})}}) %}
+  {% include '@reg_core/reg-section-hero.html.twig' with {hero: contact_hero} only %}
+  <div class="reg-container">
+    <section class="reg-contact-main" aria-labelledby="reg-contact-heading">
+      <div>
+        <span class="reg-support__eyebrow">{{ 'Main contact'|t }}</span>
+        <h2 id="reg-contact-heading">{{ contact.organization }}</h2>
+        {% if contact.address_lines %}<address>{% for line in contact.address_lines %}{{ line }}{% if not loop.last %}<br>{% endif %}{% endfor %}</address>{% endif %}
+        {% if contact.postal_address %}<p>{{ contact.postal_address }}</p>{% endif %}
+      </div>
+      <dl class="reg-contact-directory">
+        <div><dt>{{ 'Call Center'|t }}</dt><dd><a href="tel:{{ call_center|replace({' ': '', '-': ''}) }}">{{ call_center }}</a></dd></div>
+        {% if contact.telephone %}<div><dt>{{ 'Telephone'|t }}</dt><dd><a href="tel:{{ contact.telephone_uri }}">{{ contact.telephone }}</a></dd></div>{% endif %}
+        {% for label, emails in {'REG': contact.reg_emails, 'EUCL': contact.eucl_emails, 'EDCL': contact.edcl_emails} %}
+          {% if emails %}<div><dt>{{ label }}</dt><dd>{% for email in emails %}<a href="mailto:{{ email }}">{{ email }}</a>{% endfor %}</dd></div>{% endif %}
+        {% endfor %}
+      </dl>
+      <a class="reg-support__button" href="{{ links.branches }}">{{ 'Find a branch'|t }} →</a>
+    </section>
+
+    <section class="reg-support-grid" aria-label="{{ 'Customer support options'|t }}">
+      <article><h2>{{ 'Call REG'|t }}</h2><p>{{ 'Speak to the contact centre for urgent support and service guidance.'|t }}</p><a href="tel:{{ call_center|replace({' ': '', '-': ''}) }}">{{ call_center }}</a></article>
+      <article><h2>{{ 'Branch Locator'|t }}</h2><p>{{ 'Find REG/EUCL service contacts across Rwanda.'|t }}</p><a href="{{ links.branches }}">{{ 'Find a branch'|t }} →</a></article>
+      <article><h2>{{ 'Report Fault / Complaint'|t }}</h2><p>{{ 'Use the approved route for electricity faults, billing, meters, connections, or service complaints.'|t }}</p><a href="{{ links.complaints }}" data-reg-analytics-event="complaint_start">{{ 'Report a problem'|t }} →</a></article>
+      <article><h2>{{ 'Online Services'|t }}</h2><p>{{ 'Access approved REG and EUCL digital service systems.'|t }}</p><a href="{{ links.online_services }}">{{ 'Open online services'|t }} →</a></article>
+      <article><h2>{{ 'Frequently Asked Questions'|t }}</h2><p>{{ 'Search answers reviewed and published by REG.'|t }}</p><a href="{{ links.faq }}">{{ 'Browse FAQs'|t }} →</a></article>
+    </section>
+  </div>
+</main>

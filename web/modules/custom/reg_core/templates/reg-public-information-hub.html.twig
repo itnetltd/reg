@@ -1,0 +1,53 @@
+<div class="reg-pi">
+  {% include '@reg_core/reg-section-hero.html.twig' with {hero: section_hero} only %}
+
+  <div class="reg-container reg-pi__body">
+    <form class="reg-pi-search" action="{{ search_url }}" method="get" role="search">
+      <label class="visually-hidden" for="reg-pi-hub-search">{{ 'Search public information'|t }}</label>
+      <input id="reg-pi-hub-search" name="q" type="search" maxlength="120" placeholder="{{ 'Search tenders, jobs, reports and policies'|t }}">
+      <button type="submit">{{ 'Search'|t }}</button>
+    </form>
+    <section aria-labelledby="reg-pi-portals">
+      <div class="reg-pi-heading">
+        <span class="reg-pi-kicker">{{ 'Browse by service'|t }}</span>
+        <h2 id="reg-pi-portals">{{ 'Public information services'|t }}</h2>
+      </div>
+      <div class="reg-pi-hub-grid">
+        {% for card in cards %}
+          <a class="reg-pi-hub-card" href="{{ card.url }}">
+            <span>{{ card.eyebrow }}</span>
+            <h3>{{ card.title }}</h3>
+            <p>{{ card.description }}</p>
+            <strong>{{ 'Browse'|t }} <span aria-hidden="true">→</span></strong>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="reg-pi-latest" aria-labelledby="reg-pi-latest">
+      <div class="reg-pi-heading">
+        <span class="reg-pi-kicker">{{ 'Recently published'|t }}</span>
+        <h2 id="reg-pi-latest">{{ 'Latest public information'|t }}</h2>
+      </div>
+      <div class="reg-pi-latest-grid">
+        {% for group, records in latest %}
+          <div class="reg-pi-latest-group">
+            <h3>{{ group|capitalize }}</h3>
+            {% if records %}
+              <ul>
+                {% for item in records %}
+                  <li>
+                    <a href="{{ item.url }}">{{ item.title }}</a>
+                    <span>{{ item.entity }}{% if item.date %} · {{ item.date }}{% endif %}</span>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="reg-pi-muted">{{ 'No published items yet.'|t }}</p>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+</div>

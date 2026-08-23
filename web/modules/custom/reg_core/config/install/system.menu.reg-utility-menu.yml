@@ -1,0 +1,7 @@
+langcode: en
+status: true
+dependencies: {  }
+id: reg-utility-menu
+label: 'REG utility menu'
+description: 'Compact public-service links shown above the REG main navigation.'
+locked: false

@@ -1,0 +1,20 @@
+<div class="header-search header-search--{{ search_variant }}" data-reg-header-search>
+  <button class="header-search__trigger"
+          type="button"
+          aria-expanded="false"
+          aria-controls="{{ search_id }}-panel"
+          data-reg-search-toggle>
+    <span class="header-search__icon" aria-hidden="true"></span>
+    <span>{{ 'Search'|t }}</span>
+  </button>
+
+  <div id="{{ search_id }}-panel" class="header-search__panel" data-reg-search-panel hidden>
+    <form action="{{ reg_search_url }}" method="get" role="search">
+      <label for="{{ search_id }}">{{ 'Search the REG website'|t }}</label>
+      <div class="header-search__field">
+        <input id="{{ search_id }}" name="keys" type="search" placeholder="{{ 'What are you looking for?'|t }}" autocomplete="off">
+        <button type="submit">{{ 'Search'|t }}</button>
+      </div>
+    </form>
+  </div>
+</div>

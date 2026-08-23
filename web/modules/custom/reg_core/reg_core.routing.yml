@@ -1,0 +1,1249 @@
+reg_core.home:
+  path: '/home'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PortalController::home'
+    _title: 'Home'
+  requirements:
+    _permission: 'access content'
+
+reg_core.about:
+  path: '/about'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutController::page'
+    _title_callback: '\Drupal\reg_core\Controller\AboutController::title'
+    page_key: 'about'
+  requirements:
+    _permission: 'access content'
+
+reg_core.about_history:
+  path: '/about/history'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutController::page'
+    _title_callback: '\Drupal\reg_core\Controller\AboutController::title'
+    page_key: 'history'
+  requirements:
+    _permission: 'access content'
+
+reg_core.about_vision:
+  path: '/about/vision-mission-values'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutController::page'
+    _title_callback: '\Drupal\reg_core\Controller\AboutController::title'
+    page_key: 'vision_mission_values'
+  requirements:
+    _permission: 'access content'
+
+reg_core.about_group:
+  path: '/about/group'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutController::page'
+    _title_callback: '\Drupal\reg_core\Controller\AboutController::title'
+    page_key: 'group'
+  requirements:
+    _permission: 'access content'
+
+reg_core.about_edcl:
+  path: '/about/group/edcl'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutController::page'
+    _title_callback: '\Drupal\reg_core\Controller\AboutController::title'
+    page_key: 'edcl'
+  requirements:
+    _permission: 'access content'
+
+reg_core.about_eucl:
+  path: '/about/group/eucl'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutController::page'
+    _title_callback: '\Drupal\reg_core\Controller\AboutController::title'
+    page_key: 'eucl'
+  requirements:
+    _permission: 'access content'
+
+reg_core.about_leadership:
+  path: '/about/leadership'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutController::page'
+    _title_callback: '\Drupal\reg_core\Controller\AboutController::title'
+    page_key: 'leadership'
+  requirements:
+    _permission: 'access content'
+
+reg_core.about_board:
+  path: '/about/leadership/board'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutController::page'
+    _title_callback: '\Drupal\reg_core\Controller\AboutController::title'
+    page_key: 'board'
+  requirements:
+    _permission: 'access content'
+
+reg_core.about_executive:
+  path: '/about/leadership/executive-management'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutController::page'
+    _title_callback: '\Drupal\reg_core\Controller\AboutController::title'
+    page_key: 'executive_management'
+  requirements:
+    _permission: 'access content'
+
+reg_core.about_partners:
+  path: '/about/partners'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutController::page'
+    _title_callback: '\Drupal\reg_core\Controller\AboutController::title'
+    page_key: 'partners'
+  requirements:
+    _permission: 'access content'
+
+reg_core.about_people:
+  path: '/about/our-people'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutController::page'
+    _title_callback: '\Drupal\reg_core\Controller\AboutController::title'
+    page_key: 'our_people'
+  requirements:
+    _permission: 'access content'
+
+reg_core.about_legacy_root:
+  path: '/about-us'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutLegacyRedirectController::legacy'
+    destination_route: 'reg_core.about'
+  requirements:
+    _permission: 'access content'
+
+reg_core.about_legacy_history:
+  path: '/about-us/history'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutLegacyRedirectController::legacy'
+    destination_route: 'reg_core.about_history'
+  requirements:
+    _permission: 'access content'
+
+reg_core.about_legacy_vision:
+  path: '/about-us/vision-mission-values'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutLegacyRedirectController::legacy'
+    destination_route: 'reg_core.about_vision'
+  requirements:
+    _permission: 'access content'
+
+reg_core.about_legacy_edcl:
+  path: '/about-us/subsidiaries/edcl'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutLegacyRedirectController::legacy'
+    destination_route: 'reg_core.about_edcl'
+  requirements:
+    _permission: 'access content'
+
+reg_core.about_legacy_eucl:
+  path: '/about-us/subsidiaries/eucl'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutLegacyRedirectController::legacy'
+    destination_route: 'reg_core.about_eucl'
+  requirements:
+    _permission: 'access content'
+
+reg_core.about_legacy_board:
+  path: '/about-us/board-of-directors'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutLegacyRedirectController::legacy'
+    destination_route: 'reg_core.about_board'
+  requirements:
+    _permission: 'access content'
+
+reg_core.about_legacy_executive:
+  path: '/about-us/executive-management'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutLegacyRedirectController::legacy'
+    destination_route: 'reg_core.about_executive'
+  requirements:
+    _permission: 'access content'
+
+reg_core.about_legacy_branches:
+  path: '/about-us/branches-and-managers-contacts'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutLegacyRedirectController::legacy'
+    destination_route: 'reg_core.branches'
+  requirements:
+    _permission: 'access content'
+
+reg_core.about_legacy_partners:
+  path: '/about-us/partners'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutLegacyRedirectController::legacy'
+    destination_route: 'reg_core.about_partners'
+  requirements:
+    _permission: 'access content'
+
+reg_core.about_legacy_people:
+  path: '/about-us/best-employees-year-20242025'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutLegacyRedirectController::legacy'
+    destination_route: 'reg_core.about_people'
+  requirements:
+    _permission: 'access content'
+
+reg_core.services:
+  path: '/online-services'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PortalController::services'
+    _title: 'Online Services'
+  requirements:
+    _permission: 'access content'
+
+reg_core.contact:
+  path: '/contact'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SupportController::contact'
+    _title: 'Contact REG'
+  requirements:
+    _permission: 'access content'
+
+reg_core.customer_services:
+  path: '/customer-services'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SupportController::customerServices'
+    _title: 'Customer Services'
+  requirements:
+    _permission: 'access content'
+
+reg_core.complaints:
+  path: '/complaints'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SupportController::complaints'
+    _title: 'Report a Problem'
+  requirements:
+    _permission: 'access content'
+
+reg_core.report_problem:
+  path: '/report-problem'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SupportController::complaints'
+    _title: 'Report a Problem'
+  requirements:
+    _permission: 'access content'
+
+reg_core.branches:
+  path: '/branches'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\BranchController::listing'
+    _title: 'Branch Locator'
+  requirements:
+    _permission: 'access content'
+
+reg_core.branches_map_data:
+  path: '/branches/map-data'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\BranchController::mapData'
+  requirements:
+    _permission: 'access content'
+
+reg_core.branch_detail:
+  path: '/branches/{branch}'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\BranchController::detail'
+    _title_callback: '\Drupal\reg_core\Controller\BranchController::detailTitle'
+  requirements:
+    _permission: 'access content'
+    branch: '\d+'
+
+reg_core.outages:
+  path: '/outages'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\OutageController::listing'
+    _title: 'Outage Center'
+    mode: 'current'
+  requirements:
+    _permission: 'access content'
+
+reg_core.outages_admin:
+  path: '/admin/content/outages'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\OutageAdminController::overview'
+    _title: 'Outage Announcements'
+  requirements:
+    _permission: 'access reg outage administration'
+  options:
+    _admin_route: true
+
+reg_core.outages_current:
+  path: '/outages/current'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\OutageController::listing'
+    _title: 'Current outages'
+    mode: 'current'
+  requirements:
+    _permission: 'access content'
+
+reg_core.outages_planned:
+  path: '/outages/planned'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\OutageController::listing'
+    _title: 'Planned outages'
+    mode: 'planned'
+  requirements:
+    _permission: 'access content'
+
+reg_core.outages_history:
+  path: '/outages/history'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\OutageController::listing'
+    _title: 'Outage history'
+    mode: 'history'
+  requirements:
+    _permission: 'access content'
+
+reg_core.outage_detail:
+  path: '/outages/{outage_id}'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\OutageController::detail'
+    _title_callback: '\Drupal\reg_core\Controller\OutageController::detailTitle'
+  requirements:
+    _permission: 'access content'
+    outage_id: '[A-Za-z0-9._~:-]+'
+
+reg_core.faq:
+  path: '/help/faq'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\FaqController::page'
+    _title: 'Frequently Asked Questions'
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: true
+
+reg_core.faq_search:
+  path: '/reg-api/faqs'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\FaqController::search'
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: true
+
+reg_core.faq_unanswered_report:
+  path: '/admin/reports/reg-faq-unanswered'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\FaqUnansweredReportController::report'
+    _title: 'Unanswered REG FAQ searches'
+  requirements:
+    _permission: 'view reg faq unanswered report'
+  options:
+    _admin_route: true
+
+reg_core.faqs_admin:
+  path: '/admin/content/faqs'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\FaqAdminController::overview'
+    _title: 'FAQs'
+  requirements:
+    _permission: 'access reg customer service administration'
+  options:
+    _admin_route: true
+
+reg_core.branches_admin:
+  path: '/admin/content/branches'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\BranchAdminController::overview'
+    _title: 'Branches'
+  requirements:
+    _permission: 'access reg customer service administration'
+  options:
+    _admin_route: true
+
+reg_core.public_information:
+  path: '/public-information'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationController::hub'
+    _title: 'Public Information'
+  requirements:
+    _permission: 'access content'
+
+reg_core.public_information_search:
+  path: '/public-information/search'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationController::search'
+    _title: 'Search Public Information'
+  requirements:
+    _permission: 'access content'
+
+reg_core.public_information_download:
+  path: '/public-information/download/{node}/{field_name}/{delta}'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationDownloadController::download'
+  requirements:
+    _permission: 'access content'
+    node: '\d+'
+    field_name: 'field_reg_[a-z_]+'
+    delta: '\d+'
+
+reg_core.tenders:
+  path: '/tenders'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationController::tenders'
+    _title: 'Tenders'
+    mode: 'all'
+  requirements:
+    _permission: 'access content'
+
+reg_core.tenders_current:
+  path: '/tenders/current'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationController::tenders'
+    _title: 'Current tenders'
+    mode: 'current'
+  requirements:
+    _permission: 'access content'
+
+reg_core.tenders_awarded:
+  path: '/tenders/awarded'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationController::tenders'
+    _title: 'Awarded tenders'
+    mode: 'awarded'
+  requirements:
+    _permission: 'access content'
+
+reg_core.tenders_archive:
+  path: '/tenders/archive'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationController::tenders'
+    _title: 'Tender archive'
+    mode: 'archive'
+  requirements:
+    _permission: 'access content'
+
+reg_core.tenders_admin:
+  path: '/admin/content/tenders'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\TenderAdminController::overview'
+    _title: 'Tenders'
+  requirements:
+    _permission: 'access reg procurement administration'
+  options:
+    _admin_route: true
+
+reg_core.tender_subscribe:
+  path: '/tenders/subscribe'
+  defaults:
+    _form: '\Drupal\reg_core\Form\TenderSubscriptionForm'
+    _title: 'Subscribe to tender notifications'
+  requirements:
+    _permission: 'access content'
+
+reg_core.tender_unsubscribe:
+  path: '/tenders/unsubscribe/{token}'
+  defaults:
+    _form: '\Drupal\reg_core\Form\TenderUnsubscribeForm'
+    _title: 'Unsubscribe from tender notifications'
+  requirements:
+    _permission: 'access content'
+    token: '[A-Za-z0-9_-]{32,128}'
+  options:
+    no_cache: true
+
+reg_core.tender_detail:
+  path: '/tenders/{tender}'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationController::tenderDetail'
+    _title_callback: '\Drupal\reg_core\Controller\PublicInformationController::tenderTitle'
+  requirements:
+    _permission: 'access content'
+    tender: '\d+'
+
+reg_core.jobs:
+  path: '/jobs'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationController::jobs'
+    _title: 'Jobs'
+    mode: 'all'
+  requirements:
+    _permission: 'access content'
+
+reg_core.jobs_current:
+  path: '/jobs/current'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationController::jobs'
+    _title: 'Current jobs'
+    mode: 'current'
+  requirements:
+    _permission: 'access content'
+
+reg_core.jobs_results:
+  path: '/jobs/results'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationController::jobs'
+    _title: 'Recruitment results'
+    mode: 'results'
+  requirements:
+    _permission: 'access content'
+
+reg_core.jobs_archive:
+  path: '/jobs/archive'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationController::jobs'
+    _title: 'Job archive'
+    mode: 'archive'
+  requirements:
+    _permission: 'access content'
+
+reg_core.job_detail:
+  path: '/jobs/{job}'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationController::jobDetail'
+    _title_callback: '\Drupal\reg_core\Controller\PublicInformationController::jobTitle'
+  requirements:
+    _permission: 'access content'
+    job: '\d+'
+
+reg_core.publications:
+  path: '/publications'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationController::publications'
+    _title: 'Publications'
+  requirements:
+    _permission: 'access content'
+
+reg_core.publication_detail:
+  path: '/publications/{publication}'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationController::publicationDetail'
+    _title_callback: '\Drupal\reg_core\Controller\PublicInformationController::publicationTitle'
+  requirements:
+    _permission: 'access content'
+    publication: '\d+'
+
+reg_core.tender_download_report:
+  path: '/admin/reports/reg-tender-downloads'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationReportController::tenderDownloads'
+    _title: 'Tender document downloads'
+  requirements:
+    _permission: 'view reg public information reports'
+  options:
+    _admin_route: true
+
+reg_core.procurement_annual_plan:
+  path: '/procurement/annual-plan'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PlanPortalController::procurementPlan'
+    _title: 'Annual Procurement Plan'
+  requirements:
+    _permission: 'access content'
+
+reg_core.recruitment_plan:
+  path: '/careers/recruitment-plan'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PlanPortalController::recruitmentPlan'
+    _title: 'Recruitment Plan'
+  requirements:
+    _permission: 'access content'
+
+reg_core.procurement_plans_admin:
+  path: '/admin/content/procurement-plans'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PlanPortalController::procurementPlansAdmin'
+    _title: 'Annual Procurement Plans'
+  requirements:
+    _permission: 'administer reg procurement plans'
+  options:
+    _admin_route: true
+
+reg_core.procurement_plan_items_admin:
+  path: '/admin/content/procurement-plan-items'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PlanPortalController::procurementItemsAdmin'
+    _title: 'Procurement Plan Items'
+  requirements:
+    _permission: 'administer reg procurement plans'
+  options:
+    _admin_route: true
+
+reg_core.recruitment_plans_admin:
+  path: '/admin/content/recruitment-plans'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PlanPortalController::recruitmentPlansAdmin'
+    _title: 'Annual Recruitment Plans'
+  requirements:
+    _permission: 'administer reg recruitment plans'
+  options:
+    _admin_route: true
+
+reg_core.recruitment_plan_items_admin:
+  path: '/admin/content/recruitment-plan-items'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PlanPortalController::recruitmentItemsAdmin'
+    _title: 'Recruitment Plan Items'
+  requirements:
+    _permission: 'administer reg recruitment plans'
+  options:
+    _admin_route: true
+
+reg_core.jobs_admin:
+  path: '/admin/content/jobs'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PlanPortalController::jobsAdmin'
+    _title: 'Job Vacancies'
+  requirements:
+    _permission: 'access reg hr administration'
+  options:
+    _admin_route: true
+
+reg_core.business_sports_admin:
+  path: '/admin/content/reg/sports'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\BusinessContentAdminController::listing'
+    area: 'sports'
+  requirements:
+    _permission: 'access reg sports administration'
+  options:
+    _admin_route: true
+
+reg_core.business_communications_admin:
+  path: '/admin/content/reg/communications'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\BusinessContentAdminController::listing'
+    area: 'communications'
+  requirements:
+    _permission: 'access reg communications administration'
+  options:
+    _admin_route: true
+
+reg_core.business_procurement_admin:
+  path: '/admin/content/reg/procurement'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\BusinessContentAdminController::listing'
+    area: 'procurement'
+  requirements:
+    _permission: 'access reg procurement administration'
+  options:
+    _admin_route: true
+
+reg_core.business_hr_admin:
+  path: '/admin/content/reg/hr'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\BusinessContentAdminController::listing'
+    area: 'hr'
+  requirements:
+    _permission: 'access reg hr administration'
+  options:
+    _admin_route: true
+
+reg_core.business_outages_admin:
+  path: '/admin/content/reg/outages'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\BusinessContentAdminController::listing'
+    area: 'outages'
+  requirements:
+    _permission: 'access reg outage administration'
+  options:
+    _admin_route: true
+
+reg_core.business_customer_service_admin:
+  path: '/admin/content/reg/customer-service'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\BusinessContentAdminController::listing'
+    area: 'customer-service'
+  requirements:
+    _permission: 'access reg customer service administration'
+  options:
+    _admin_route: true
+
+reg_core.business_energy_admin:
+  path: '/admin/content/reg/energy'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\BusinessContentAdminController::listing'
+    area: 'energy'
+  requirements:
+    _permission: 'access reg energy administration'
+  options:
+    _admin_route: true
+
+reg_core.supplier_tenders:
+  path: '/supplier/tenders'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SupplierPortalController::tenders'
+    _title: 'Supplier tenders'
+  requirements:
+    _permission: 'access reg supplier portal'
+
+reg_core.supplier_bids:
+  path: '/supplier/bids'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SupplierPortalController::bids'
+    _title: 'Supplier bids'
+  requirements:
+    _permission: 'access reg supplier portal'
+
+reg_core.my_applications:
+  path: '/my-applications'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PlanPortalController::myApplications'
+    _title: 'My applications'
+  requirements:
+    _permission: 'access reg candidate portal'
+
+reg_core.bid_start:
+  path: '/supplier/tenders/{tender}/bid'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SupplierPortalController::bid'
+    _title: 'Bid submission'
+  requirements:
+    _permission: 'submit reg bids'
+    tender: '\d+'
+
+reg_core.supplier_register:
+  path: '/supplier/register'
+  defaults:
+    _form: '\Drupal\reg_core\Form\SupplierRegisterForm'
+    _title: 'Supplier registration'
+  requirements:
+    _access: 'TRUE'
+
+reg_core.supplier_login:
+  path: '/supplier/login'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SupplierPortalController::login'
+    _title: 'Supplier login'
+  requirements:
+    _access: 'TRUE'
+
+reg_core.supplier_verify:
+  path: '/supplier/verify/{uid}/{token}'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SupplierPortalController::verify'
+    _title: 'Verify supplier email'
+  requirements:
+    _access: 'TRUE'
+    uid: '\d+'
+    token: '[A-Za-z0-9_-]+'
+
+reg_core.supplier_dashboard:
+  path: '/supplier/dashboard'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SupplierPortalController::dashboard'
+    _title: 'Supplier dashboard'
+  requirements:
+    _permission: 'access reg supplier portal'
+
+reg_core.supplier_profile:
+  path: '/supplier/profile'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SupplierPortalController::profile'
+    _title: 'Supplier profile'
+  requirements:
+    _permission: 'access reg supplier portal'
+
+reg_core.supplier_profile_setup:
+  path: '/supplier/profile/setup'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SupplierPortalController::profile'
+    _title: 'Set up supplier profile'
+  requirements:
+    _permission: 'access reg supplier portal'
+
+reg_core.supplier_team:
+  path: '/supplier/team'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SupplierPortalController::team'
+    _title: 'Supplier team'
+  requirements:
+    _permission: 'access reg supplier portal'
+
+reg_core.supplier_team_invite:
+  path: '/supplier/team/invite'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SupplierPortalController::invite'
+    _title: 'Invite supplier team member'
+  requirements:
+    _permission: 'access reg supplier portal'
+
+reg_core.supplier_invite_accept:
+  path: '/supplier/team/accept/{token}'
+  defaults:
+    _form: '\Drupal\reg_core\Form\SupplierInviteAcceptForm'
+    _title: 'Accept supplier invitation'
+  requirements:
+    _access: 'TRUE'
+    token: '[A-Za-z0-9_-]+'
+
+reg_core.supplier_admin:
+  path: '/admin/procurement/suppliers'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SupplierAdminController::listing'
+    _title: 'Supplier organizations'
+  requirements:
+    _permission: 'review reg suppliers'
+  options:
+    _admin_route: true
+
+reg_core.supplier_admin_review:
+  path: '/admin/procurement/suppliers/{supplier}/review'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SupplierAdminController::review'
+    _title: 'Review supplier organization'
+  requirements:
+    _permission: 'review reg suppliers'
+  options:
+    _admin_route: true
+    parameters:
+      supplier:
+        type: entity:node
+
+reg_core.application_start:
+  path: '/jobs/{job}/apply'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PlanPortalController::applicationStart'
+    _title: 'Job application'
+  requirements:
+    _permission: 'submit reg applications'
+    job: '\d+'
+
+reg_core.publication_download_report:
+  path: '/admin/reports/reg-publication-downloads'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationReportController::publicationDownloads'
+    _title: 'Publication downloads'
+  requirements:
+    _permission: 'view reg public information reports'
+  options:
+    _admin_route: true
+
+reg_core.sports:
+  path: '/sports'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SportsController::landing'
+    _title: 'REG Sports'
+  requirements:
+    _permission: 'access content'
+
+reg_core.sports_team_basketball_men:
+  path: '/sports/basketball-men'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SportsController::basketballMen'
+    _title: 'REG Basketball Men'
+  requirements:
+    _permission: 'access content'
+
+reg_core.sports_team_basketball_women:
+  path: '/sports/basketball-women'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SportsController::basketballWomen'
+    _title: 'REG Basketball Women'
+  requirements:
+    _permission: 'access content'
+
+reg_core.sports_team_volleyball_men:
+  path: '/sports/volleyball-men'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SportsController::volleyballMen'
+    _title: 'REG Volleyball Men'
+  requirements:
+    _permission: 'access content'
+
+reg_core.sports_fixtures:
+  path: '/sports/fixtures'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SportsController::fixtures'
+    _title: 'Sports Fixtures'
+  requirements:
+    _permission: 'access content'
+
+reg_core.sports_results:
+  path: '/sports/results'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SportsController::results'
+    _title: 'Sports Results'
+  requirements:
+    _permission: 'access content'
+
+reg_core.sports_standings:
+  path: '/sports/standings'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SportsController::standings'
+    _title: 'Sports Standings'
+  requirements:
+    _permission: 'access content'
+
+reg_core.sports_news:
+  path: '/sports/news'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SportsController::news'
+    _title: 'Sports News'
+  requirements:
+    _permission: 'access content'
+
+reg_core.sports_news_detail:
+  path: '/sports/news/{node}'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SportsController::newsDetail'
+    _title_callback: '\Drupal\reg_core\Controller\SportsController::newsTitle'
+  requirements:
+    _permission: 'access content'
+    node: '\d+'
+
+reg_core.sports_players:
+  path: '/sports/players'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SportsController::players'
+    _title: 'Sports Players'
+  requirements:
+    _permission: 'access content'
+
+reg_core.sports_player:
+  path: '/sports/player/{player}'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SportsController::player'
+    _title_callback: '\Drupal\reg_core\Controller\SportsController::playerTitle'
+  requirements:
+    _permission: 'access content'
+    player: '\d+'
+
+reg_core.sports_fixture:
+  path: '/sports/match/{fixture}'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SportsController::fixture'
+    _title_callback: '\Drupal\reg_core\Controller\SportsController::fixtureTitle'
+  requirements:
+    _permission: 'access content'
+    fixture: '\d+'
+
+reg_core.sports_gallery:
+  path: '/sports/gallery'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SportsController::gallery'
+    _title: 'Sports Gallery'
+  requirements:
+    _permission: 'access content'
+
+reg_core.sports_gallery_detail:
+  path: '/sports/gallery/{gallery}'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SportsController::galleryDetail'
+    _title_callback: '\Drupal\reg_core\Controller\SportsController::galleryTitle'
+  requirements:
+    _permission: 'access content'
+    gallery: '\d+'
+
+reg_core.sports_videos:
+  path: '/sports/videos'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SportsController::videos'
+    _title: 'Sports Videos'
+  requirements:
+    _permission: 'access content'
+
+reg_core.videos:
+  path: '/media/videos'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\VideoController::archive'
+    _title: 'Videos'
+  requirements:
+    _permission: 'access content'
+
+reg_core.video_media_center:
+  path: '/media'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\VideoController::mediaCenter'
+    _title: 'Media Center'
+  requirements:
+    _permission: 'access content'
+
+reg_core.news:
+  path: '/news'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\NewsController::archive'
+    _title: 'News & Insights'
+  requirements:
+    _permission: 'access content'
+
+reg_core.news_admin:
+  path: '/admin/content/news'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\NewsAdminController::overview'
+    _title: 'News'
+  requirements:
+    _permission: 'access reg communications administration'
+  options:
+    _admin_route: true
+
+reg_core.social_posts_admin:
+  path: '/admin/content/social-posts'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SocialPostAdminController::overview'
+    _title: 'Social posts'
+  requirements:
+    _permission: 'access reg communications administration'
+  options:
+    _admin_route: true
+
+reg_core.sports_search:
+  path: '/sports/search'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SportsController::search'
+    _title: 'Search REG Sports'
+  requirements:
+    _permission: 'access content'
+
+reg_core.bill_estimator:
+  path: '/tools/bill-estimator'
+  defaults:
+    _form: '\Drupal\reg_core\Form\BillEstimatorForm'
+    _title: 'Electricity Bill Estimator'
+  requirements:
+    _permission: 'access content'
+
+reg_core.carbon_calculator:
+  path: '/tools/carbon-footprint'
+  defaults:
+    _form: '\Drupal\reg_core\Form\CarbonCalculatorForm'
+    _title: 'Carbon Footprint Calculator'
+  requirements:
+    _permission: 'access content'
+
+reg_core.settings:
+  path: '/admin/config/reg/site-settings'
+  defaults:
+    _form: '\Drupal\reg_core\Form\RegSettingsForm'
+    _title: 'REG website settings'
+  requirements:
+    _permission: 'administer reg website settings'
+  options:
+    _admin_route: true
+
+reg_core.social_media_settings:
+  path: '/admin/config/reg/social-media'
+  defaults:
+    _form: '\Drupal\reg_core\Form\SocialMediaSettingsForm'
+    _title: 'REG social media'
+  requirements:
+    _permission: 'administer reg website settings'
+  options:
+    _admin_route: true
+
+reg_core.translation_report:
+  path: '/admin/reports/reg-translations'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\TranslationReportController::report'
+    _title: 'REG Translation Status'
+  requirements:
+    _permission: 'view reg translation report'
+  options:
+    _admin_route: true
+
+reg_core.analytics_event:
+  path: '/reg-api/analytics/event'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AnalyticsEventController::record'
+  requirements:
+    _access: 'TRUE'
+  methods: [POST]
+  options:
+    no_cache: true
+
+reg_core.section_heroes_admin:
+  path: '/admin/content/section-heroes'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SectionHeroAdminController::overview'
+    _title: 'Section Heroes'
+  requirements:
+    _permission: 'access reg communications administration'
+  options:
+    _admin_route: true
+
+reg_core.about_admin:
+  path: '/admin/content/about'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutAdminController::overview'
+    _title: 'About pages'
+    bundle: 'reg_about_page'
+  requirements:
+    _permission: 'access reg communications administration'
+  options:
+    _admin_route: true
+
+reg_core.leadership_admin:
+  path: '/admin/content/leadership'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutAdminController::overview'
+    _title: 'Leadership'
+    bundle: 'reg_leader'
+  requirements:
+    _permission: 'access reg communications administration'
+  options:
+    _admin_route: true
+
+reg_core.partners_admin:
+  path: '/admin/content/partners'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutAdminController::overview'
+    _title: 'Partners'
+    bundle: 'reg_partner'
+  requirements:
+    _permission: 'access reg communications administration'
+  options:
+    _admin_route: true
+
+reg_core.employee_recognition_admin:
+  path: '/admin/content/employee-recognition'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\AboutAdminController::overview'
+    _title: 'Employee recognition'
+    bundle: 'reg_employee_recognition'
+  requirements:
+    _permission: 'access reg communications administration'
+  options:
+    _admin_route: true
+
+reg_core.energy_tools_admin:
+  path: '/admin/content/energy-tools'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\EnergyToolsAdminController::overview'
+    _title: 'Energy Tools'
+  requirements:
+    _permission: 'access reg customer service administration'
+  options:
+    _admin_route: true
+
+reg_core.homepage_statistics_admin:
+  path: '/admin/content/homepage-stats'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\HomepageStatisticsAdminController::overview'
+    _title: 'REG At a Glance'
+  requirements:
+    _permission: 'access reg energy administration'
+  options:
+    _admin_route: true
+
+reg_core.energy_facts_admin:
+  path: '/admin/content/energy-facts'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\HomepageStatisticsAdminController::overview'
+    _title: 'Energy Facts'
+  requirements:
+    _permission: 'access reg energy administration'
+  options:
+    _admin_route: true
+
+reg_core.homepage_heroes_admin:
+  path: '/admin/content/homepage-heroes'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\HomepageHeroesAdminController::overview'
+    _title: 'Homepage Heroes'
+  requirements:
+    _permission: 'access reg communications administration'
+  options:
+    _admin_route: true
+
+reg_core.public_alerts_admin:
+  path: '/admin/content/public-alerts'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicAlertsAdminController::overview'
+    _title: 'Public Alerts'
+  requirements:
+    _permission: 'access reg communications administration'
+  options:
+    _admin_route: true
+
+reg_core.dashboard:
+  path: '/admin/reg-dashboard'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\DashboardController::overview'
+    _title: 'REG Analytics Dashboard'
+  requirements:
+    _permission: 'view reg analytics dashboard'
+  options:
+    _admin_route: true
+
+reg_core.dashboard_customer_services:
+  path: '/admin/reg-dashboard/customer-services'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\DashboardController::customerServices'
+    _title: 'REG Customer Services Dashboard'
+  requirements:
+    _permission: 'view reg customer service dashboard'
+  options:
+    _admin_route: true
+
+reg_core.dashboard_content:
+  path: '/admin/reg-dashboard/content'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\DashboardController::content'
+    _title: 'REG Content Governance Dashboard'
+  requirements:
+    _permission: 'view reg content dashboard'
+  options:
+    _admin_route: true
+
+reg_core.dashboard_procurement:
+  path: '/admin/reg-dashboard/procurement'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\DashboardController::procurement'
+    _title: 'REG Procurement Dashboard'
+  requirements:
+    _permission: 'view reg procurement dashboard'
+  options:
+    _admin_route: true
+
+reg_core.dashboard_recruitment:
+  path: '/admin/reg-dashboard/recruitment'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\DashboardController::recruitment'
+    _title: 'REG Recruitment Dashboard'
+  requirements:
+    _permission: 'view reg recruitment dashboard'
+  options:
+    _admin_route: true
+
+reg_core.dashboard_publications:
+  path: '/admin/reg-dashboard/publications'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\DashboardController::publications'
+    _title: 'REG Publications Dashboard'
+  requirements:
+    _permission: 'view reg publications dashboard'
+  options:
+    _admin_route: true
+
+reg_core.dashboard_sports:
+  path: '/admin/reg-dashboard/sports'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\DashboardController::sports'
+    _title: 'REG Sports Dashboard'
+  requirements:
+    _permission: 'view reg sports dashboard'
+  options:
+    _admin_route: true
+
+reg_core.dashboard_translations:
+  path: '/admin/reg-dashboard/translations'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\TranslationReportController::report'
+    _title: 'REG Translation Status'
+  requirements:
+    _permission: 'view reg translation report'
+  options:
+    _admin_route: true
+
+reg_core.dashboard_operations:
+  path: '/admin/reg-dashboard/operations'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\DashboardController::operations'
+    _title: 'REG Operations Dashboard'
+  requirements:
+    _permission: 'view reg operations dashboard'
+  options:
+    _admin_route: true
+
+reg_core.dashboard_export:
+  path: '/admin/reg-dashboard/export/{report}'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\DashboardController::export'
+  requirements:
+    _permission: 'export reg analytics reports'
+    report: '[a-z-]+'
+  options:
+    _admin_route: true
+    no_cache: true

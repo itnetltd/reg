@@ -1,0 +1,44 @@
+<div class="reg-video-archive" data-reg-video-context>
+  {% set videos_hero = section_hero|merge({eyebrow: 'Media Center'|t, title: archive_heading|t, description: archive_description|t}) %}
+  {% include '@reg_core/reg-section-hero.html.twig' with {hero: videos_hero} only %}
+  {{ social_follow }}
+  <div class="reg-container reg-video-archive__body">
+
+  <form class="reg-video-filters" method="get" action="{{ path('reg_core.videos') }}">
+    <label><span>{{ 'Search videos'|t }}</span><input type="search" name="search" value="{{ filters.search }}" placeholder="{{ 'Search by title or description'|t }}"></label>
+    <label><span>{{ 'Category'|t }}</span><select name="category"><option value="0">{{ 'All categories'|t }}</option>{% for category in categories %}<option value="{{ category.id }}"{{ filters.category == category.id ? ' selected' }}>{{ category.label }}</option>{% endfor %}</select></label>
+    <label><span>{{ 'Year'|t }}</span><select name="year"><option value="">{{ 'All years'|t }}</option>{% for year in years %}<option value="{{ year }}"{{ filters.year == year ? ' selected' }}>{{ year }}</option>{% endfor %}</select></label>
+    <button type="submit">{{ 'Apply filters'|t }}</button>
+    {% if filters.search or filters.category or filters.year %}<a href="{{ path('reg_core.videos') }}">{{ 'Clear filters'|t }}</a>{% endif %}
+  </form>
+
+  <div class="reg-video-archive__summary" role="status">{{ '@count videos'|t({'@count': results_count}) }}</div>
+  {% if items %}
+    <div class="reg-video-grid">
+      {% for video in items %}
+        <article class="reg-video-card" data-reg-video-item data-reg-video-id="{{ video.id }}"
+          data-reg-video-provider="{{ video.provider }}" data-reg-video-url="{{ video.public_url }}"
+          data-reg-video-embed-url="{{ video.embed_url }}" data-reg-video-direct-url="{{ video.direct_video_url }}"
+          data-reg-video-title="{{ video.title }}">
+          <button type="button" data-reg-video-play aria-label="{{ 'Play @title'|t({'@title': video.title}) }}">
+            <span class="reg-video-card__media">
+              <img src="{{ video.thumbnail.url }}"{% if video.thumbnail.srcset %} srcset="{{ video.thumbnail.srcset }}" sizes="(max-width: 48rem) calc(100vw - 40px), 33vw"{% endif %} alt="{{ video.thumbnail.alt }}" loading="lazy">
+              <span class="reg-video-card__play" aria-hidden="true">▶</span>
+            </span>
+            <span class="reg-video-card__body">
+              <span class="reg-video-card__meta">{% if video.category %}<span>{{ video.category }}</span>{% endif %}{% if video.date %}<time datetime="{{ video.date_iso }}">{{ video.date }}</time>{% endif %}</span>
+              <strong>{{ video.title }}</strong>
+              {% if video.description %}<span>{{ video.description }}</span>{% endif %}
+              <span class="reg-video-card__action">{{ 'Play video'|t }} <span aria-hidden="true">→</span></span>
+            </span>
+          </button>
+        </article>
+      {% endfor %}
+    </div>
+    {{ pager }}
+  {% else %}
+    <div class="reg-video-empty"><h2>{{ 'No videos found'|t }}</h2><p>{{ 'Published videos matching your filters will appear here.'|t }}</p></div>
+  {% endif %}
+  {% include '@reg_core/reg-video-modal.html.twig' with {modal_id: 'reg-video-archive-modal'} only %}
+  </div>
+</div>

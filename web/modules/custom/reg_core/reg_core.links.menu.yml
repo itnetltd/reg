@@ -1,0 +1,277 @@
+reg_core.settings:
+  title: 'REG website settings'
+  description: 'Configure official service links, calculator factors and customer-support contacts.'
+  route_name: reg_core.settings
+  parent: system.admin_config_services
+  weight: 20
+
+reg_core.social_media_settings:
+  title: 'REG social media'
+  description: 'Manage official social channels shown in the utility bar, footer, and Media Center.'
+  route_name: reg_core.social_media_settings
+  parent: system.admin_config_services
+  weight: 21
+
+reg_core.news_admin:
+  title: 'News'
+  description: 'Manage News & Insights, featured images, publication dates, translations, and editorial status.'
+  route_name: reg_core.news_admin
+  parent: system.admin_content
+  weight: 11
+
+reg_core.business_sports_admin:
+  title: 'Sports content'
+  description: 'Manage sports teams, players, fixtures, standings, media and updates.'
+  route_name: reg_core.business_sports_admin
+  parent: system.admin_content
+  weight: 1
+
+reg_core.business_communications_admin:
+  title: 'Communications content'
+  route_name: reg_core.business_communications_admin
+  parent: system.admin_content
+  weight: 2
+
+reg_core.business_procurement_admin:
+  title: 'Procurement content'
+  route_name: reg_core.business_procurement_admin
+  parent: system.admin_content
+  weight: 3
+
+reg_core.business_hr_admin:
+  title: 'HR content'
+  route_name: reg_core.business_hr_admin
+  parent: system.admin_content
+  weight: 4
+
+reg_core.business_outages_admin:
+  title: 'Outage content'
+  route_name: reg_core.business_outages_admin
+  parent: system.admin_content
+  weight: 5
+
+reg_core.business_customer_service_admin:
+  title: 'Customer-service content'
+  route_name: reg_core.business_customer_service_admin
+  parent: system.admin_content
+  weight: 6
+
+reg_core.business_energy_admin:
+  title: 'Energy content'
+  route_name: reg_core.business_energy_admin
+  parent: system.admin_content
+  weight: 7
+
+reg_core.social_posts_admin:
+  title: 'Social posts'
+  description: 'Manage approved native X and other social posts, homepage featuring, ordering, and editorial state.'
+  route_name: reg_core.social_posts_admin
+  parent: system.admin_content
+  weight: 11.5
+
+reg_core.about_admin:
+  title: 'About pages'
+  description: 'Manage the About REG narrative, vision, mission, group and source review metadata.'
+  route_name: reg_core.about_admin
+  parent: system.admin_content
+  weight: 10
+
+reg_core.leadership_admin:
+  title: 'Leadership'
+  description: 'Manage Board and Executive Management records, biographies and portraits.'
+  route_name: reg_core.leadership_admin
+  parent: system.admin_content
+  weight: 10.1
+
+reg_core.partners_admin:
+  title: 'Partners'
+  description: 'Manage stakeholders, development partners, logos and approved links.'
+  route_name: reg_core.partners_admin
+  parent: system.admin_content
+  weight: 10.2
+
+reg_core.employee_recognition_admin:
+  title: 'Employee recognition'
+  description: 'Manage approved employee-recognition records and portraits.'
+  route_name: reg_core.employee_recognition_admin
+  parent: system.admin_content
+  weight: 10.3
+
+reg_core.section_heroes_admin:
+  title: 'Section Heroes'
+  description: 'Manage reusable section hero backgrounds, text, and page overrides.'
+  route_name: reg_core.section_heroes_admin
+  parent: system.admin_content
+  weight: 12
+
+reg_core.energy_tools_admin:
+  title: 'Energy Tools'
+  description: 'Manage homepage energy tools, status, Media icons, links, and display order.'
+  route_name: reg_core.energy_tools_admin
+  parent: system.admin_content
+  weight: 13
+
+reg_core.outages_admin:
+  title: 'Outage Announcements'
+  description: 'Manage multi-window interruption notices, operational status, locations, documents, and publication.'
+  route_name: reg_core.outages_admin
+  parent: system.admin_content
+  weight: 12.5
+
+reg_core.homepage_statistics_admin:
+  title: 'REG At a Glance'
+  description: 'Manage homepage statistics, values, supporting notes, visibility, translations, and display order.'
+  route_name: reg_core.homepage_statistics_admin
+  parent: system.admin_content
+  weight: 13.5
+
+reg_core.energy_facts_admin:
+  title: 'Energy Facts'
+  description: 'Manage current and historical generation, transmission, and electricity-access facts.'
+  route_name: reg_core.energy_facts_admin
+  parent: system.admin_content
+  weight: 13.55
+
+reg_core.homepage_heroes_admin:
+  title: 'Homepage Heroes'
+  description: 'Manage hero slides, responsive images, calls to action, scheduling, language, and priority.'
+  route_name: reg_core.homepage_heroes_admin
+  parent: system.admin_content
+  weight: 13.6
+
+reg_core.public_alerts_admin:
+  title: 'Public Alerts'
+  description: 'Manage scheduled homepage and sitewide notices, severity, priority, translations, and publication.'
+  route_name: reg_core.public_alerts_admin
+  parent: system.admin_content
+  weight: 14
+
+reg_core.faqs_admin:
+  title: 'FAQs'
+  description: 'Search and manage FAQ categories, translations, review status, sources, and publication.'
+  route_name: reg_core.faqs_admin
+  parent: system.admin_content
+  weight: 15
+
+reg_core.branches_admin:
+  title: 'Branches'
+  description: 'Manage branch managers, PH, TE, email, source review, and location completeness.'
+  route_name: reg_core.branches_admin
+  parent: system.admin_content
+  weight: 16
+
+reg_core.tenders_admin:
+  title: 'Tenders'
+  description: 'Manage tender notices, documents, homepage featuring, translations, and publication status.'
+  route_name: reg_core.tenders_admin
+  parent: system.admin_content
+  weight: 17
+
+reg_core.faq_unanswered_report:
+  title: 'Unanswered REG FAQ searches'
+  description: 'Review privacy-filtered searches that returned no approved FAQ answer.'
+  route_name: reg_core.faq_unanswered_report
+  parent: reg_core.dashboard
+  weight: 20
+
+reg_core.procurement_plans_admin:
+  title: 'Procurement plans'
+  description: 'Manage approved annual procurement plans and traceability.'
+  route_name: reg_core.procurement_plans_admin
+  parent: system.admin_content
+  weight: 21
+
+reg_core.procurement_plan_items_admin:
+  title: 'Procurement plan items'
+  route_name: reg_core.procurement_plan_items_admin
+  parent: system.admin_content
+  weight: 22
+
+reg_core.recruitment_plans_admin:
+  title: 'Recruitment plans'
+  description: 'Manage approved annual recruitment plans and traceability.'
+  route_name: reg_core.recruitment_plans_admin
+  parent: system.admin_content
+  weight: 23
+
+reg_core.recruitment_plan_items_admin:
+  title: 'Recruitment plan items'
+  route_name: reg_core.recruitment_plan_items_admin
+  parent: system.admin_content
+  weight: 24
+
+reg_core.jobs_admin:
+  title: 'Job vacancies'
+  description: 'Manage plan-linked and historical vacancies.'
+  route_name: reg_core.jobs_admin
+  parent: system.admin_content
+  weight: 25
+
+reg_core.tender_download_report:
+  title: 'Tender document downloads'
+  description: 'Review aggregate downloads of published tender documents.'
+  route_name: reg_core.tender_download_report
+  parent: reg_core.dashboard
+  weight: 21
+
+reg_core.publication_download_report:
+  title: 'Publication downloads'
+  description: 'Review aggregate downloads of official publications.'
+  route_name: reg_core.publication_download_report
+  parent: reg_core.dashboard
+  weight: 22
+
+reg_core.dashboard:
+  title: 'REG analytics dashboard'
+  description: 'Open permission-scoped website, service, governance, and operations dashboards.'
+  route_name: reg_core.dashboard
+  parent: system.admin_reports
+  weight: 10
+
+reg_core.dashboard_customer_services:
+  title: 'Customer services'
+  route_name: reg_core.dashboard_customer_services
+  parent: reg_core.dashboard
+  weight: 1
+
+reg_core.dashboard_content:
+  title: 'Content governance'
+  route_name: reg_core.dashboard_content
+  parent: reg_core.dashboard
+  weight: 2
+
+reg_core.dashboard_procurement:
+  title: 'Procurement analytics'
+  route_name: reg_core.dashboard_procurement
+  parent: reg_core.dashboard
+  weight: 3
+
+reg_core.dashboard_recruitment:
+  title: 'Recruitment analytics'
+  route_name: reg_core.dashboard_recruitment
+  parent: reg_core.dashboard
+  weight: 4
+
+reg_core.dashboard_publications:
+  title: 'Publications analytics'
+  route_name: reg_core.dashboard_publications
+  parent: reg_core.dashboard
+  weight: 5
+
+reg_core.dashboard_sports:
+  title: 'Sports analytics'
+  route_name: reg_core.dashboard_sports
+  parent: reg_core.dashboard
+  weight: 6
+
+reg_core.dashboard_translations:
+  title: 'Translation status'
+  route_name: reg_core.dashboard_translations
+  parent: reg_core.dashboard
+  weight: 7
+
+reg_core.dashboard_operations:
+  title: 'Operations'
+  route_name: reg_core.dashboard_operations
+  parent: reg_core.dashboard
+  weight: 8

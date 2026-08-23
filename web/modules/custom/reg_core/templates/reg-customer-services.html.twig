@@ -1,0 +1,10 @@
+<main class="reg-support">
+  {% include '@reg_core/reg-section-hero.html.twig' with {hero: section_hero} only %}
+  <div class="reg-container">
+  <section class="reg-utility-grid" aria-label="{{ 'REG customer-service utilities'|t }}">
+    {% for service in services %}
+      <a href="{{ service.url }}" data-reg-analytics-event="{{ service.event }}" data-reg-analytics-type="{{ service.title|clean_class }}"><span aria-hidden="true">↗</span><h2>{{ service.title }}</h2><p>{{ service.summary }}</p></a>
+    {% endfor %}
+  </section>
+  </div>
+</main>

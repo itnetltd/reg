@@ -1,0 +1,30 @@
+{% if alerts %}
+  {% set alert_count = alerts|length %}
+  {% set is_carousel = alert_count > 1 %}
+  <aside class="public-alert{{ is_carousel ? ' public-alert--carousel' }}"{% if is_carousel %} data-reg-alert-carousel aria-roledescription="{{ 'carousel'|t }}"{% endif %} role="region" aria-label="{{ 'Important notices'|t }}">
+    <div class="public-alert__viewport">
+      {% for alert in alerts %}
+        <div id="public-alert-slide-{{ alert.id }}" class="public-alert__slide public-alert--{{ alert.severity }} public-alert--type-{{ alert.type }}{{ loop.first ? ' is-active' }}" role="group" aria-roledescription="{{ 'notice'|t }}" aria-label="{{ '@current of @total'|t({'@current': loop.index, '@total': alert_count}) }}" aria-hidden="{{ loop.first ? 'false' : 'true' }}"{% if not loop.first %} inert{% endif %} data-reg-alert-slide data-alert-duration="{{ alert.severity == 'critical' ? 12000 : 9000 }}">
+          <div class="reg-container public-alert__inner">
+            <div class="public-alert__content">
+              <span class="public-alert__severity">
+                <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M12 3 2.8 20h18.4L12 3Z"></path><path d="M12 9v5m0 3h.01"></path></svg>
+                {{ alert.severity_label }}{% if is_carousel %}<small>{{ loop.index }} / {{ alert_count }}</small>{% endif %}
+              </span>
+              <p><strong id="public-alert-title-{{ alert.id }}">{{ alert.title }}</strong><span>{{ alert.message }}</span></p>
+            </div>
+            {% if alert.cta_label and alert.cta_url %}<a class="public-alert__cta" href="{{ alert.cta_url }}"{% if alert.cta_external %} target="_blank" rel="noopener noreferrer external"{% endif %}>{{ alert.cta_label }} <span aria-hidden="true">&rarr;</span></a>{% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    {% if is_carousel %}
+      <div class="public-alert__controls" aria-label="{{ 'Notice controls'|t }}">
+        <button type="button" data-reg-alert-prev aria-label="{{ 'Previous notice'|t }}"><span aria-hidden="true">&lsaquo;</span></button>
+        <button type="button" data-reg-alert-next aria-label="{{ 'Next notice'|t }}"><span aria-hidden="true">&rsaquo;</span></button>
+        <button type="button" data-reg-alert-pause data-label-pause="{{ 'Pause notices'|t }}" data-label-play="{{ 'Play notices'|t }}" aria-label="{{ 'Pause notices'|t }}"><span aria-hidden="true">&#10074;&#10074;</span></button>
+      </div>
+      <p class="visually-hidden" aria-live="polite" aria-atomic="true" data-reg-alert-status></p>
+    {% endif %}
+  </aside>
+{% endif %}

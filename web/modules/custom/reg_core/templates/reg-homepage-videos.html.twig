@@ -1,0 +1,57 @@
+{% if videos %}
+  {% set total = videos|length %}
+  <section class="section video-section" aria-labelledby="reg-featured-videos-title" data-reg-video-context>
+    <div class="reg-container video-section__inner">
+      <header class="video-section__heading">
+        <span class="section-kicker section-kicker--light">{{ 'Media Center'|t }}</span>
+        <h2 id="reg-featured-videos-title">{{ 'Featured Videos'|t }}</h2>
+      </header>
+
+      <div class="video-carousel" data-reg-video-carousel role="region" aria-roledescription="{{ 'carousel'|t }}" aria-label="{{ 'Featured REG videos'|t }}" tabindex="0">
+        <p class="visually-hidden" aria-live="polite" aria-atomic="true" data-reg-video-status></p>
+        <div class="video-stage">
+          {% for video in videos %}
+            {% set is_current = loop.first %}
+            {% set is_next = total > 1 and loop.index0 == 1 %}
+            {% set is_previous = total > 2 and loop.last %}
+            <article class="video-slide{{ is_current ? ' video-slide--current' }}{{ is_next ? ' video-slide--next' }}{{ is_previous ? ' video-slide--previous' }}"
+              data-reg-video-item data-reg-video-slide data-reg-video-id="{{ video.id }}"
+              data-reg-video-provider="{{ video.provider }}" data-reg-video-url="{{ video.public_url }}"
+              data-reg-video-embed-url="{{ video.embed_url }}" data-reg-video-direct-url="{{ video.direct_video_url }}"
+              data-reg-video-title="{{ video.title }}" role="group" aria-roledescription="{{ 'slide'|t }}"
+              aria-label="{{ '@current of @total'|t({'@current': loop.index, '@total': total}) }}"{% if not is_current and not is_next and not is_previous %} hidden{% endif %}>
+              <button class="video-card" type="button" data-reg-video-play aria-label="{{ is_current ? 'Play @title'|t({'@title': video.title}) : 'Show @title'|t({'@title': video.title}) }}">
+                <img class="video-card__image" src="{{ video.thumbnail.url }}"{% if video.thumbnail.srcset %} srcset="{{ video.thumbnail.srcset }}" sizes="{{ video.thumbnail.sizes }}"{% endif %} alt="{{ video.thumbnail.alt }}" loading="lazy">
+                <span class="video-card__shade" aria-hidden="true"></span>
+                <span class="video-card__body">
+                  <span class="video-card__meta">
+                    {% if video.category %}<span>{{ video.category }}</span>{% endif %}
+                    {% if video.date %}<time datetime="{{ video.date_iso }}">{{ video.date }}</time>{% endif %}
+                  </span>
+                  <strong class="video-card__title">{{ video.title }}</strong>
+                  {% if video.description %}<span class="video-card__description">{{ video.description }}</span>{% endif %}
+                </span>
+                <span class="video-card__play" aria-hidden="true"><span>▶</span></span>
+              </button>
+            </article>
+          {% endfor %}
+        </div>
+
+        {% if total > 1 %}
+          <div class="video-carousel__controls">
+            <button class="video-carousel__arrow" type="button" data-reg-video-previous aria-label="{{ 'Previous video'|t }}"><span aria-hidden="true">←</span></button>
+            <div class="video-pagination" aria-label="{{ 'Choose a featured video'|t }}">
+              {% for video in videos %}
+                <button type="button" data-reg-video-pagination="{{ loop.index0 }}" aria-label="{{ 'Show video @number: @title'|t({'@number': '%02d'|format(loop.index), '@title': video.title}) }}"{% if loop.first %} aria-current="true"{% endif %}>{{ '%02d'|format(loop.index) }}</button>
+              {% endfor %}
+            </div>
+            <button class="video-carousel__arrow" type="button" data-reg-video-next aria-label="{{ 'Next video'|t }}"><span aria-hidden="true">→</span></button>
+          </div>
+        {% endif %}
+      </div>
+
+      <a class="video-section__all" href="{{ view_all_url }}" data-reg-analytics-event="view_all_videos" data-reg-analytics-type="video">{{ 'View all videos'|t }} <span aria-hidden="true">→</span></a>
+    </div>
+    {% include '@reg_core/reg-video-modal.html.twig' with {modal_id: 'reg-homepage-video-modal'} only %}
+  </section>
+{% endif %}

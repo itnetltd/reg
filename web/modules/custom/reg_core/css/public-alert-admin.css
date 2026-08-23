@@ -1,0 +1,22 @@
+.reg-public-alert-admin__summaries {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-block: 1.5rem;
+}
+
+.reg-public-alert-admin__summary {
+  padding: 1rem;
+  border: 1px solid #d9d9d9;
+  border-inline-start: .35rem solid #da291c;
+  background: #fff;
+}
+
+.reg-public-alert-admin__summary strong,
+.reg-public-alert-admin__summary span {
+  display: block;
+}
+
+.reg-public-alert-admin__summary strong {
+  font-size: 2rem;
+}

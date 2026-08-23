@@ -1,0 +1,11 @@
+REG electricity tariff estimator update
+
+From Windows CMD in C:\Sites\reg-drupal:
+
+powershell -NoProfile -Command "Expand-Archive -Path '%USERPROFILE%\Downloads\reg-tariff-2025-hotfix.zip' -DestinationPath 'C:\Sites\reg-drupal' -Force"
+
+ddev exec php -l web/modules/custom/reg_core/src/Form/BillEstimatorForm.php
+ddev drush cr
+ddev launch /tools/bill-estimator
+
+No database update is required.

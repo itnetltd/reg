@@ -1,0 +1,19 @@
+<div class="outage-center outage-detail" data-reg-analytics-event="outage_view">
+  {% set outage_detail_hero = section_hero|merge({eyebrow: outage.status_label, title: outage.title, description: outage.network_element ?: outage.outage_type_label, back_url: back_url, back_label: 'Back to Outage Center'|t}) %}
+  {% include '@reg_core/reg-section-hero.html.twig' with {hero: outage_detail_hero} only %}
+
+  <div class="reg-container outage-center__content">
+    <div class="outage-detail__layout">
+      <article class="outage-detail__main">
+        {% if outage.status_note or outage.postponed_date %}<section class="outage-detail__status"><h2>{{ outage.status_label }}</h2>{% if outage.status_note %}<p>{{ outage.status_note }}</p>{% endif %}{% if outage.postponed_date %}<p><strong>{{ 'New proposed date:'|t }}</strong> {{ outage.postponed_date }}</p>{% endif %}</section>{% endif %}
+        <section><h2>{{ 'Summary'|t }}</h2>{% if outage.summary %}<p>{{ outage.summary }}</p>{% endif %}{% if outage.public_reason %}<p><strong>{{ 'Reason:'|t }}</strong> {{ outage.public_reason }}</p>{% endif %}<dl class="outage-detail__facts">{% if outage.announcement_date %}<div><dt>{{ 'Announcement date'|t }}</dt><dd>{{ outage.announcement_date }}</dd></div>{% endif %}{% if outage.reference %}<div><dt>{{ 'Reference'|t }}</dt><dd>{{ outage.reference }}</dd></div>{% endif %}<div><dt>{{ 'Outage type'|t }}</dt><dd>{{ outage.outage_type_label }}</dd></div>{% if outage.network_element %}<div><dt>{{ 'Network element'|t }}</dt><dd>{{ outage.network_element }}</dd></div>{% endif %}{% if outage.actual_restoration_formatted %}<div><dt>{{ 'Actual restoration'|t }}</dt><dd>{{ outage.actual_restoration_formatted }}{% if outage.restored_early %} — {{ 'restored early'|t }}{% endif %}</dd></div>{% endif %}</dl></section>
+
+        <section class="outage-detail__schedule"><h2>{{ 'Schedule'|t }}</h2><div class="outage-schedule" role="table" aria-label="{{ 'Outage schedule windows'|t }}">{% for segment in outage.segments %}<article class="outage-window" role="row"><div><span>{{ 'Date'|t }}</span><strong>{{ segment.date_formatted }}</strong></div><div><span>{{ 'Time'|t }}</span><strong>{{ segment.start_formatted }}–{{ segment.end_formatted }}</strong></div><div><span>{{ 'Feeder'|t }}</span><strong>{{ segment.feeder ?: outage.network_element }}</strong></div><div><span>{{ 'District'|t }}</span><strong>{{ segment.districts|join(', ') }}</strong></div><div class="outage-window__areas"><span>{{ 'Affected areas'|t }}</span><strong>{{ segment.affected_area }}</strong>{% if segment.sectors %}<small>{{ segment.sectors|join(' · ') }}</small>{% endif %}</div>{% if segment.actual_restoration_formatted %}<div><span>{{ 'Restoration'|t }}</span><strong>{{ segment.actual_restoration_formatted }}</strong></div>{% endif %}</article>{% endfor %}</div></section>
+
+        {% if outage.safety_message %}<section class="outage-detail__notice"><h2>{{ 'Safety notice'|t }}</h2><p>{{ outage.safety_message }}</p></section>{% endif %}
+        {% if outage.documents %}<section class="outage-detail__documents"><h2>{{ 'Official documents'|t }}</h2>{% for document in outage.documents %}<a href="{{ document.url }}" download>{{ 'Download official announcement: @label'|t({'@label': document.label}) }} <span aria-hidden="true">&darr;</span></a>{% endfor %}</section>{% endif %}
+      </article>
+      <aside class="outage-detail__help"><h2>{{ 'Customer support'|t }}</h2><p>{{ outage.customer_message }}</p><a href="tel:{{ call_center.telephone }}">{{ 'Call @number'|t({'@number': call_center.label}) }}</a><small>{{ 'Published REG outage information is provided as accessible web content; official documents are supplementary.'|t }}</small></aside>
+    </div>
+  </div>
+</div>

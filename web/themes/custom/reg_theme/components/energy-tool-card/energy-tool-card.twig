@@ -1,0 +1,25 @@
+<article class="energy-tool-card energy-tool-card--{{ tool.accent }}">
+  <div class="energy-tool-card__top">
+    <span class="energy-tool-card__icon" aria-hidden="true">
+      {% if tool.icon.url %}
+        <img src="{{ tool.icon.url }}" alt="" loading="lazy" width="64" height="64">
+      {% elseif tool.icon_name == 'calculator' %}
+        <svg viewBox="0 0 48 48" focusable="false"><rect x="10" y="5" width="28" height="38" rx="4"></rect><path d="M16 11h16v8H16zM17 26h2m6 0h2m6 0h-2M17 34h2m6 0h2m6 0h-2"></path></svg>
+      {% elseif tool.icon_name == 'leaf' %}
+        <svg viewBox="0 0 48 48" focusable="false"><path d="M39 7C22 8 10 16 10 29c0 7 5 12 12 12 13 0 18-13 17-34Z"></path><path d="M10 40c5-10 12-17 24-25"></path></svg>
+      {% elseif tool.icon_name == 'shield' %}
+        <svg viewBox="0 0 48 48" focusable="false"><path d="M24 5 39 11v11c0 10-6 17-15 21C15 39 9 32 9 22V11l15-6Z"></path><path d="m26 14-8 12h6l-2 9 8-13h-6l2-8Z"></path></svg>
+      {% else %}
+        <svg viewBox="0 0 48 48" focusable="false"><path d="m27 5-13 22h10l-3 16 13-23H24l3-15Z"></path></svg>
+      {% endif %}
+    </span>
+    <span class="energy-tool-card__status energy-tool-card__status--{{ tool.status }}">{{ tool.status_label }}</span>
+  </div>
+  <h3>{{ tool.title }}</h3>
+  <p>{{ tool.description }}</p>
+  {% if tool.cta_url and tool.cta_label %}
+    <a class="energy-tool-card__cta" href="{{ tool.cta_url }}" data-reg-analytics-event="{{ tool.analytics_event }}" data-reg-analytics-type="{{ tool.key }}" data-reg-analytics-id="{{ tool.id }}">
+      {{ tool.cta_label }} <span aria-hidden="true">→</span>
+    </a>
+  {% endif %}
+</article>

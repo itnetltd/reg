@@ -1,0 +1,1019 @@
+<?php
+
+/**
+ * @file
+ * Site-specific hooks for the REG website.
+ */
+
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
+use Drupal\media\MediaInterface;
+use Drupal\node\NodeInterface;
+
+require_once __DIR__ . '/reg_core.supplier.inc';
+
+/**
+ * Implements hook_entity_field_access().
+ *
+ * Business editors may set an initial operational state, but only their
+ * approver may change it after the record has been created.
+ */
+function reg_core_entity_field_access(string $operation, FieldDefinitionInterface $field_definition, AccountInterface $account, ?FieldItemListInterface $items = NULL): AccessResult {
+  if ($operation !== 'edit' || !$items || $items->getEntity()->isNew()) {
+    return AccessResult::neutral();
+  }
+  $requirements = [
+    'field_reg_outage_status' => 'change reg outage operational status',
+    'field_reg_tender_status' => 'change reg procurement lifecycle',
+    'field_reg_job_status' => 'change reg recruitment lifecycle',
+  ];
+  $permission = $requirements[$field_definition->getName()] ?? NULL;
+  return $permission
+    ? AccessResult::allowedIfHasPermission($account, $permission)
+    : AccessResult::neutral();
+}
+
+/**
+ * Implements hook_page_attachments().
+ */
+function reg_core_page_attachments(array &$attachments): void {
+  $route_match = \Drupal::routeMatch();
+  $route = $route_match->getRouteObject();
+  $route_name = $route_match->getRouteName();
+  if (!$route || !$route_name || $route->getOption('_admin_route')) {
+    return;
+  }
+  $attachments['#cache']['contexts'][] = 'url.query_args';
+  $attachments['#cache']['contexts'][] = 'languages:language_interface';
+
+  $language_manager = \Drupal::languageManager();
+  $parameters = $route_match->getRawParameters()->all();
+  $query = \Drupal::request()->query->all();
+  $news = [];
+  $route_node = $route_match->getParameter('node');
+  if ($route_node instanceof NodeInterface && $route_node->bundle() === 'reg_news' && \Drupal::hasService('reg_core.news_repository')) {
+    try {
+      $news = \Drupal::service('reg_core.news_repository')->article($route_node);
+      $attachments['#attached']['library'][] = 'reg_core/newsroom';
+      $attachments['#cache']['contexts'][] = 'languages:language_content';
+      $attachments['#cache']['tags'] = array_values(array_unique(array_merge(
+        $attachments['#cache']['tags'] ?? [],
+        $news['cache_tags'] ?? [],
+      )));
+    }
+    catch (\Throwable) {
+      // Keep the article available while update hooks or caches are rebuilding.
+      $news = [];
+    }
+  }
+  try {
+    $canonical = !empty($news['seo']['canonical_url'])
+      ? $news['seo']['canonical_url']
+      : Url::fromRoute($route_name, $parameters, [
+        'absolute' => TRUE,
+        'language' => $language_manager->getCurrentLanguage(),
+      ])->toString();
+    $attachments['#attached']['html_head_link'][] = [[
+      'rel' => 'canonical',
+      'href' => $canonical,
+    ], TRUE];
+  }
+  catch (\Exception) {
+    // Some system routes cannot be generated without runtime parameters.
+  }
+  $alternates = [];
+  foreach (['en', 'rw'] as $langcode) {
+    $language = $language_manager->getLanguage($langcode);
+    if (!$language) {
+      continue;
+    }
+    if ($news && $route_node instanceof NodeInterface) {
+      if (!$route_node->hasTranslation($langcode) || !$route_node->getTranslation($langcode)->isPublished()) {
+        continue;
+      }
+    }
+    try {
+      $alternates[$langcode] = Url::fromRoute($route_name, $parameters, [
+        'absolute' => TRUE,
+        'language' => $language,
+        'query' => $query,
+      ])->toString();
+    }
+    catch (\Exception) {
+      continue;
+    }
+  }
+  foreach ($alternates as $langcode => $url) {
+    $attachments['#attached']['html_head_link'][] = [[
+      'rel' => 'alternate',
+      'hreflang' => $langcode,
+      'href' => $url,
+    ], TRUE];
+  }
+  if (isset($alternates['en'])) {
+    $attachments['#attached']['html_head_link'][] = [[
+      'rel' => 'alternate',
+      'hreflang' => 'x-default',
+      'href' => $alternates['en'],
+    ], TRUE];
+  }
+
+  if ($news) {
+    $meta = [
+      ['name' => 'description', 'content' => $news['seo']['description']],
+      ['property' => 'og:type', 'content' => 'article'],
+      ['property' => 'og:title', 'content' => $news['seo']['title']],
+      ['property' => 'og:description', 'content' => $news['seo']['description']],
+      ['property' => 'og:url', 'content' => $news['seo']['canonical_url']],
+    ];
+    if (!empty($news['seo']['image_url'])) {
+      $meta[] = ['property' => 'og:image', 'content' => $news['seo']['image_url']];
+    }
+    foreach ($meta as $index => $attributes) {
+      if (($attributes['content'] ?? '') !== '') {
+        $attachments['#attached']['html_head'][] = [[
+          '#tag' => 'meta',
+          '#attributes' => $attributes,
+        ], 'reg_news_meta_' . $index];
+      }
+    }
+
+    $structured = [
+      '@context' => 'https://schema.org',
+      '@type' => 'NewsArticle',
+      'headline' => $news['title'],
+      'description' => $news['seo']['description'],
+      'datePublished' => $news['seo']['date_published'],
+      'dateModified' => $news['seo']['date_modified'],
+      'mainEntityOfPage' => $news['seo']['canonical_url'],
+      'publisher' => ['@type' => 'Organization', 'name' => 'Rwanda Energy Group'],
+    ];
+    if (!empty($news['seo']['image_url'])) {
+      $structured['image'] = [$news['seo']['image_url']];
+    }
+    if (!empty($news['department'])) {
+      $structured['author'] = ['@type' => 'Organization', 'name' => $news['department']];
+    }
+    $structured = array_filter($structured, static fn ($value): bool => $value !== '' && $value !== []);
+    $attachments['#attached']['html_head'][] = [[
+      '#tag' => 'script',
+      '#attributes' => ['type' => 'application/ld+json'],
+      '#value' => json_encode($structured, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+    ], 'reg_news_structured_data'];
+  }
+
+  $config = \Drupal::config('reg_core.settings');
+  if ($config->get('analytics.local_aggregate_enabled')) {
+    /** @var \Drupal\reg_core\Analytics\AnalyticsProviderInterface $provider */
+    $provider = \Drupal::service('reg_core.analytics_provider');
+    $attachments['#attached']['library'][] = 'reg_core/analytics';
+    $attachments['#attached']['drupalSettings']['regAnalytics'] = [
+      'localEnabled' => TRUE,
+      'endpoint' => Url::fromRoute('reg_core.analytics_event')->toString(),
+      'provider' => $provider->publicSettings(),
+    ];
+    $attachments['#cache']['tags'][] = 'config:reg_core.settings';
+  }
+}
+
+/**
+ * Implements hook_media_presave().
+ */
+function reg_core_media_presave(MediaInterface $media): void {
+  if ($media->bundle() === 'document' && !$media->isNew()) {
+    // Preserve changes to official documents as revisions for audit history.
+    $media->setNewRevision(TRUE);
+  }
+}
+
+/**
+ * Implements hook_mail().
+ */
+function reg_core_mail(string $key, array &$message, array $params): void {
+  if ($key === 'tender_subscription_confirmation') {
+    $message['subject'] = t('REG tender notification subscription');
+    $message['body'][] = t('Your preferences for approved REG tender notifications have been saved.');
+    $message['body'][] = t('This subscription cannot be used to submit a bid. Always follow the instructions in the official tender notice.');
+    $message['body'][] = t('Unsubscribe: @url', ['@url' => $params['unsubscribe_url'] ?? '']);
+  }
+  elseif ($key === 'tender_alert') {
+    $message['subject'] = t('New REG tender: @title', ['@title' => $params['title'] ?? '']);
+    $message['body'][] = t('@summary', ['@summary' => $params['summary'] ?? '']);
+    $message['body'][] = t('View the published tender: @url', ['@url' => $params['url'] ?? '']);
+    $message['body'][] = t('Unsubscribe: @url', ['@url' => $params['unsubscribe_url'] ?? '']);
+  }
+  elseif ($key === 'supplier_verification') {
+    $message['subject'] = t('Verify your REG supplier account');
+    $message['body'][] = t('Hello @name,', ['@name' => $params['name'] ?? '']);
+    $message['body'][] = t('Verify your email within 24 hours: @url', ['@url' => $params['verification_url'] ?? '']);
+    $message['body'][] = t('If you did not request this account, do not use the link.');
+  }
+  elseif ($key === 'supplier_invitation') {
+    $message['subject'] = t('Invitation to the REG supplier workspace for @organization', ['@organization' => $params['organization'] ?? '']);
+    $message['body'][] = t('Accept this organization-scoped invitation within seven days: @url', ['@url' => $params['invitation_url'] ?? '']);
+  }
+  elseif ($key === 'supplier_review') {
+    $message['subject'] = t('REG supplier profile decision: @decision', ['@decision' => $params['decision'] ?? '']);
+    $message['body'][] = t('Organization: @organization', ['@organization' => $params['organization'] ?? '']);
+    $message['body'][] = t('Decision: @decision', ['@decision' => $params['decision'] ?? '']);
+    if (!empty($params['reason'])) $message['body'][] = t('Reason: @reason', ['@reason' => $params['reason']]);
+    $message['body'][] = t('Sign in to the REG supplier workspace to review your profile.');
+  }
+}
+
+/**
+ * Implements hook_cron().
+ */
+function reg_core_cron(): void {
+  if (\Drupal::config('reg_core.settings')->get('outages.source') === 'ge_dms') {
+    \Drupal::service('reg_core.dms_outage_synchronizer')->synchronizeIfDue();
+  }
+  $cutoff = \Drupal::time()->getRequestTime() - 604800;
+  if (\Drupal::database()->schema()->tableExists('reg_core_supplier_verification')) \Drupal::database()->delete('reg_core_supplier_verification')->condition('expires', $cutoff, '<')->execute();
+  if (\Drupal::database()->schema()->tableExists('reg_core_supplier_invitation')) \Drupal::database()->delete('reg_core_supplier_invitation')->condition('expires', $cutoff, '<')->execute();
+}
+
+/**
+ * Implements hook_field_widget_complete_form_alter().
+ */
+function reg_core_field_widget_complete_form_alter(array &$field_widget_complete_form, \Drupal\Core\Form\FormStateInterface $form_state, array $context): void {
+  if (($context['items']->getName() ?? '') === 'field_reg_outage_segments' && isset($field_widget_complete_form['widget']['add_more'])) {
+    $field_widget_complete_form['widget']['add_more']['#value'] = t('+ Add outage window');
+  }
+}
+
+/**
+ * Implements hook_node_presave().
+ */
+function reg_core_node_presave(NodeInterface $node): void {
+  if (in_array($node->bundle(), ['reg_tender', 'reg_job'], TRUE)) {
+    reg_core_apply_plan_defaults($node);
+    if (!$node->isNew() && ($original = $node->getOriginal()) instanceof NodeInterface) {
+      $tracked = $node->bundle() === 'reg_tender'
+        ? ['field_reg_proc_plan_item', 'field_reg_closing_date', 'field_reg_publication_channel', 'field_reg_submission_method', 'field_reg_tender_status']
+        : ['field_reg_recruit_plan_item', 'field_reg_closing_date', 'field_reg_application_method', 'field_reg_job_status'];
+      foreach ($tracked as $field) if ($node->hasField($field) && !$node->get($field)->equals($original->get($field))) {
+        $node->setNewRevision(TRUE);
+        if (trim((string) $node->getRevisionLogMessage()) === '') $node->setRevisionLogMessage('Plan relationship, channel, deadline, or lifecycle status changed.');
+        break;
+      }
+    }
+    return;
+  }
+  if (in_array($node->bundle(), ['reg_bid', 'reg_job_application'], TRUE)) {
+    reg_core_secure_submission_presave($node);
+    return;
+  }
+  if ($node->bundle() !== 'reg_outage' || $node->isNew()) {
+    return;
+  }
+  $original = $node->getOriginal();
+  if (!$original instanceof NodeInterface) {
+    return;
+  }
+  foreach (['field_reg_outage_segments', 'field_reg_outage_status'] as $field) {
+    if (!$node->get($field)->equals($original->get($field))) {
+      $node->setNewRevision(TRUE);
+      if (trim((string) $node->getRevisionLogMessage()) === '') {
+        $node->setRevisionLogMessage($field === 'field_reg_outage_status' ? 'Operational outage status changed.' : 'Published outage schedule changed.');
+      }
+      break;
+    }
+  }
+}
+
+/** Implements hook_form_BASE_FORM_ID_alter() for plan and channel rules. */
+function reg_core_form_node_form_alter(array &$form, FormStateInterface $form_state): void {
+  $node = $form_state->getFormObject()->getEntity();
+  if ($node instanceof NodeInterface && in_array($node->bundle(), ['reg_tender', 'reg_job'], TRUE)) {
+    $form['#validate'][] = 'reg_core_plan_link_form_validate';
+    if ($node->isNew()) {
+      $tender = $node->bundle() === 'reg_tender';
+      $permission = $tender ? 'override reg procurement plan defaults' : 'override reg recruitment plan defaults';
+      if (!\Drupal::currentUser()->hasPermission($permission)) {
+        $controlled = $tender ? ['field_reg_entity', 'field_reg_tender_category', 'field_reg_procurement_method', 'field_reg_project', 'field_reg_financial_year'] : ['field_reg_entity', 'field_reg_department', 'field_reg_vacancies', 'field_reg_job_type', 'field_reg_financial_year'];
+        foreach ($controlled as $field) if (isset($form[$field])) $form[$field]['#access'] = FALSE;
+      }
+    }
+  }
+}
+
+/** Enforces plan-or-approved-exception and authoritative channel requirements. */
+function reg_core_plan_link_form_validate(array &$form, FormStateInterface $form_state): void {
+  $node = $form_state->getFormObject()->getEntity();
+  if (!$node instanceof NodeInterface) return;
+  $value = static function (string $field) use ($form_state): mixed {
+    $input = $form_state->getValue($field);
+    return $input[0]['target_id'] ?? $input[0]['uri'] ?? $input[0]['value'] ?? NULL;
+  };
+  $unplanned = (bool) $value('field_reg_unplanned');
+  $plan_field = $node->bundle() === 'reg_tender' ? 'field_reg_proc_plan_item' : 'field_reg_recruit_plan_item';
+  if ($node->isNew() && !$value($plan_field) && !$unplanned) $form_state->setErrorByName($plan_field, t('Select an approved annual plan item or mark this as unplanned/exceptional procurement or recruitment.'));
+  if ($unplanned) {
+    foreach (['field_reg_exception_reason' => 'reason', 'field_reg_approval_ref' => 'approval reference'] as $field => $label) if (!trim((string) $value($field))) $form_state->setErrorByName($field, t('An exception @label is required.', ['@label' => $label]));
+    if ($node->bundle() === 'reg_tender') {
+      if (!$value('field_reg_approval_date')) $form_state->setErrorByName('field_reg_approval_date', t('An exception approval date is required.'));
+      if (!$value('field_reg_approval_document')) $form_state->setErrorByName('field_reg_approval_document', t('An exception approval document is required.'));
+    }
+  }
+  if ($node->bundle() === 'reg_tender') {
+    $method = (string) $value('field_reg_submission_method');
+    $channel = (string) $value('field_reg_publication_channel');
+    if ($node->isNew() && $channel === '') $form_state->setErrorByName('field_reg_publication_channel', t('Select the authoritative publication channel.'));
+    if ($node->isNew() && $method === '') $form_state->setErrorByName('field_reg_submission_method', t('Select the authoritative submission method.'));
+    if (($method === 'umucyo' || $channel === 'umucyo' || $channel === 'both') && !$value('field_reg_umucyo_url')) $form_state->setErrorByName('field_reg_umucyo_url', t('An approved UMUCYO tender URL is required for this channel.'));
+    if ($method === 'external' && !$value('field_reg_submission_url')) $form_state->setErrorByName('field_reg_submission_url', t('The approved external submission URL is required.'));
+  }
+  else {
+    $method = (string) $value('field_reg_application_method');
+    if ($node->isNew() && $method === '') $form_state->setErrorByName('field_reg_application_method', t('Select the authoritative application method.'));
+    if (in_array($method, ['mifotra', 'external'], TRUE) && !$value('field_reg_application_url')) $form_state->setErrorByName('field_reg_application_url', t('The authoritative external application URL is required.'));
+  }
+}
+
+/** Copies safe plan defaults without overwriting deliberate vacancy/tender data. */
+function reg_core_apply_plan_defaults(NodeInterface $node): void {
+  $is_tender = $node->bundle() === 'reg_tender';
+  $override_permission = $is_tender ? 'override reg procurement plan defaults' : 'override reg recruitment plan defaults';
+  $may_override = \Drupal::currentUser()->hasPermission($override_permission);
+  $field = $is_tender ? 'field_reg_proc_plan_item' : 'field_reg_recruit_plan_item';
+  $item = $node->hasField($field) ? $node->get($field)->entity : NULL;
+  if ($node->isNew() && $node->hasField($field)) {
+    $unplanned = (bool) $node->get('field_reg_unplanned')->value;
+    if ($unplanned && !$may_override) throw new \Drupal\Core\Entity\EntityStorageException('Only an authorized approver may create an exceptional procurement or recruitment record.');
+    if (!$item instanceof NodeInterface && !$unplanned) throw new \Drupal\Core\Entity\EntityStorageException('A new tender or vacancy must reference an approved plan item or an approved exception.');
+    if ($unplanned) {
+      if (trim((string) $node->get('field_reg_exception_reason')->value) === '' || trim((string) $node->get('field_reg_approval_ref')->value) === '') throw new \Drupal\Core\Entity\EntityStorageException('Approved exception reason and reference are required.');
+      if ($is_tender && ($node->get('field_reg_approval_date')->isEmpty() || $node->get('field_reg_approval_document')->isEmpty())) throw new \Drupal\Core\Entity\EntityStorageException('Exceptional procurement requires approval date and document.');
+    }
+    if ($is_tender) {
+      if ($node->get('field_reg_publication_channel')->isEmpty() || $node->get('field_reg_submission_method')->isEmpty()) throw new \Drupal\Core\Entity\EntityStorageException('New tenders require publication channel and submission method.');
+      $method = (string) $node->get('field_reg_submission_method')->value;
+      $channel = (string) $node->get('field_reg_publication_channel')->value;
+      if (($method === 'umucyo' || in_array($channel, ['umucyo', 'both'], TRUE)) && $node->get('field_reg_umucyo_url')->isEmpty()) throw new \Drupal\Core\Entity\EntityStorageException('An approved UMUCYO URL is required.');
+      if ($method === 'external' && $node->get('field_reg_submission_url')->isEmpty()) throw new \Drupal\Core\Entity\EntityStorageException('An approved external submission URL is required.');
+    }
+    else {
+      if ($node->get('field_reg_application_method')->isEmpty()) throw new \Drupal\Core\Entity\EntityStorageException('New vacancies require an application method.');
+      if (in_array((string) $node->get('field_reg_application_method')->value, ['mifotra', 'external'], TRUE) && $node->get('field_reg_application_url')->isEmpty()) throw new \Drupal\Core\Entity\EntityStorageException('An authoritative external application URL is required.');
+    }
+  }
+  if (!$item instanceof NodeInterface) return;
+  $plan_field = $is_tender ? 'field_reg_procurement_plan_ref' : 'field_reg_recruitment_plan_ref';
+  $plan = $item->get($plan_field)->entity;
+  $plan_status_field = $is_tender ? 'field_reg_proc_plan_status' : 'field_reg_recruit_plan_status';
+  if ($node->isNew() && (!$plan instanceof NodeInterface || !in_array((string) $plan->get($plan_status_field)->value, ['approved', 'published'], TRUE))) throw new \Drupal\Core\Entity\EntityStorageException('The selected plan item does not belong to an approved annual plan.');
+  $copy = static function (string $target, string $source) use ($node, $item, $may_override): void {
+    if ($node->hasField($target) && $item->hasField($source) && ($node->get($target)->isEmpty() || ($node->isNew() && !$may_override)) && !$item->get($source)->isEmpty()) $node->set($target, $item->get($source)->getValue());
+  };
+  foreach (['field_reg_entity' => 'field_reg_entity', 'field_reg_project' => 'field_reg_project', 'field_reg_procurement_method' => 'field_reg_procurement_method', 'field_reg_department' => 'field_reg_department', 'field_reg_vacancies' => 'field_reg_vacancies', 'field_reg_job_type' => 'field_reg_job_type'] as $target => $source) $copy($target, $source);
+  if ($plan instanceof NodeInterface && $node->hasField('field_reg_financial_year') && ($node->get('field_reg_financial_year')->isEmpty() || ($node->isNew() && !$may_override))) $node->set('field_reg_financial_year', $plan->get('field_reg_financial_year')->getValue());
+  if ($is_tender) {
+    if ($node->get('field_reg_procurement_plan')->isEmpty()) $node->set('field_reg_procurement_plan', (string) $item->get('field_reg_plan_reference')->value);
+    if ($node->get('field_reg_tender_category')->isEmpty() || ($node->isNew() && !$may_override)) {
+      $category = $item->get('field_reg_proc_category_key')->value;
+      $label = ['goods' => 'Goods', 'works' => 'Works', 'consultancy' => 'Consultancy Services', 'non_consultancy' => 'Non-Consultancy Services', 'other' => 'Other approved category'][$category] ?? '';
+      if ($label !== '') {
+        $ids = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->getQuery()->accessCheck(FALSE)->condition('vid', 'reg_procurement_category')->condition('name', $label)->range(0, 1)->execute();
+        if ($ids) $node->set('field_reg_tender_category', reset($ids));
+      }
+    }
+  }
+  elseif ($node->isNew() && trim((string) $node->label()) === '') $node->setTitle((string) $item->label());
+}
+
+/** Enforces authoritative method, deadline, declaration and immutable receipt. */
+function reg_core_secure_submission_presave(NodeInterface $node): void {
+  $bid = $node->bundle() === 'reg_bid';
+  $reference_field = $bid ? 'field_reg_submission_ref' : 'field_reg_application_ref';
+  $status_field = $bid ? 'field_reg_submission_status' : 'field_reg_application_status';
+  $related_field = $bid ? 'field_reg_bid_tender' : 'field_reg_application_job';
+  $method_field = $bid ? 'field_reg_submission_method' : 'field_reg_application_method';
+  $lifecycle_field = $bid ? 'field_reg_tender_status' : 'field_reg_job_status';
+  $original = !$node->isNew() ? $node->getOriginal() : NULL;
+  if ($original instanceof NodeInterface && (string) $original->get($status_field)->value !== 'draft') {
+    $permission = $bid ? 'administer reg procurement plans' : 'administer reg recruitment plans';
+    if (!\Drupal::currentUser()->hasPermission($permission)) throw new \Drupal\Core\Entity\EntityStorageException('Only an authorized officer may change a submitted record status.');
+    foreach ($node->getFieldDefinitions() as $field_name => $definition) {
+      if ($field_name === $status_field || $definition->isComputed() || !str_starts_with($field_name, 'field_')) continue;
+      if (!$node->get($field_name)->equals($original->get($field_name))) throw new \Drupal\Core\Entity\EntityStorageException('Submitted payload and receipt fields are immutable.');
+    }
+    $node->setNewRevision(TRUE);
+    $node->setRevisionLogMessage($bid ? 'Authorized bid lifecycle status changed.' : 'Authorized candidate-visible application status changed.');
+    return;
+  }
+  $related = $node->get($related_field)->entity;
+  if (!$related instanceof NodeInterface || (string) $related->get($method_field)->value !== 'reg_online' || (string) $related->get($lifecycle_field)->value !== 'active') throw new \Drupal\Core\Entity\EntityStorageException('This opportunity does not accept REG online submissions.');
+  $deadline = strtotime((string) $related->get('field_reg_closing_date')->value . ' UTC') ?: 0;
+  if (!$deadline || $deadline <= \Drupal::time()->getRequestTime()) throw new \Drupal\Core\Entity\EntityStorageException('The submission deadline has passed.');
+  if ($bid) {
+    /** @var \Drupal\reg_core\Supplier\SupplierManager $supplier_manager */
+    $supplier_manager = \Drupal::service('reg_core.supplier_manager');
+    $organization = $supplier_manager->organization();
+    $record_organization = $node->get('field_reg_supplier_org')->entity;
+    if (!$organization instanceof NodeInterface || !$record_organization instanceof NodeInterface || (int) $organization->id() !== (int) $record_organization->id()) throw new \Drupal\Core\Entity\EntityStorageException('The bid must belong to the current user’s active supplier organization.');
+    if (!$supplier_manager->canPrepareBid($related)) throw new \Drupal\Core\Entity\EntityStorageException('This organization or membership role cannot prepare the bid.');
+    if ((string) $node->get($status_field)->value === 'submitted' && (!$supplier_manager->canSubmitBid($related) || (string) $node->get('field_reg_bid_scan_status')->value !== 'clean' || $node->get('field_reg_technical_documents')->isEmpty() || $node->get('field_reg_financial_documents')->isEmpty())) throw new \Drupal\Core\Entity\EntityStorageException('Final submission requires a verified organization, authorized role, required document sections, and clean malware scan results.');
+  }
+  if ((string) $node->get($status_field)->value === 'submitted') {
+    $declaration_field = $bid && $node->hasField('field_reg_bid_declaration') ? 'field_reg_bid_declaration' : 'field_reg_declaration';
+    if (!(bool) $node->get($declaration_field)->value) throw new \Drupal\Core\Entity\EntityStorageException('The declaration must be accepted before submission.');
+    $now = \Drupal::time()->getRequestTime();
+    $prefix = $bid ? 'REG-BID' : 'REG-APP';
+    if ($node->get($reference_field)->isEmpty()) $node->set($reference_field, $prefix . '-' . gmdate('Ymd', $now) . '-' . strtoupper(substr(hash('sha256', $node->uuid()), 0, 10)));
+    $node->set('field_reg_submitted_at', gmdate('Y-m-d\\TH:i:s', $now));
+    if ($bid) $node->set('field_reg_submission_hash', hash('sha256', implode('|', [$related->id(), $node->getOwnerId(), $now, $node->uuid()])));
+    $node->setNewRevision(TRUE); $node->setRevisionLogMessage($bid ? 'Bid submitted with immutable server timestamp and receipt reference.' : 'Application submitted with immutable server timestamp and receipt reference.');
+  }
+}
+
+/** Implements hook_node_access() for private portal records. */
+function reg_core_node_access(NodeInterface $node, string $operation, AccountInterface $account): AccessResult {
+  if (!in_array($node->bundle(), ['reg_supplier_profile', 'reg_supplier_membership', 'reg_bid', 'reg_applicant_profile', 'reg_job_application'], TRUE)) return AccessResult::neutral();
+  $supplier_record = in_array($node->bundle(), ['reg_supplier_profile', 'reg_supplier_membership', 'reg_bid'], TRUE);
+  $admin = $supplier_record ? ($account->hasPermission('review reg suppliers') || $account->hasPermission('administer reg procurement plans')) : $account->hasPermission('administer reg recruitment plans');
+  if ($admin || ((int) $node->getOwnerId() === (int) $account->id() && $account->isAuthenticated())) return AccessResult::allowed()->cachePerUser()->addCacheableDependency($node);
+  if ($supplier_record && $account->isAuthenticated()) {
+    $organization = \Drupal::service('reg_core.supplier_manager')->organization((int) $account->id());
+    $record_org = $node->bundle() === 'reg_supplier_profile' ? $node : ($node->hasField('field_reg_supplier_org') ? $node->get('field_reg_supplier_org')->entity : NULL);
+    if ($organization instanceof NodeInterface && $record_org instanceof NodeInterface && (int) $organization->id() === (int) $record_org->id()) return AccessResult::allowed()->cachePerUser()->addCacheableDependency($node);
+  }
+  return AccessResult::forbidden()->cachePerUser()->addCacheableDependency($node);
+}
+
+/**
+ * Implements hook_theme().
+ */
+function reg_core_theme(): array {
+  return [
+    'reg_public_alert' => [
+      'variables' => ['alerts' => []],
+    ],
+    'reg_plan_listing' => [
+      'variables' => ['kind' => '', 'heading' => '', 'description' => '', 'items' => [], 'filters' => [], 'years' => [], 'departments' => [], 'entity_options' => [], 'category_options' => [], 'status_options' => [], 'section_hero' => []],
+    ],
+    'reg_private_portal' => [
+      'variables' => ['heading' => '', 'items' => [], 'notice' => ''],
+    ],
+    'reg_supplier_dashboard' => [
+      'variables' => ['organization' => NULL, 'organization_role' => '', 'completeness' => NULL, 'counts' => [], 'links' => []],
+    ],
+    'reg_supplier_portal' => [
+      'variables' => ['heading' => '', 'items' => [], 'links' => []],
+    ],
+    'reg_supplier_team' => [
+      'variables' => ['members' => [], 'can_invite' => FALSE, 'links' => []],
+    ],
+    'reg_section_hero' => [
+      'variables' => ['hero' => []],
+    ],
+    'reg_homepage_hero' => [
+      'variables' => ['heroes' => []],
+    ],
+    'reg_homepage_statistics' => [
+      'variables' => ['statistics' => []],
+    ],
+    'reg_energy_at_glance' => [
+      'variables' => ['cards' => []],
+    ],
+    'reg_about_page' => [
+      'variables' => [
+        'page' => [],
+        'section_hero' => [],
+        'breadcrumbs' => [],
+        'links' => [],
+        'vision_page' => [],
+        'group_page' => [],
+        'values' => [],
+        'subsidiaries' => [],
+        'board' => [],
+        'executives' => [],
+        'stakeholders' => [],
+        'development_partners' => [],
+        'employees' => [],
+        'branch_count' => 0,
+      ],
+    ],
+    'reg_what_we_do_page' => [
+      'variables' => [
+        'page' => [],
+        'facts' => [],
+        'children' => [],
+        'plants' => [],
+        'access_statistics' => [],
+        'projects' => [],
+        'news' => [],
+      ],
+    ],
+    'reg_homepage_partners' => [
+      'variables' => ['partners' => []],
+    ],
+    'reg_homepage_energy_tools' => [
+      'variables' => ['tools' => []],
+    ],
+    'reg_homepage_videos' => [
+      'variables' => ['videos' => [], 'view_all_url' => ''],
+    ],
+    'reg_news_homepage' => [
+      'variables' => ['content' => [], 'view_all_url' => ''],
+    ],
+    'reg_news_archive' => [
+      'variables' => [
+        'archive_heading' => 'News & Insights',
+        'archive_description' => '',
+        'lead' => [],
+        'items' => [],
+        'results_count' => 0,
+        'filters' => [],
+        'categories' => [],
+        'years' => [],
+        'departments' => [],
+        'pager' => NULL,
+      ],
+    ],
+    'reg_news_card' => [
+      'variables' => ['item' => [], 'variant' => 'card', 'analytics_event' => ''],
+    ],
+    'reg_social_links' => [
+      'variables' => [
+        'items' => [],
+        'variant' => 'default',
+        'heading' => '',
+        'description' => '',
+      ],
+    ],
+    'reg_video_archive' => [
+      'variables' => [
+        'archive_heading' => 'Videos',
+        'archive_description' => '',
+        'items' => [],
+        'results_count' => 0,
+        'filters' => [],
+        'categories' => [],
+        'years' => [],
+        'pager' => NULL,
+        'social_follow' => NULL,
+      ],
+    ],
+    'reg_faq_assistant' => [
+      'variables' => [
+        'call_center' => '2727',
+        'faq_url' => NULL,
+        'search_url' => NULL,
+        'quick_topics' => [],
+      ],
+    ],
+    'reg_faq_page' => [
+      'variables' => [
+        'items' => [],
+        'query' => '',
+        'current_category' => '',
+        'category_links' => [],
+        'quick_categories' => [],
+        'results_count' => 0,
+        'rate_limited' => FALSE,
+        'escalation' => [],
+        'language_name' => '',
+        'clear_url' => NULL,
+      ],
+    ],
+    'reg_faq_admin' => [
+      'variables' => [
+        'rows' => [],
+        'filters' => [],
+        'categories' => [],
+        'review_statuses' => [],
+        'languages' => [],
+        'add_url' => '',
+        'clear_url' => '',
+      ],
+    ],
+    'reg_outage_center' => [
+      'variables' => [
+        'outages' => [],
+        'mode' => 'current',
+        'filters' => [],
+        'districts' => [],
+        'sectors' => [],
+        'statuses' => [],
+        'types' => [],
+        'tabs' => [],
+        'source_message' => '',
+        'fallback' => FALSE,
+        'last_updated' => NULL,
+        'results_count' => 0,
+        'call_center' => ['label' => '2727', 'telephone' => '2727'],
+      ],
+    ],
+    'reg_outage_detail' => [
+      'variables' => [
+        'outage' => [],
+        'source_message' => '',
+        'fallback' => FALSE,
+        'back_url' => NULL,
+        'call_center' => ['label' => '2727', 'telephone' => '2727'],
+      ],
+    ],
+    'reg_public_information_hub' => [
+      'variables' => [
+        'cards' => [],
+        'latest' => [],
+        'search_url' => NULL,
+      ],
+    ],
+    'reg_public_information_listing' => [
+      'variables' => [
+        'bundle' => '',
+        'heading' => '',
+        'intro' => '',
+        'empty_message' => '',
+        'items' => [],
+        'results_count' => 0,
+        'filters' => [],
+        'tabs' => [],
+        'category_options' => [],
+        'entity_options' => [],
+        'status_options' => [],
+        'language_options' => [],
+        'years' => [],
+        'pager' => NULL,
+        'subscribe_url' => '',
+        'handoff' => [],
+      ],
+    ],
+    'reg_public_information_search' => [
+      'variables' => [
+        'items' => [],
+        'filters' => [],
+        'category_options' => [],
+        'type_options' => [],
+        'entity_options' => [],
+        'language_options' => [],
+        'pager' => NULL,
+      ],
+    ],
+    'reg_public_information_detail' => [
+      'variables' => [
+        'item' => [],
+        'back_url' => NULL,
+        'back_label' => '',
+        'handoff' => [],
+      ],
+    ],
+    'reg_tender_homepage' => [
+      'variables' => [
+        'items' => [],
+        'view_all_url' => '',
+      ],
+    ],
+    'reg_tender_detail' => [
+      'variables' => [
+        'item' => [],
+        'back_url' => NULL,
+        'back_label' => '',
+        'handoff' => [],
+      ],
+    ],
+    'reg_sports_landing' => [
+      'variables' => ['content' => [], 'links' => []],
+    ],
+    'reg_sports_team' => [
+      'variables' => ['team' => [], 'links' => []],
+    ],
+    'reg_sports_listing' => [
+      'variables' => [
+        'view' => '',
+        'heading' => '',
+        'items' => [],
+        'count' => 0,
+        'mapped_count' => 0,
+        'pending_count' => 0,
+        'empty_message' => '',
+        'filters' => [],
+        'teams' => [],
+        'sports' => [],
+        'competitions' => [],
+        'seasons' => [],
+        'positions' => [],
+        'pager' => NULL,
+        'links' => [],
+      ],
+    ],
+    'reg_sports_standings' => [
+      'variables' => [
+        'rows' => [],
+        'filters' => [],
+        'sports' => [],
+        'competitions' => [],
+        'seasons' => [],
+        'links' => [],
+      ],
+    ],
+    'reg_sports_detail' => [
+      'variables' => ['item' => [], 'analytics_event' => '', 'links' => []],
+    ],
+    'reg_contact' => [
+      'variables' => ['call_center' => '2727', 'general_phone' => '', 'general_email' => '', 'contact' => [], 'complaint' => [], 'links' => []],
+    ],
+    'reg_customer_services' => [
+      'variables' => ['services' => []],
+    ],
+    'reg_complaints' => [
+      'variables' => ['routing' => [], 'categories' => [], 'branches_url' => ''],
+    ],
+    'reg_branch_locator' => [
+      'variables' => [
+        'items' => [],
+        'markers' => [],
+        'filters' => [],
+        'provinces' => [],
+        'districts' => [],
+        'services' => [],
+        'entities' => [],
+        'count' => 0,
+        'pager' => NULL,
+        'map_data_url' => '',
+        'call_center' => '2727',
+      ],
+    ],
+    'reg_branch_detail' => [
+      'variables' => ['branch' => [], 'marker' => [], 'back_url' => ''],
+    ],
+    'reg_branch_admin' => [
+      'variables' => ['rows' => [], 'filters' => [], 'districts' => [], 'entities' => [], 'review_statuses' => [], 'add_url' => '', 'clear_url' => ''],
+    ],
+    'reg_translation_report' => [
+      'variables' => ['rows' => [], 'summary' => [], 'filters' => [], 'bundles' => []],
+    ],
+    'reg_dashboard' => [
+      'variables' => [
+        'section' => '',
+        'title_text' => '',
+        'notice' => '',
+        'cards' => [],
+        'tables' => [],
+        'filters' => [],
+        'navigation' => [],
+        'exports' => [],
+        'content_types' => [],
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_preprocess().
+ *
+ * Section selection remains centralized in the resolver. Feature templates
+ * receive the same normalized model without route checks or image paths.
+ */
+function reg_core_preprocess(array &$variables, string $hook): void {
+  $supported = [
+    'reg_branch_detail',
+    'reg_branch_locator',
+    'reg_complaints',
+    'reg_contact',
+    'reg_customer_services',
+    'reg_faq_page',
+    'reg_outage_center',
+    'reg_outage_detail',
+    'reg_public_information_detail',
+    'reg_public_information_hub',
+    'reg_public_information_listing',
+    'reg_public_information_search',
+    'reg_tender_detail',
+    'reg_sports_detail',
+    'reg_sports_landing',
+    'reg_sports_listing',
+    'reg_sports_standings',
+    'reg_sports_team',
+    'reg_video_archive',
+    'reg_news_archive',
+  ];
+  if (in_array($hook, $supported, TRUE) && \Drupal::hasService('reg_core.section_hero_resolver')) {
+    $variables['section_hero'] = \Drupal::service('reg_core.section_hero_resolver')->resolve();
+  }
+}
+
+/**
+ * Implements hook_preprocess_page().
+ *
+ * Generic node/View section pages that do not own a REG feature template use
+ * the same component at page level. Custom feature pages render it themselves.
+ */
+function reg_core_preprocess_page(array &$variables): void {
+  if (!\Drupal::hasService('reg_core.section_hero_resolver')) {
+    return;
+  }
+  $route_name = \Drupal::routeMatch()->getRouteName() ?: '';
+  if (in_array($route_name, ['system.403', 'system.404', '<front>'], TRUE)) {
+    return;
+  }
+  $custom_routes = [
+    'reg_core.contact',
+    'reg_core.customer_services',
+    'reg_core.complaints',
+    'reg_core.report_problem',
+    'reg_core.branches',
+    'reg_core.branch_detail',
+    'reg_core.outages',
+    'reg_core.outages_current',
+    'reg_core.outages_planned',
+    'reg_core.outages_history',
+    'reg_core.outage_detail',
+    'reg_core.faq',
+    'reg_core.public_information',
+    'reg_core.public_information_search',
+    'reg_core.tenders',
+    'reg_core.tenders_current',
+    'reg_core.tenders_awarded',
+    'reg_core.tenders_archive',
+    'reg_core.tender_detail',
+    'reg_core.jobs',
+    'reg_core.jobs_current',
+    'reg_core.jobs_results',
+    'reg_core.jobs_archive',
+    'reg_core.job_detail',
+    'reg_core.publications',
+    'reg_core.publication_detail',
+    'reg_core.sports',
+    'reg_core.sports_team_basketball_men',
+    'reg_core.sports_team_basketball_women',
+    'reg_core.sports_team_volleyball_men',
+    'reg_core.sports_fixtures',
+    'reg_core.sports_results',
+    'reg_core.sports_standings',
+    'reg_core.sports_news',
+    'reg_core.sports_news_detail',
+    'reg_core.sports_players',
+    'reg_core.sports_player',
+    'reg_core.sports_fixture',
+    'reg_core.sports_gallery',
+    'reg_core.sports_gallery_detail',
+    'reg_core.sports_videos',
+    'reg_core.sports_search',
+    'reg_core.videos',
+    'reg_core.video_media_center',
+    'reg_core.news',
+  ];
+  if (str_starts_with($route_name, 'reg_core.about')) {
+    return;
+  }
+  if (!in_array($route_name, $custom_routes, TRUE)) {
+    $route_node = \Drupal::routeMatch()->getParameter('node');
+    if ($route_name === 'entity.node.canonical' && $route_node instanceof \Drupal\node\NodeInterface && $route_node->bundle() === 'reg_news') {
+      return;
+    }
+    $hero = \Drupal::service('reg_core.section_hero_resolver')->resolve();
+    if ($route_name === 'entity.node.canonical' && $route_node instanceof NodeInterface && $route_node->bundle() === 'reg_what_we_do_page') {
+      $hero['eyebrow'] = 'What We Do';
+      $hero['title'] = $route_node->label();
+      $hero['description'] = (string) $route_node->get('field_reg_summary')->value;
+    }
+    if ($hero) {
+      $variables['reg_section_hero_global'] = [
+        '#theme' => 'reg_section_hero',
+        '#hero' => $hero,
+        '#attached' => ['library' => ['reg_core/section_hero']],
+        '#cache' => [
+          'contexts' => ['languages:language_interface', 'url.path'],
+          'tags' => $hero['cache_tags'] ?? ['node_list:reg_section_hero'],
+          'max-age' => 300,
+        ],
+      ];
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_node().
+ */
+function reg_core_preprocess_node(array &$variables): void {
+  $node = $variables['node'] ?? NULL;
+  if (!$node instanceof NodeInterface || $node->bundle() !== 'reg_what_we_do_page' || ($variables['view_mode'] ?? '') !== 'full') {
+    return;
+  }
+
+  $manager = \Drupal::entityTypeManager();
+  $storage = $manager->getStorage('node');
+  $key = (string) $node->get('field_reg_wwd_key')->value;
+  $group = (string) $node->get('field_reg_wwd_group')->value;
+  $variables['#attached']['library'][] = 'reg_core/what_we_do';
+  $variables['page'] = [
+    'title' => $node->label(),
+    'summary' => (string) $node->get('field_reg_summary')->value,
+    'body' => (string) $node->get('body')->processed,
+    'key' => $key,
+    'group' => $group,
+    'source_url' => (string) ($node->get('field_reg_source_url')->uri ?? ''),
+  ];
+
+  $fact_ids = $storage->getQuery()->accessCheck(TRUE)
+    ->condition('type', 'reg_fact')->condition('status', 1)
+    ->condition('field_reg_wwd_key', $key)->sort('created', 'ASC')->execute();
+  $variables['facts'] = [];
+  foreach ($storage->loadMultiple($fact_ids) as $fact) {
+    $value = rtrim(rtrim(number_format((float) $fact->get('field_reg_fact_value')->value, 3, '.', ','), '0'), '.');
+    $variables['facts'][] = [
+      'metric' => (string) $fact->get('field_reg_metric')->value,
+      'value' => $value,
+      'unit' => (string) $fact->get('field_reg_fact_unit')->value,
+      'period' => (string) $fact->get('field_reg_reporting_period')->value,
+    ];
+  }
+
+  $variables['children'] = [];
+  foreach (\Drupal\reg_core\Content\WhatWeDoImporter::pageManifest() as $child_key => $definition) {
+    $include = match ($key) {
+      'overview' => in_array($child_key, ['generation', 'transmission', 'distribution', 'access', 'biomass-clean-cooking', 'petroleum', 'projects'], TRUE),
+      'generation' => str_starts_with($child_key, 'generation-'),
+      'access' => in_array($child_key, ['access-on-grid', 'access-off-grid', 'access-national-electrification-plan'], TRUE),
+      'off-grid' => str_starts_with($child_key, 'off-grid-'),
+      default => FALSE,
+    };
+    if (!$include) {
+      continue;
+    }
+    $ids = $storage->getQuery()->accessCheck(TRUE)->condition('type', 'reg_what_we_do_page')->condition('status', 1)->condition('field_reg_wwd_key', $child_key)->range(0, 1)->execute();
+    $child = $ids ? $storage->load(reset($ids)) : NULL;
+    if ($child) {
+      $variables['children'][] = ['title' => $child->label(), 'summary' => (string) $child->get('field_reg_summary')->value, 'url' => $child->toUrl()->toString()];
+    }
+  }
+
+  $variables['plants'] = [];
+  if ($key === 'generation') {
+    $plant_ids = $storage->getQuery()->accessCheck(TRUE)->condition('type', 'reg_power_plant')->condition('status', 1)->sort('field_reg_plant_technology')->sort('title')->execute();
+    foreach ($storage->loadMultiple($plant_ids) as $plant) {
+      $variables['plants'][] = [
+        'name' => $plant->label(), 'technology' => (string) $plant->get('field_reg_plant_technology')->value,
+        'grid' => (string) ($plant->get('field_reg_grid_status')->value === 'off_grid' ? 'Off-grid' : 'On-grid'),
+        'capacity' => rtrim(rtrim(number_format((float) $plant->get('field_reg_capacity_mw')->value, 3, '.', ','), '0'), '.'),
+        'ownership' => (string) $plant->get('field_reg_ownership')->value,
+        'year' => (string) $plant->get('field_reg_commissioning_year')->value,
+      ];
+    }
+  }
+
+  $variables['access_statistics'] = [];
+  $access_type = match ($key) {'access' => 'total', 'access-on-grid' => 'on_grid', 'access-off-grid' => 'off_grid', default => ''};
+  if ($access_type) {
+    $stat_ids = $storage->getQuery()->accessCheck(TRUE)->condition('type', 'reg_access_statistic')->condition('status', 1)->condition('field_reg_access_type', $access_type)->sort('field_reg_district_name')->execute();
+    foreach ($storage->loadMultiple($stat_ids) as $stat) {
+      $variables['access_statistics'][] = ['district' => (string) $stat->get('field_reg_district_name')->value, 'rate' => number_format((float) $stat->get('field_reg_access_rate')->value, 1) . '%', 'period' => (string) $stat->get('field_reg_reporting_period')->value];
+    }
+  }
+
+  $variables['projects'] = [];
+  $project_limit = $key === 'projects' ? 60 : 6;
+  $project_ids = $storage->getQuery()->accessCheck(TRUE)->condition('type', 'reg_project')->condition('status', 1)->sort('changed', 'DESC')->range(0, $project_limit)->execute();
+  foreach ($storage->loadMultiple($project_ids) as $project) {
+    $variables['projects'][] = ['title' => $project->label(), 'summary' => (string) $project->get('field_reg_summary')->value, 'category' => (string) $project->get('field_reg_project_category')->value, 'url' => $project->toUrl()->toString()];
+  }
+
+  $variables['news'] = [];
+  $news_ids = $storage->getQuery()->accessCheck(TRUE)->condition('type', 'reg_news')->condition('status', 1)->sort('field_reg_publication_date', 'DESC')->range(0, 3)->execute();
+  foreach ($storage->loadMultiple($news_ids) as $news) {
+    $variables['news'][] = ['title' => $news->label(), 'url' => $news->toUrl()->toString()];
+  }
+}
+
+/**
+ * Implements hook_page_bottom().
+ */
+function reg_core_page_bottom(array &$page_bottom): void {
+  $route = \Drupal::routeMatch()->getRouteObject();
+  if (!$route || $route->getOption('_admin_route')) {
+    return;
+  }
+
+  $config = \Drupal::config('reg_core.settings');
+  $translation = \Drupal::translation();
+  $page_bottom['reg_faq_assistant'] = [
+    '#theme' => 'reg_faq_assistant',
+    '#call_center' => $config->get('support.call_center') ?: '2727',
+    '#faq_url' => Url::fromRoute('reg_core.faq')->toString(),
+    '#search_url' => Url::fromRoute('reg_core.faq_search')->toString(),
+    '#quick_topics' => [
+      ['id' => 'outages', 'label' => $translation->translate('Power Outages')],
+      ['id' => 'online_services', 'label' => $translation->translate('Online Services')],
+      ['id' => 'connection', 'label' => $translation->translate('New Connection')],
+      ['id' => 'tariffs', 'label' => $translation->translate('Tariffs and Billing')],
+    ],
+    '#attached' => [
+      'library' => ['reg_core/faq_assistant'],
+    ],
+    '#cache' => [
+      'contexts' => ['url.path', 'languages:language_interface'],
+      'tags' => ['config:reg_core.settings', 'node_list:reg_faq'],
+    ],
+  ];
+
+  CacheableMetadata::createFromRenderArray($page_bottom['reg_faq_assistant'])
+    ->applyTo($page_bottom['reg_faq_assistant']);
+}

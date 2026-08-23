@@ -1,0 +1,20 @@
+REG Drupal Phase Two Update
+===========================
+
+1. Extract this ZIP over the root of C:\Sites\reg-drupal.
+2. Open Command Prompt in C:\Sites\reg-drupal.
+3. Run:
+
+   ddev exec bash ./scripts/apply-phase2.sh
+
+4. Open:
+
+   ddev launch
+
+5. Configure approved links and calculator assumptions at:
+
+   /admin/config/reg/site-settings
+
+The update creates structured content types, editorial roles, multilingual readiness,
+Online Services gateway, Outage Center, FAQ-first assistant, Bill Estimator, Carbon
+Calculator, and a service-first homepage aligned to the revised inception report.
