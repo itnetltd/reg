@@ -16,3 +16,17 @@
 .DS_Store
 *.log
 /phpunit.xml
+
+/vendor/
+/web/sites/default/files/
+/web/sites/default/settings.php
+/web/sites/default/settings.local.php
+
+/private/
+
+*.sql
+*.sql.gz
+*.tar.gz
+
+.env
+.env.*
