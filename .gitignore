@@ -1,4 +1,20 @@
 /vendor/
+
+/web/sites/default/files/
+/web/sites/default/settings.php
+/web/sites/default/settings.local.php
+
+/private/secure-submissions/
+/private/supplier-acceptance/
+
+.codex/
+
+*.sql
+*.sql.gz
+*.tar.gz
+
+.env
+.env.*
 /web/core/
 /web/modules/contrib/
 /web/themes/contrib/
@@ -17,16 +33,6 @@
 *.log
 /phpunit.xml
 
-/vendor/
-/web/sites/default/files/
-/web/sites/default/settings.php
-/web/sites/default/settings.local.php
-
 /private/
 
-*.sql
-*.sql.gz
-*.tar.gz
 
-.env
-.env.*
