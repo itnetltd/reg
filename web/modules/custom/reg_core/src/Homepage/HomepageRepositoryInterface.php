@@ -23,6 +23,11 @@ interface HomepageRepositoryInterface {
   public function statistics(): array;
 
   /**
+   * Returns the four stable, CMS-managed statistics used in the hero.
+   */
+  public function heroStatistics(): array;
+
+  /**
    * Returns the latest approved, manually managed sector indicators.
    */
   public function energyAtGlance(): array;

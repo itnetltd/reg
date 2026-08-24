@@ -49,6 +49,7 @@ final class HomepageHeroBlock extends BlockBase implements ContainerFactoryPlugi
   public function build(): array {
     $result = $this->homepageRepository->heroes();
     $heroes = $result['heroes'] ?? [];
+    $statistics = $this->homepageRepository->heroStatistics();
     if ($heroes === []) {
       $site = $this->configFactory->get('system.site');
       $heroes[] = [
@@ -68,10 +69,11 @@ final class HomepageHeroBlock extends BlockBase implements ContainerFactoryPlugi
     return [
       '#theme' => 'reg_homepage_hero',
       '#heroes' => $heroes,
+      '#statistics' => $statistics,
       '#attached' => ['library' => ['reg_core/homepage_hero']],
       '#cache' => [
         'contexts' => ['languages:language_interface'],
-        'tags' => ['node_list', 'node_list:reg_homepage_hero', 'media_list', 'file_list', 'config:system.site'],
+        'tags' => ['node_list', 'node_list:reg_homepage_hero', 'node_list:reg_fact', 'media_list', 'file_list', 'config:system.site'],
         'max-age' => (int) ($result['max_age'] ?? 300),
       ],
     ];

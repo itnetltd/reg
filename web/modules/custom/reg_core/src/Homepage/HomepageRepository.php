@@ -197,6 +197,7 @@ final class HomepageRepository implements HomepageRepositoryInterface {
           : 0);
       $statistics[] = [
         'id' => (int) $node->id(),
+        'key' => $this->value($node, 'field_reg_fact_key'),
         'title' => $this->value($node, 'field_reg_metric') ?: (string) $node->label(),
         'value' => number_format((float) $raw_value, $decimals, '.', ','),
         'suffix' => $this->value($node, 'field_reg_fact_unit'),
@@ -209,6 +210,32 @@ final class HomepageRepository implements HomepageRepositoryInterface {
       'node_list:reg_fact',
     ]);
     return $statistics;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function heroStatistics(): array {
+    $statistics = [];
+    foreach ($this->statistics() as $statistic) {
+      $key = (string) ($statistic['key'] ?? '');
+      if ($key !== '') {
+        $statistics[$key] = $statistic;
+      }
+    }
+
+    $highlights = [];
+    foreach ([
+      'homepage-installed-generation-capacity',
+      'homepage-national-electricity-access',
+      'homepage-transmission-network-length',
+      'homepage-clean-cooking-stoves',
+    ] as $key) {
+      if (isset($statistics[$key])) {
+        $highlights[] = $statistics[$key];
+      }
+    }
+    return $highlights;
   }
 
   /**

@@ -29,6 +29,29 @@
         </article>
       {% endfor %}
     </div>
+    {% if statistics %}
+      <section class="reg-hero-stats" aria-labelledby="reg-hero-stats-title" data-reg-counter-group>
+        <h2 id="reg-hero-stats-title" class="visually-hidden">{{ 'REG at a glance'|t }}</h2>
+        <div class="reg-hero-stats__grid">
+          {% for statistic in statistics %}
+            {% set counter_value = statistic.value|replace({',': ''}) %}
+            {% set counter_parts = counter_value|split('.') %}
+            {% set counter_decimals = counter_parts|length > 1 ? counter_parts[1]|length : 0 %}
+            <div class="reg-hero-stat" data-reg-stat-key="{{ statistic.key }}">
+              <p class="reg-hero-stat__value">
+                <span
+                  class="reg-hero-stat__number js-reg-counter"
+                  data-counter-value="{{ counter_value }}"
+                  data-counter-decimals="{{ counter_decimals }}"
+                  aria-label="{{ statistic.value }}"
+                >{{ statistic.value }}</span>{% if statistic.suffix %}<span class="reg-hero-stat__unit{{ statistic.suffix == '%' ? ' reg-hero-stat__unit--tight' }}">{{ statistic.suffix }}</span>{% endif %}
+              </p>
+              <p class="reg-hero-stat__label">{{ statistic.title }}</p>
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
     {% if is_carousel %}
       <div class="reg-hero-carousel__controls">
         <button type="button" class="reg-hero-carousel__arrow" data-reg-hero-prev aria-label="{{ 'Previous slide'|t }}"><span aria-hidden="true">&larr;</span></button>

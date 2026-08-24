@@ -2583,7 +2583,7 @@ function reg_core_place_homepage_statistics_block(): void {
       'pages' => '<front>',
     ]);
   if ($is_new) {
-    $block->setStatus(TRUE);
+    $block->setStatus(FALSE);
   }
   $block->save();
 }

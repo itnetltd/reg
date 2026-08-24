@@ -537,3 +537,12 @@ function reg_core_post_update_supplier_primary_membership_activation(?array &$sa
   reg_core_finalize_supplier_registration();
   return 'Activated supplier profile owners and their primary organization memberships.';
 }
+
+/** Moves selected facts into the hero and retires the large homepage block. */
+function reg_core_post_update_hero_statistics_overlay(?array &$sandbox = NULL): string {
+  $block = \Drupal\block\Entity\Block::load('reg_homepage_statistics');
+  if ($block && $block->status()) {
+    $block->setStatus(FALSE)->save();
+  }
+  return 'Moved four CMS-managed facts into the fixed homepage hero overlay and disabled the large statistics block placement.';
+}

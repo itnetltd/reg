@@ -503,7 +503,7 @@ function reg_core_theme(): array {
       'variables' => ['hero' => []],
     ],
     'reg_homepage_hero' => [
-      'variables' => ['heroes' => []],
+      'variables' => ['heroes' => [], 'statistics' => []],
     ],
     'reg_homepage_statistics' => [
       'variables' => ['statistics' => []],

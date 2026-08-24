@@ -4,16 +4,21 @@ portal:
     component:
       css/reg-core.css: {}
 
-homepage_statistics:
-  version: 2.x
-  css:
-    component:
-      css/homepage-statistics.css: {}
+homepage_counters:
+  version: 1.x
   js:
     js/homepage-statistics.js: {}
   dependencies:
     - core/drupal
     - core/once
+
+homepage_statistics:
+  version: 2.x
+  css:
+    component:
+      css/homepage-statistics.css: {}
+  dependencies:
+    - reg_core/homepage_counters
 
 energy_at_glance:
   version: 1.x
@@ -24,7 +29,7 @@ energy_at_glance:
     - reg_core/homepage_statistics
 
 homepage_hero:
-  version: 2.x
+  version: 3.x
   css:
     component:
       css/homepage-hero.css: {}
@@ -33,6 +38,7 @@ homepage_hero:
   dependencies:
     - core/drupal
     - core/once
+    - reg_core/homepage_counters
 
 about:
   version: 1.x
