@@ -62,6 +62,7 @@ reg_core.settings:
         contact_source_url:
           type: uri
           label: 'Official contact source URL'
+
     links:
       type: mapping
       label: 'Official service links'
@@ -237,3 +238,29 @@ reg_core.social_media_platform:
     show_homepage_feed:
       type: boolean
       label: 'Show feed on homepage'
+
+reg_core.procurement_settings:
+  type: config_object
+  label: 'REG Procurement settings'
+  mapping:
+    supplier_registration_notification_email:
+      type: email
+      label: 'Supplier Registration Notification Email'
+    secondary_notification_email:
+      type: email
+      label: 'Secondary Notification Email'
+    notification_sender_name:
+      type: label
+      label: 'Notification Sender Name'
+    notification_sender_email:
+      type: email
+      label: 'Notification Sender Email'
+    send_procurement_notification:
+      type: boolean
+      label: 'Send Procurement Notification'
+    send_supplier_confirmation:
+      type: boolean
+      label: 'Send Supplier Confirmation'
+    require_supplier_approval:
+      type: boolean
+      label: 'Require Supplier Approval'

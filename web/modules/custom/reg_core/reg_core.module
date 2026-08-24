@@ -213,6 +213,29 @@ function reg_core_mail(string $key, array &$message, array $params): void {
     $message['body'][] = t('Verify your email within 24 hours: @url', ['@url' => $params['verification_url'] ?? '']);
     $message['body'][] = t('If you did not request this account, do not use the link.');
   }
+  elseif ($key === 'supplier_registration_confirmation') {
+    $message['subject'] = t('Supplier Registration Received - REG Procurement Portal');
+    $message['body'][] = t('Your supplier registration has been received.');
+    $message['body'][] = t('Company: @company', ['@company' => $params['company'] ?? '']);
+    $message['body'][] = t('Registration reference: @reference', ['@reference' => $params['reference'] ?? '']);
+    $message['body'][] = t('Registration status: @status', ['@status' => $params['status'] ?? 'Pending Review']);
+    $message['body'][] = t('Portal login and status: @url', ['@url' => $params['portal_url'] ?? '']);
+    $message['body'][] = t('REG will never request your supplier password by email.');
+  }
+  elseif ($key === 'supplier_registration_procurement') {
+    $message['subject'] = t('New Supplier Registration Awaiting Review');
+    $message['body'][] = t('Company: @value', ['@value' => $params['company'] ?? '']);
+    $message['body'][] = t('TIN: @value', ['@value' => $params['tin'] ?? '']);
+    $message['body'][] = t('Registration number: @value', ['@value' => $params['registration_number'] ?? '']);
+    $message['body'][] = t('Supplier type: @value', ['@value' => $params['supplier_type'] ?? '']);
+    $message['body'][] = t('Contact name: @value', ['@value' => $params['contact_name'] ?? '']);
+    $message['body'][] = t('Email: @value', ['@value' => $params['email'] ?? '']);
+    $message['body'][] = t('Phone: @value', ['@value' => $params['phone'] ?? '']);
+    $message['body'][] = t('Registration date: @value', ['@value' => $params['registration_date'] ?? '']);
+    $message['body'][] = t('Supplier registration reference: @value', ['@value' => $params['reference'] ?? '']);
+    $message['body'][] = t('Review Supplier Registration: @url', ['@url' => $params['review_url'] ?? '']);
+    $message['body'][] = t('Private supplier documents are available only through the authorized Drupal review page.');
+  }
   elseif ($key === 'supplier_invitation') {
     $message['subject'] = t('Invitation to the REG supplier workspace for @organization', ['@organization' => $params['organization'] ?? '']);
     $message['body'][] = t('Accept this organization-scoped invitation within seven days: @url', ['@url' => $params['invitation_url'] ?? '']);
@@ -223,6 +246,13 @@ function reg_core_mail(string $key, array &$message, array $params): void {
     $message['body'][] = t('Decision: @decision', ['@decision' => $params['decision'] ?? '']);
     if (!empty($params['reason'])) $message['body'][] = t('Reason: @reason', ['@reason' => $params['reason']]);
     $message['body'][] = t('Sign in to the REG supplier workspace to review your profile.');
+  }
+
+  $sender_email = trim((string) ($params['sender_email'] ?? ''));
+  if (filter_var($sender_email, FILTER_VALIDATE_EMAIL)) {
+    $sender_name = trim(preg_replace('/[\r\n]+/', ' ', (string) ($params['sender_name'] ?? '')) ?? '');
+    $message['from'] = $sender_email;
+    $message['headers']['From'] = $sender_name !== '' ? $sender_name . ' <' . $sender_email . '>' : $sender_email;
   }
 }
 

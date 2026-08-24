@@ -5,12 +5,19 @@ reg_core.settings:
   parent: system.admin_config_services
   weight: 20
 
+reg_core.procurement_settings:
+  title: 'REG Procurement settings'
+  description: 'Configure supplier-registration notifications, senders, and approval requirements.'
+  route_name: reg_core.procurement_settings
+  parent: system.admin_config_services
+  weight: 21
+
 reg_core.social_media_settings:
   title: 'REG social media'
   description: 'Manage official social channels shown in the utility bar, footer, and Media Center.'
   route_name: reg_core.social_media_settings
   parent: system.admin_config_services
-  weight: 21
+  weight: 22
 
 reg_core.news_admin:
   title: 'News'

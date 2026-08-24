@@ -47,7 +47,7 @@ final class SupplierManager {
     $role = $this->organizationRole($uid);
     $status = (string) ($organization?->get('field_reg_supplier_status')->value ?? '');
     return $organization instanceof NodeInterface
-      && in_array($status, ['pending', 'verified'], TRUE)
+      && $status === 'approved'
       && in_array($role, ['supplier_admin', 'bid_manager', 'bid_contributor'], TRUE)
       && $this->tenderAcceptsRegBids($tender);
   }
@@ -55,7 +55,7 @@ final class SupplierManager {
   public function canSubmitBid(NodeInterface $tender, ?int $uid = NULL): bool {
     $organization = $this->organization($uid);
     return $this->canPrepareBid($tender, $uid)
-      && (string) $organization?->get('field_reg_supplier_status')->value === 'verified'
+      && (string) $organization?->get('field_reg_supplier_status')->value === 'approved'
       && (string) $organization?->get('field_reg_document_scan_status')->value === 'clean'
       && in_array($this->organizationRole($uid), ['supplier_admin', 'bid_manager'], TRUE);
   }
@@ -76,11 +76,34 @@ final class SupplierManager {
   }
 
   public function tinExists(string $tin, int $exclude_nid = 0): bool {
-    $normalized = strtoupper(preg_replace('/[^A-Z0-9]/i', '', $tin) ?? '');
+    $normalized = $this->normalizeIdentity($tin);
     if ($normalized === '') return FALSE;
     $storage = $this->regEntityTypeManager->getStorage('node');
     $ids = $storage->getQuery()->accessCheck(FALSE)->condition('type', 'reg_supplier_profile')->condition('field_reg_tin', $normalized)->execute();
     return (bool) array_filter(array_map('intval', $ids), static fn(int $id): bool => $id !== $exclude_nid);
+  }
+
+  /** Returns a comparison-safe supplier identity value. */
+  public function normalizeIdentity(string $value): string {
+    return strtoupper(preg_replace('/[^A-Z0-9]/i', '', $value) ?? '');
+  }
+
+  /** Checks TIN and registration number without revealing an owner. */
+  public function identityExists(string $tin, string $registration, int $exclude_nid = 0): bool {
+    $tin = $this->normalizeIdentity($tin);
+    $registration = $this->normalizeIdentity($registration);
+    $storage = $this->regEntityTypeManager->getStorage('node');
+    $ids = $storage->getQuery()->accessCheck(FALSE)->condition('type', 'reg_supplier_profile')->execute();
+    foreach ($storage->loadMultiple($ids) as $profile) {
+      if ((int) $profile->id() === $exclude_nid) {
+        continue;
+      }
+      if ($this->normalizeIdentity((string) $profile->get('field_reg_tin')->value) === $tin
+        || $this->normalizeIdentity((string) $profile->get('field_reg_registration_no')->value) === $registration) {
+        return TRUE;
+      }
+    }
+    return FALSE;
   }
 
   public function members(NodeInterface $organization): array {
@@ -103,7 +126,7 @@ final class SupplierManager {
     $company = !$organization->get('field_reg_company_name')->isEmpty() && !$organization->get('field_reg_registration_no')->isEmpty() && !$organization->get('field_reg_supplier_categories')->isEmpty();
     $documents = !$organization->get('field_reg_private_documents')->isEmpty();
     $email = (bool) $user->get('field_reg_email_verified')->value;
-    $verified = (string) $organization->get('field_reg_supplier_status')->value === 'verified';
+    $verified = (string) $organization->get('field_reg_supplier_status')->value === 'approved';
     return ['company' => $company, 'documents' => $documents, 'email' => $email, 'verified' => $verified, 'complete_count' => count(array_filter([$company, $documents, $email, $verified])), 'total' => 4];
   }
 

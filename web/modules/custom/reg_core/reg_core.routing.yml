@@ -691,14 +691,30 @@ reg_core.bid_start:
     _controller: '\Drupal\reg_core\Controller\SupplierPortalController::bid'
     _title: 'Bid submission'
   requirements:
-    _permission: 'submit reg bids'
+    _permission: 'access content'
     tender: '\d+'
 
 reg_core.supplier_register:
   path: '/supplier/register'
   defaults:
     _form: '\Drupal\reg_core\Form\SupplierRegisterForm'
-    _title: 'Supplier registration'
+    _title: 'SUPPLIER REGISTRATION'
+  requirements:
+    _access: 'TRUE'
+
+reg_core.supplier_registration_success:
+  path: '/supplier/registration-success'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SupplierPortalController::registrationSuccess'
+    _title: 'REGISTRATION RECEIVED'
+  requirements:
+    _access: 'TRUE'
+
+reg_core.supplier_privacy:
+  path: '/supplier/privacy'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\SupplierPortalController::privacy'
+    _title: 'Supplier privacy and data use'
   requirements:
     _access: 'TRUE'
 
@@ -1008,6 +1024,16 @@ reg_core.settings:
   defaults:
     _form: '\Drupal\reg_core\Form\RegSettingsForm'
     _title: 'REG website settings'
+  requirements:
+    _permission: 'administer reg website settings'
+  options:
+    _admin_route: true
+
+reg_core.procurement_settings:
+  path: '/admin/config/reg/procurement'
+  defaults:
+    _form: '\Drupal\reg_core\Form\ProcurementSettingsForm'
+    _title: 'REG Procurement settings'
   requirements:
     _permission: 'administer reg website settings'
   options:

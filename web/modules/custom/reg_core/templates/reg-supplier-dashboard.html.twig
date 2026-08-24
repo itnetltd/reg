@@ -5,6 +5,21 @@
     <div class="reg-supplier-card"><h2>{{ organization.label }}</h2><p><span class="reg-supplier-badge">{{ organization.field_reg_supplier_status.value|replace({'_':' '})|title }}</span> · {{ organization_role|replace({'_':' '})|title }}</p></div>
     {% if organization.field_reg_review_reason.value %}<div class="messages messages--warning"><strong>{{ 'REG review note'|t }}</strong><p>{{ organization.field_reg_review_reason.value }}</p></div>{% endif %}
     {% if completeness %}<div class="reg-supplier-card"><h2>{{ 'Onboarding progress'|t }}</h2><progress value="{{ completeness.complete_count }}" max="{{ completeness.total }}">{{ completeness.complete_count }}/{{ completeness.total }}</progress><ul><li>{{ completeness.email ? '✓' : '○' }} {{ 'Email verified'|t }}</li><li>{{ completeness.company ? '✓' : '○' }} {{ 'Company information'|t }}</li><li>{{ completeness.documents ? '✓' : '○' }} {{ 'Registration documents'|t }}</li><li>{{ completeness.verified ? '✓' : '○' }} {{ 'REG verification decision'|t }}</li></ul></div>{% endif %}
-    <div class="reg-supplier-stats"><a href="{{ path('reg_core.supplier_tenders') }}"><strong>{{ counts.tenders }}</strong><span>{{ 'Open tenders'|t }}</span></a><a href="{{ path('reg_core.supplier_bids') }}"><strong>{{ counts.bids }}</strong><span>{{ 'Organization bids'|t }}</span></a><a href="{{ path('reg_core.supplier_team') }}"><strong>{{ counts.team }}</strong><span>{{ 'Team members'|t }}</span></a></div>
+    {% set supplier_status = organization.field_reg_supplier_status.value %}
+    {% if supplier_status == 'approved' %}
+      <div class="reg-supplier-stats"><a href="{{ path('reg_core.supplier_tenders') }}"><strong>{{ counts.tenders }}</strong><span>{{ 'Open REG Tenders'|t }}</span></a><a href="{{ path('reg_core.supplier_bids') }}"><strong>{{ counts.bids }}</strong><span>{{ 'My Draft and Submitted Bids'|t }}</span></a><a href="{{ path('reg_core.supplier_team') }}"><strong>{{ counts.team }}</strong><span>{{ 'Team Members'|t }}</span></a></div>
+    {% elseif supplier_status == 'pending' %}
+      <div class="reg-supplier-card"><h2>{{ 'SUPPLIER REGISTRATION STATUS'|t }}</h2><p><strong>{{ 'Pending Approval'|t }}</strong></p><p>{{ 'Company:'|t }} {{ organization.label }}</p><p>{{ 'Email:'|t }} {{ organization.field_reg_email.value }}</p><p>{{ 'Registration submitted:'|t }} {{ organization.field_reg_submitted_at.value }}</p><p>{{ 'Your supplier registration is currently being reviewed by REG Procurement.'|t }}</p></div>
+    {% elseif supplier_status == 'email_unverified' %}
+      <div class="reg-supplier-card"><h2>{{ 'SUPPLIER REGISTRATION STATUS'|t }}</h2><p><strong>{{ 'Email Verification Required'|t }}</strong></p><p>{{ 'Company:'|t }} {{ organization.label }}</p><p>{{ 'Verify the registered email address before REG Procurement can review this supplier registration.'|t }}</p></div>
+    {% elseif supplier_status == 'request_update' %}
+      <div class="reg-supplier-card"><h2>{{ 'SUPPLIER REGISTRATION STATUS'|t }}</h2><p><strong>{{ 'Update Requested'|t }}</strong></p><p>{{ 'Review the REG note above and update your company profile. Bid actions remain unavailable until approval.'|t }}</p></div>
+    {% elseif supplier_status == 'suspended' %}
+      <div class="reg-supplier-card"><h2>{{ 'SUPPLIER REGISTRATION STATUS'|t }}</h2><p><strong>{{ 'Suspended'|t }}</strong></p><p>{{ 'This supplier workspace cannot start or submit bids. Contact REG Procurement for assistance.'|t }}</p></div>
+    {% elseif supplier_status == 'rejected' %}
+      <div class="reg-supplier-card"><h2>{{ 'SUPPLIER REGISTRATION STATUS'|t }}</h2><p><strong>{{ 'Not Approved'|t }}</strong></p><p>{{ 'This registration cannot use procurement actions. Contact REG Procurement for assistance.'|t }}</p></div>
+    {% else %}
+      <div class="reg-supplier-card"><h2>{{ 'SUPPLIER REGISTRATION STATUS'|t }}</h2><p><strong>{{ supplier_status|replace({'_':' '})|title }}</strong></p><p>{{ 'Procurement actions are unavailable for this supplier status.'|t }}</p></div>
+    {% endif %}
   {% else %}<div class="reg-supplier-card"><h2>{{ 'Create your supplier organization'|t }}</h2><p>{{ 'Add the legal entity, categories, contacts, and private registration documents used for REG online tender verification.'|t }}</p><a class="reg-supplier-button" href="{{ path('reg_core.supplier_profile') }}">{{ 'START ONBOARDING'|t }}</a></div>{% endif %}
 </section>

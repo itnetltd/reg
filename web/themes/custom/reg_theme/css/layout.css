@@ -129,7 +129,7 @@
 
 .service-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
 
-.section--status, .section--tenders { border-block: 1px solid var(--reg-border); background: #fff; }
+.section--status, .section--tenders { border-block: 1px solid var(--reg-border); background: #F3F6F8; }
 .section--news { background: var(--reg-surface); }
 .section--news,
 .section--tenders { padding-block: clamp(64px, 5vw, 80px); }

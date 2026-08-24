@@ -1,6 +1,8 @@
 <div class="site-shell site-shell--front">
   {% include '@reg_theme/partials/header.html.twig' with {reg_header_front: true} %}
 
+  {{ page.top_navigation }}
+
   {{ page.public_alert }}
 
   <main id="main-content" tabindex="-1">

@@ -1,0 +1,7 @@
+supplier_registration_notification_email: ''
+secondary_notification_email: ''
+notification_sender_name: 'REG Procurement Portal'
+notification_sender_email: ''
+send_procurement_notification: false
+send_supplier_confirmation: true
+require_supplier_approval: true

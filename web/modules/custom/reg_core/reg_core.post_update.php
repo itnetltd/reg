@@ -492,3 +492,48 @@ function reg_core_post_update_business_area_governance(?array &$sandbox = NULL):
   reg_core_apply_business_governance();
   return 'Applied scoped business roles, review workflows, media policy, and administration access.';
 }
+
+/** Repairs the existing supplier registration and approval lifecycle. */
+function reg_core_post_update_supplier_registration_repair(?array &$sandbox = NULL): string {
+  require_once __DIR__ . '/reg_core.install';
+  require_once __DIR__ . '/reg_core.supplier.inc';
+  reg_core_finalize_supplier_registration();
+  return 'Repaired supplier registration, pending approval roles, structured profiles, and lifecycle migration.';
+}
+
+/** Installs configurable supplier-registration notification settings. */
+function reg_core_post_update_supplier_registration_notifications(?array &$sandbox = NULL): string {
+  $config = \Drupal::configFactory()->getEditable('reg_core.procurement_settings');
+  $defaults = [
+    'supplier_registration_notification_email' => '',
+    'secondary_notification_email' => '',
+    'notification_sender_name' => 'REG Procurement Portal',
+    'notification_sender_email' => '',
+    'send_procurement_notification' => FALSE,
+    'send_supplier_confirmation' => TRUE,
+    'require_supplier_approval' => TRUE,
+  ];
+  foreach ($defaults as $key => $value) {
+    if ($config->get($key) === NULL) {
+      $config->set($key, $value);
+    }
+  }
+  $config->save(TRUE);
+  return 'Added configurable supplier registration recipients, sender identity, notifications, and approval policy.';
+}
+
+/** Activates primary supplier accounts and their self-registration membership. */
+function reg_core_post_update_supplier_login_lifecycle(?array &$sandbox = NULL): string {
+  require_once __DIR__ . '/reg_core.install';
+  require_once __DIR__ . '/reg_core.supplier.inc';
+  reg_core_finalize_supplier_registration();
+  return 'Activated supplier self-registration accounts and memberships while preserving genuine team invitations.';
+}
+
+/** Repairs legacy primary memberships that retained an inviter value. */
+function reg_core_post_update_supplier_primary_membership_activation(?array &$sandbox = NULL): string {
+  require_once __DIR__ . '/reg_core.install';
+  require_once __DIR__ . '/reg_core.supplier.inc';
+  reg_core_finalize_supplier_registration();
+  return 'Activated supplier profile owners and their primary organization memberships.';
+}
