@@ -448,8 +448,9 @@ final class SportsController extends ControllerBase {
    */
   private function cacheability(bool $query = FALSE): array {
     return [
-      'contexts' => array_filter(['languages:language_interface', 'user.permissions', $query ? 'url.query_args' : NULL]),
+      'contexts' => array_filter(['languages:language_content', 'languages:language_interface', 'user.permissions', $query ? 'url.query_args' : NULL]),
       'tags' => array_map(static fn(string $bundle): string => 'node_list:' . $bundle, [
+        'reg_news',
         'reg_sports_team',
         'reg_sports_player',
         'reg_sports_staff',

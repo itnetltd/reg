@@ -60,17 +60,14 @@ final class NewsController implements ContainerInjectionInterface {
     $result = $this->newsRepository->archive($filters, $page, self::PAGE_SIZE);
     $this->pagerManager->createPager($result['total'], self::PAGE_SIZE, 0);
     $options = $this->newsRepository->filterOptions();
-    $items = $result['items'];
-    $lead = $page === 0 && $items ? array_shift($items) : [];
-
     return [
       '#theme' => 'reg_news_archive',
-      '#archive_heading' => $section === 'sports' ? 'Sports News' : 'News & Insights',
+      '#archive_heading' => $section === 'sports' ? 'Sports News' : 'Corporate News',
       '#archive_description' => $section === 'sports'
         ? 'Latest news, results, achievements and updates from REG sports teams.'
         : 'Approved updates, developments and corporate announcements from Rwanda Energy Group.',
-      '#lead' => $lead,
-      '#items' => $items,
+      '#lead' => [],
+      '#items' => $result['items'],
       '#results_count' => $result['total'],
       '#filters' => $filters,
       '#categories' => $options['categories'],

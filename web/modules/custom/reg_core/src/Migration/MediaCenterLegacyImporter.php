@@ -73,9 +73,7 @@ final class MediaCenterLegacyImporter {
         $this->logger->warning('Legacy REG News record failed: @url (@reason)', ['@url' => $record['source_url'], '@reason' => $reason]);
       }
     }
-    if (!$dry_run) {
-      $this->linkTranslationPairs($news_nodes, $report);
-    }
+    $this->linkTranslationPairs($dry_run ? $records : $news_nodes, $report, !$dry_run);
     $report['completed_at'] = gmdate(DATE_ATOM, $this->time->getCurrentTime());
     return $report;
   }
@@ -371,24 +369,31 @@ final class MediaCenterLegacyImporter {
   /** Classifies sports only from clear text and known REG team names. */
   public function classifyNews(string $text): array {
     $normal = mb_strtolower($this->plain($text));
-    $team = preg_match('/\b(reg basketball club|reg bbc|reg wbbc|reg volleyball club|reg vc)\b/u', $normal);
-    $context = preg_match('/\b(basketball|volleyball|league|champion(?:ship)?|tournament|coach|player|match|finals?|bronze|runner-up|score|beat)\b/u', $normal);
-    if ($team && $context) {
-      $sport = str_contains($normal, 'volleyball') || str_contains($normal, 'reg vc') ? 'Volleyball'
-        : ((str_contains($normal, 'basketball') || str_contains($normal, 'reg bbc') || str_contains($normal, 'reg wbbc')) ? 'Basketball' : '');
-      return ['sports', $sport, $sport !== ''];
+    $basketball = (bool) preg_match('/\b(reg basketball(?: club)?|reg bbc|reg wbbc|basketball)\b/u', $normal);
+    $volleyball = (bool) preg_match('/\b(reg volleyball(?: club)?|reg vc|volleyball)\b/u', $normal);
+    $known_team = (bool) preg_match('/\b(reg basketball club|reg bbc|reg wbbc|reg volleyball club|reg vc)\b/u', $normal);
+    $competition = (bool) preg_match('/\b(match(?:es)?|matchday|games?|league|champion(?:ship)?s?|tournaments?|sports? competitions?|fixtures?|finals?|semi-finals?|season|cup|imikino|imikino ngororamubiri|shampiyona|amarushanwa|irushanwa)\b/u', $normal);
+    $people = (bool) preg_match('/\b(players?|coaches?|athletes?|abakinnyi|umukinnyi|abatoza|umutoza)\b/u', $normal);
+    $result = (bool) preg_match('/\b(wins?|won|victory|beat|defeated?|scor(?:e|ed|ing)|bronze|silver|gold|runner-up|champions?|yatsinze|yegukanye|igikombe|amanota)\b/u', $normal);
+
+    if ($known_team || $basketball || $volleyball || ($people && ($competition || $result)) || ($competition && $result)) {
+      $sport = $volleyball ? 'Volleyball' : ($basketball ? 'Basketball' : '');
+      return ['sports', $sport, TRUE];
     }
-    $ambiguous = (bool) preg_match('/\b(reg (?:bc|club|team)|sports?|champion(?:ship)?|tournament|league)\b/u', $normal);
+
+    // A lone generic sports word is not enough to override corporate. Flag it
+    // for a person to review instead of trusting a legacy category.
+    $ambiguous = (bool) preg_match('/\b(reg (?:bc|club|team)|sports?|match(?:es)?|games?|champion(?:ship)?s?|tournaments?|league|players?|coaches?|imikino|shampiyona|amarushanwa)\b/u', $normal);
     return ['corporate', '', !$ambiguous];
   }
 
   /** Determines language conservatively. */
   private function language(string $text): array {
     $normal = ' ' . mb_strtolower($this->plain($text)) . ' ';
-    $rw_hits = preg_match_all('/\b(u rwanda|amakuru|itangazo|abanyarwanda|amashanyarazi|umushinga|yatangaje|yakiriye|igihugu|abakozi|mu rwego|kuri uyu)\b/u', $normal);
-    $en_hits = preg_match_all('/\b(the|and|with|from|this|energy|electricity|project|rwanda energy group|said|has|were|will)\b/u', $normal);
-    if ($rw_hits >= 2 && $rw_hits > $en_hits / 3) return ['rw', TRUE];
-    if ($en_hits >= 3) return ['en', TRUE];
+    $rw_hits = preg_match_all('/\b(u rwanda|amakuru|itangazo|abanyarwanda|amashanyarazi|umuriro|umushinga|imishinga|yatangaje|yakiriye|igihugu|abakozi|mu rwego|kuri uyu|yegukanye|yatsinze|abakinnyi|umukinnyi|abatoza|umutoza|imikino|shampiyona|amarushanwa|irushanwa|igikombe|kugira ngo|binyuze mu|ku bufatanye)\b/u', $normal);
+    $en_hits = preg_match_all('/\b(the|and|with|from|this|energy|electricity|project|rwanda energy group|said|has|have|were|will|club|team|players?|coaches?|match(?:es)?|championships?|tournament|won|wins|hosted|announced|signed|during|through)\b/u', $normal);
+    if ($rw_hits >= 2 && $rw_hits > $en_hits) return ['rw', TRUE];
+    if ($en_hits >= 2 && $en_hits > $rw_hits) return ['en', TRUE];
     return [$rw_hits > 0 ? 'rw' : 'en', FALSE];
   }
 
@@ -402,7 +407,7 @@ final class MediaCenterLegacyImporter {
     $context_date = $this->dateFromText($text) ?: $listing_date;
     $display_node = $xpath->query('//div[contains(@class,\'event_img_date\')]')->item(0);
     $display = $this->text($display_node);
-    if ($context_date && preg_match('/\b(\d{1,2})\s+(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\b/i', $display, $match)) {
+    if ($context_date && preg_match('/\b(\d{1,2})\s*(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\b/i', $display, $match)) {
       try {
         return (new \DateTimeImmutable($match[1] . ' ' . $match[2] . ' ' . substr($context_date, 0, 4), new \DateTimeZone('UTC')))->format('Y-m-d');
       }
@@ -541,20 +546,29 @@ final class MediaCenterLegacyImporter {
     return trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($value), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
   }
 
-  /** Links high-confidence same-date, cross-language story pairs. */
-  private function linkTranslationPairs(array $records, array &$report): void {
+  /** Detects and optionally links high-confidence translation counterparts. */
+  private function linkTranslationPairs(array $records, array &$report, bool $write): void {
     $by_date = [];
     foreach ($records as $record) if ($record['date']) $by_date[$record['date']][] = $record;
-    $storage = $this->entityTypeManager->getStorage('node');
+    $storage = $write ? $this->entityTypeManager->getStorage('node') : NULL;
     foreach ($by_date as $date => $candidates) {
       foreach ($candidates as $left) {
         foreach ($candidates as $right) {
-          if ($left['node_id'] === $right['node_id'] || $left['langcode'] === $right['langcode'] || !$this->likelyPair($left['title'], $right['title'])) continue;
-          foreach ([[$left, $right], [$right, $left]] as [$source, $target]) {
-            $node = $storage->load($source['node_id']);
-            if ($node instanceof NodeInterface) {
-              $this->setIfField($node, 'field_reg_related_translation', ['target_id' => $target['node_id']]);
-              $node->save();
+          if (($left['source_url'] ?? '') === ($right['source_url'] ?? '')
+            || $left['langcode'] === $right['langcode']
+            || $left['section'] !== $right['section']
+            || !$this->likelyPair($left['title'], $right['title'])) {
+            continue;
+          }
+          if ($write && isset($left['node_id'], $right['node_id'])) {
+            foreach ([[$left, $right], [$right, $left]] as [$source, $target]) {
+              $node = $storage?->load($source['node_id']);
+              if ($node instanceof NodeInterface
+                && $node->hasField('field_reg_related_translation')
+                && $node->get('field_reg_related_translation')->isEmpty()) {
+                $node->set('field_reg_related_translation', ['target_id' => $target['node_id']]);
+                $node->save();
+              }
             }
           }
           $report['translation_pairs']++;
@@ -565,12 +579,46 @@ final class MediaCenterLegacyImporter {
   }
 
   private function likelyPair(string $left, string $right): bool {
-    $left = mb_strtolower($left);
-    $right = mb_strtolower($right);
-    foreach (['eapp', 'power pool', 'nyabihu', 'rubavu', 'tid', 'million', 'miliyoni', 'australia'] as $anchor) {
-      if (str_contains($left, $anchor) && str_contains($right, $anchor)) return TRUE;
+    return array_intersect($this->counterpartAnchors($left), $this->counterpartAnchors($right)) !== [];
+  }
+
+  /** Returns story-specific anchors shared unchanged across en/rw headlines. */
+  private function counterpartAnchors(string $title): array {
+    $normal = mb_strtolower($this->plain($title));
+    $anchors = [];
+    $aliases = [
+      'eapp' => ['eapp', 'eastern africa power pool'],
+      'nyabihu' => ['nyabihu'],
+      'rubavu' => ['rubavu'],
+      'gisagara' => ['gisagara'],
+      'australia' => ['australia'],
+      'zimbabwe' => ['zimbabwe'],
+      'belgium' => ['belgium', 'ububiligi'],
+      'tid' => ['tid'],
+      'be-earp' => ['be-earp', 'bearp'],
+      'reg-bbc' => ['reg bbc'],
+      'reg-wbbc' => ['reg wbbc'],
+      'reg-vc' => ['reg vc'],
+    ];
+    foreach ($aliases as $anchor => $phrases) {
+      foreach ($phrases as $phrase) {
+        if (str_contains($normal, $phrase)) {
+          $anchors[$anchor] = TRUE;
+          break;
+        }
+      }
     }
-    return FALSE;
+    if (preg_match_all('/\b\d+(?:[.,]\d+)?\s*(?:mw|kv|mva|million|miliyoni|billion|miliyari)\b/u', $normal, $measurements)) {
+      foreach ($measurements[0] as $measurement) {
+        $anchors['measure:' . preg_replace('/\s+/u', '', str_replace([',', 'miliyoni', 'miliyari'], ['', 'million', 'billion'], $measurement))] = TRUE;
+      }
+    }
+    if (preg_match_all('/\b[A-Z][A-Z0-9-]{2,}\b/', $this->plain($title), $acronyms)) {
+      foreach ($acronyms[0] as $acronym) {
+        if ($acronym !== 'REG') $anchors['acronym:' . $acronym] = TRUE;
+      }
+    }
+    return array_keys($anchors);
   }
 
   private function recordHash(array $record): string {
@@ -612,7 +660,7 @@ final class MediaCenterLegacyImporter {
   }
 
   private function primaryReviewStatus(array $issues): string {
-    foreach (['needs_file', 'needs_date', 'needs_language', 'needs_classification', 'duplicate_candidate'] as $issue) {
+    foreach (['needs_classification', 'needs_file', 'needs_date', 'needs_language', 'duplicate_candidate'] as $issue) {
       if (in_array($issue, $issues, TRUE)) return $issue;
     }
     return 'verified';

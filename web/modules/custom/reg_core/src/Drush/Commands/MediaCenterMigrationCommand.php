@@ -49,7 +49,12 @@ final class MediaCenterMigrationCommand extends Command {
     $output->writeln(sprintf('Discovered: %d', $report['discovered']));
     $output->writeln(sprintf('Would Create: %d', $report['would_create']));
     $output->writeln(sprintf('Existing: %d', $report['existing']));
+    $output->writeln(sprintf('Corporate English: %d', $report['breakdown']['corporate_en']['discovered']));
+    $output->writeln(sprintf('Corporate Kinyarwanda: %d', $report['breakdown']['corporate_rw']['discovered']));
+    $output->writeln(sprintf('Sports English: %d', $report['breakdown']['sports_en']['discovered']));
+    $output->writeln(sprintf('Sports Kinyarwanda: %d', $report['breakdown']['sports_rw']['discovered']));
     $output->writeln(sprintf('Needs Review: %d', $report['needs_review']));
+    $output->writeln(sprintf('Translation Counterparts: %d', $report['translation_pairs']));
     $output->writeln(sprintf('Failed: %d', $report['failed']));
     if ($report['source_failures']) {
       $output->writeln(json_encode(['source_failures' => $report['source_failures']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));

@@ -40,51 +40,25 @@ final class NewsRepository implements NewsRepositoryInterface {
       return $cached->data;
     }
 
-    $primary_id = NULL;
-    $featured_query = $this->publishedQuery()
+    $ids = $this->publishedQuery()
       ->condition('field_reg_news_section', 'corporate')
-      ->condition('field_reg_featured', 1)
-      ->sort('field_reg_homepage_priority', 'DESC')
       ->sort('field_reg_publication_date', 'DESC')
       ->sort('nid', 'DESC')
-      ->range(0, 1);
-    $featured_ids = $featured_query->execute();
-    if ($featured_ids) {
-      $primary_id = (int) reset($featured_ids);
-    }
-    else {
-      $latest_ids = $this->publishedQuery()
-        ->condition('field_reg_news_section', 'corporate')
-        ->sort('field_reg_publication_date', 'DESC')
-        ->sort('nid', 'DESC')
-        ->range(0, 1)
-        ->execute();
-      if ($latest_ids) {
-        $primary_id = (int) reset($latest_ids);
-      }
-    }
+      ->range(0, 3)
+      ->execute();
 
     $primary = [];
     $secondary = [];
     $tags = $this->listCacheTags();
-    if ($primary_id) {
-      $node = $this->entityTypeManager->getStorage('node')->load($primary_id);
-      if ($node instanceof NodeInterface) {
+    foreach ($this->loadTranslated($ids) as $index => $node) {
+      if ($index === 0) {
         $primary = $this->item($node, 'reg_news_featured', 'eager');
         $tags = Cache::mergeTags($tags, $primary['cache_tags']);
+        continue;
       }
-
-      $secondary_query = $this->publishedQuery()
-        ->condition('field_reg_news_section', 'corporate')
-        ->condition('nid', $primary_id, '<>')
-        ->sort('field_reg_publication_date', 'DESC')
-        ->sort('nid', 'DESC')
-        ->range(0, 2);
-      foreach ($this->loadTranslated($secondary_query->execute()) as $secondary_node) {
-        $story = $this->item($secondary_node, 'reg_news_thumbnail');
-        $secondary[] = $story;
-        $tags = Cache::mergeTags($tags, $story['cache_tags']);
-      }
+      $story = $this->item($node, 'reg_news_thumbnail');
+      $secondary[] = $story;
+      $tags = Cache::mergeTags($tags, $story['cache_tags']);
     }
 
     $data = [
@@ -142,7 +116,7 @@ final class NewsRepository implements NewsRepositoryInterface {
     $items = [];
     $tags = $this->listCacheTags();
     foreach ($this->loadTranslated($ids) as $node) {
-      $item = $this->item($node, count($items) === 0 && $page === 0 ? 'reg_news_featured' : 'reg_news_card');
+      $item = $this->item($node, 'reg_news_card');
       $items[] = $item;
       $tags = Cache::mergeTags($tags, $item['cache_tags']);
     }
@@ -188,8 +162,18 @@ final class NewsRepository implements NewsRepositoryInterface {
     natcasesort($departments);
 
     $sports = [];
-    foreach ($this->entityTypeManager->getStorage('taxonomy_term')->loadTree('reg_sports_sport') as $term) {
-      $sports[] = ['id' => (int) $term->tid, 'label' => $term->name];
+    foreach ($this->entityTypeManager->getStorage('taxonomy_term')->loadTree('reg_sports_sport') as $term_record) {
+      if (!in_array(mb_strtolower($term_record->name), ['basketball', 'volleyball'], TRUE)) {
+        continue;
+      }
+      $term = $this->entityTypeManager->getStorage('taxonomy_term')->load($term_record->tid);
+      if (!$term) {
+        continue;
+      }
+      if ($term->hasTranslation($langcode)) {
+        $term = $term->getTranslation($langcode);
+      }
+      $sports[] = ['id' => (int) $term->id(), 'label' => $term->label()];
     }
 
     return [

@@ -19,9 +19,60 @@ final class MediaCenterLegacyImporterTest extends TestCase {
     return [
       'volleyball' => ['REG Volleyball Club secured bronze in the championship final.', 'sports', 'Volleyball', TRUE],
       'basketball' => ['REG BBC beat UTB in the basketball tournament final.', 'sports', 'Basketball', TRUE],
+      'basketball without team name' => ['Basketball players prepare for the new season.', 'sports', 'Basketball', TRUE],
+      'Kinyarwanda volleyball' => ['REG VC yegukanye igikombe cya shampiyona.', 'sports', 'Volleyball', TRUE],
+      'generic sports result' => ['The players won the national championship final.', 'sports', '', TRUE],
       'corporate' => ['REG hosts an electricity project governance meeting in Kigali.', 'corporate', '', TRUE],
       'uncertain club' => ['REG Club announces a new initiative.', 'corporate', '', FALSE],
+      'uncertain match' => ['The financing match is under review.', 'corporate', '', FALSE],
     ];
+  }
+
+  #[DataProvider('languageCases')]
+  public function testLanguageDetection(string $text, string $language, bool $certain): void {
+    $importer = (new \ReflectionClass(MediaCenterLegacyImporter::class))->newInstanceWithoutConstructor();
+    $method = new \ReflectionMethod($importer, 'language');
+
+    self::assertSame([$language, $certain], $method->invoke($importer, $text));
+  }
+
+  public static function languageCases(): array {
+    return [
+      'English' => ['REG Basketball Club signed new players and coaches.', 'en', TRUE],
+      'Kinyarwanda' => ['REG BBC yegukanye igikombe, abakinnyi n\'umutoza barishima.', 'rw', TRUE],
+      'uncertain' => ['REG launches Nyabihu initiative.', 'en', FALSE],
+    ];
+  }
+
+  public function testHighConfidenceTranslationCounterparts(): void {
+    $importer = (new \ReflectionClass(MediaCenterLegacyImporter::class))->newInstanceWithoutConstructor();
+    $method = new \ReflectionMethod($importer, 'likelyPair');
+
+    self::assertTrue($method->invoke(
+      $importer,
+      'REG hosts EAPP governance meeting',
+      'REG yakiriye inama y\'imiyoborere ya EAPP',
+    ));
+    self::assertTrue($method->invoke(
+      $importer,
+      'REG commissions 80 MW power plant',
+      'REG yatangije uruganda rw\'amashanyarazi rwa 80MW',
+    ));
+    self::assertFalse($method->invoke(
+      $importer,
+      'REG launches a new electricity project',
+      'REG BBC yegukanye igikombe cya shampiyona',
+    ));
+  }
+
+  public function testClassificationReviewTakesPriority(): void {
+    $importer = (new \ReflectionClass(MediaCenterLegacyImporter::class))->newInstanceWithoutConstructor();
+    $method = new \ReflectionMethod($importer, 'primaryReviewStatus');
+
+    self::assertSame(
+      'needs_classification',
+      $method->invoke($importer, ['needs_date', 'needs_language', 'needs_classification']),
+    );
   }
 
   public function testOriginalDateExtraction(): void {
@@ -31,6 +82,19 @@ final class MediaCenterLegacyImporterTest extends TestCase {
     self::assertSame('2019-12-05', $method->invoke($importer, 'Kigali, December 05, 2019'));
     self::assertSame('2018-10-18', $method->invoke($importer, 'On the 18th October 2018'));
     self::assertNull($method->invoke($importer, 'Imported today without an original date'));
+  }
+
+  public function testLegacyDateBadgeOverridesBodyDay(): void {
+    $importer = (new \ReflectionClass(MediaCenterLegacyImporter::class))->newInstanceWithoutConstructor();
+    $dom = new \DOMDocument();
+    $dom->loadHTML('<div class=event_img_date>17<br>Oct</div>');
+    $xpath = new \DOMXPath($dom);
+    $method = new \ReflectionMethod($importer, 'articleDate');
+
+    self::assertSame(
+      '2018-10-17',
+      $method->invoke($importer, $xpath, 'On the 18th October 2018, the project was inaugurated yesterday.', NULL),
+    );
   }
 
   #[DataProvider('sourceScopeCases')]
