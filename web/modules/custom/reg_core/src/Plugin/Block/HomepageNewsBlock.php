@@ -9,7 +9,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\reg_core\News\NewsRepositoryInterface;
 use Drupal\reg_core\Social\SocialMediaManager;
-use Drupal\reg_core\Social\SocialPostRepositoryInterface;
+use Drupal\reg_core\Social\XFeedServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -28,7 +28,7 @@ final class HomepageNewsBlock extends BlockBase implements ContainerFactoryPlugi
     $plugin_definition,
     private readonly NewsRepositoryInterface $newsRepository,
     private readonly SocialMediaManager $socialMediaManager,
-    private readonly SocialPostRepositoryInterface $socialPostRepository,
+    private readonly XFeedServiceInterface $xFeed,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
@@ -43,7 +43,7 @@ final class HomepageNewsBlock extends BlockBase implements ContainerFactoryPlugi
       $plugin_definition,
       $container->get(NewsRepositoryInterface::class),
       $container->get('reg_core.social_media_manager'),
-      $container->get(SocialPostRepositoryInterface::class),
+      $container->get(XFeedServiceInterface::class),
     );
   }
 
@@ -54,9 +54,9 @@ final class HomepageNewsBlock extends BlockBase implements ContainerFactoryPlugi
     $content = $this->newsRepository->homepage();
     $content['x_feed'] = $this->socialMediaManager->homepageXFeed();
     if ($content['x_feed'] !== []) {
-      $social_posts = $this->socialPostRepository->homepageXPosts(2);
-      $content['x_feed']['posts'] = $social_posts['items'];
-      $content['cache_tags'] = array_merge($content['cache_tags'], $social_posts['cache_tags']);
+      $x_feed = $this->xFeed->homepageFeed();
+      $content['x_feed']['posts'] = $x_feed['items'];
+      $content['cache_tags'] = array_merge($content['cache_tags'], $x_feed['cache_tags']);
     }
     return [
       '#theme' => 'reg_news_homepage',
@@ -65,7 +65,7 @@ final class HomepageNewsBlock extends BlockBase implements ContainerFactoryPlugi
       '#attached' => ['library' => ['reg_core/newsroom']],
       '#cache' => [
         'contexts' => ['languages:language_content', 'languages:language_interface', 'user.node_grants:view'],
-        'tags' => array_values(array_unique(array_merge($content['cache_tags'], ['config:reg_core.social_media']))),
+        'tags' => array_values(array_unique(array_merge($content['cache_tags'], ['config:reg_core.social_media', 'reg_core:x_feed']))),
         'max-age' => 300,
       ],
     ];

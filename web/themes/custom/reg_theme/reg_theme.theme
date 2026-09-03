@@ -120,10 +120,10 @@ function reg_theme_preprocess_page(array &$variables): void {
     'sports' => reg_theme_sports_items(),
   ];
   $variables['reg_fallback']['news']['x_feed'] = $social_media->homepageXFeed();
-  if ($variables['reg_fallback']['news']['x_feed'] !== [] && \Drupal::hasService('reg_core.social_post_repository')) {
-    $social_posts = \Drupal::service('reg_core.social_post_repository')->homepageXPosts(2);
-    $variables['reg_fallback']['news']['x_feed']['posts'] = $social_posts['items'];
-    $variables['page']['#cache']['tags'] = array_merge($variables['page']['#cache']['tags'], $social_posts['cache_tags']);
+  if ($variables['reg_fallback']['news']['x_feed'] !== [] && \Drupal::hasService('reg_core.x_feed')) {
+    $x_feed = \Drupal::service('reg_core.x_feed')->homepageFeed();
+    $variables['reg_fallback']['news']['x_feed']['posts'] = $x_feed['items'];
+    $variables['page']['#cache']['tags'] = array_merge($variables['page']['#cache']['tags'], $x_feed['cache_tags']);
   }
 
 }

@@ -238,6 +238,27 @@ reg_core.social_media_platform:
     show_homepage_feed:
       type: boolean
       label: 'Show feed on homepage'
+    api_enabled:
+      type: boolean
+      label: 'Enable X API feed'
+    api_username:
+      type: string
+      label: 'X account username'
+    api_user_id:
+      type: string
+      label: 'Optional numeric X user ID'
+    api_cache_lifetime:
+      type: integer
+      label: 'X API cache lifetime in seconds'
+    api_homepage_post_count:
+      type: integer
+      label: 'Homepage X post count'
+    api_exclude_replies:
+      type: boolean
+      label: 'Exclude X replies'
+    api_exclude_reposts:
+      type: boolean
+      label: 'Exclude X reposts'
 
 reg_core.procurement_settings:
   type: config_object

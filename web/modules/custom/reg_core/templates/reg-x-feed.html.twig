@@ -5,19 +5,22 @@
       <h3 id="reg-x-feed-title">{{ feed.display_name }}</h3>
       <span>{{ feed.handle }}</span>
     </div>
-    <a class="reg-x-feed__follow" href="{{ feed.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ 'View Rwanda Energy Group on X'|t }}">{{ 'VIEW ON X'|t }} <span aria-hidden="true">↗</span></a>
+    <a class="reg-x-feed__follow" href="{{ feed.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ 'View Rwanda Energy Group on X'|t }}">{{ 'VIEW ON X'|t }} <span aria-hidden="true">&nearr;</span></a>
   </header>
+
   {% if feed.posts %}
     <div class="reg-x-feed__posts">
-      {% for post in feed.posts|slice(0, 2) %}
-        <article class="reg-x-feed__post{{ post.image.render ? ' reg-x-feed__post--media' : '' }}">
+      {% for post in feed.posts %}
+        <article class="reg-x-feed__post{{ post.image.url ? ' reg-x-feed__post--media' : '' }}">
           <div class="reg-x-feed__post-copy">
             {% if post.date %}<time datetime="{{ post.date_iso }}">{{ post.date }}</time>{% endif %}
             <p>{{ post.text }}</p>
-            <a href="{{ post.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ 'View this Rwanda Energy Group post on X'|t }}">{{ 'VIEW POST'|t }} <span aria-hidden="true">↗</span></a>
+            <a href="{{ post.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ 'View this Rwanda Energy Group post on X'|t }}">{{ 'VIEW POST'|t }} <span aria-hidden="true">&nearr;</span></a>
           </div>
-          {% if post.image.render %}
-            <a class="reg-x-feed__thumbnail" href="{{ post.url }}" target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true">{{ post.image.render }}</a>
+          {% if post.image.url %}
+            <a class="reg-x-feed__media" href="{{ post.url }}" target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true">
+              <img src="{{ post.image.url }}" alt="{{ post.image.alt }}" loading="lazy"{% if post.image.width %} width="{{ post.image.width }}"{% endif %}{% if post.image.height %} height="{{ post.image.height }}"{% endif %}>
+            </a>
           {% endif %}
         </article>
       {% endfor %}
@@ -26,7 +29,7 @@
     <div class="reg-x-feed__fallback" data-reg-x-fallback>
       <span class="reg-x-feed__eyebrow">{{ 'Stay connected'|t }}</span>
       <p>{{ 'Follow Rwanda Energy Group for electricity updates, projects, announcements and public information.'|t }}</p>
-      <a href="{{ feed.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ 'View Rwanda Energy Group on X'|t }}">{{ 'VIEW @handle ON X'|t({'@handle': feed.handle}) }} <span aria-hidden="true">↗</span></a>
+      <a href="{{ feed.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ 'View Rwanda Energy Group on X'|t }}">{{ 'VIEW @handle ON X'|t({'@handle': feed.handle}) }} <span aria-hidden="true">&nearr;</span></a>
     </div>
   {% endif %}
 </aside>

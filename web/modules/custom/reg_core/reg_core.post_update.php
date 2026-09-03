@@ -546,3 +546,22 @@ function reg_core_post_update_hero_statistics_overlay(?array &$sandbox = NULL): 
   }
   return 'Moved four CMS-managed facts into the fixed homepage hero overlay and disabled the large statistics block placement.';
 }
+
+/**
+ * Adds safe configuration defaults for the server-side X API feed.
+ */
+function reg_core_post_update_server_side_x_api_feed(?array &$sandbox = NULL): string {
+  require_once __DIR__ . '/reg_core.install';
+  reg_core_apply_social_media_configuration();
+  return 'Added environment-authenticated X API feed settings; no credential was stored in Drupal configuration.';
+}
+
+/**
+ * Prepares REG News fields and bilingual settings for legacy migration.
+ */
+function reg_core_post_update_prepare_reg_news_migration(?array &$sandbox = NULL): string {
+  require_once __DIR__ . '/reg_core.install';
+  require_once __DIR__ . '/reg_core.media_center.inc';
+  reg_core_apply_media_center_migration();
+  return 'Prepared the existing REG News bundle with bilingual classification, source metadata, review status, translation pairing, and the existing Sports taxonomy.';
+}

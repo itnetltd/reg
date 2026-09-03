@@ -2,11 +2,11 @@
 <article{{ attributes.addClass('reg-news-article') }} data-reg-analytics-event="news_view" data-reg-analytics-id="{{ news.id }}">
   <header class="reg-news-article__header">
     <div class="reg-news-article__header-inner">
-      <p class="reg-news-article__kicker">{{ 'News'|t }}{% if news.category.label %} / {{ news.category.label }}{% endif %}</p>
+      <p class="reg-news-article__kicker">{{ news.section == 'sports' ? 'REG Sports'|t : 'Media Center'|t }} / {{ news.section == 'sports' ? 'Sports News'|t : 'Corporate News'|t }}</p>
       <h1>{{ news.title }}</h1>
       {% if news.summary %}<p class="reg-news-article__summary">{{ news.summary }}</p>{% endif %}
       <div class="reg-news-article__meta">
-        {% if news.date %}<time datetime="{{ news.date_iso }}">{{ news.date }}</time>{% endif %}
+        {% if news.date %}<time datetime="{{ news.date_iso }}">{{ 'Published:'|t }} {{ news.date }}</time>{% endif %}
         {% if news.date and news.category.label %}<span aria-hidden="true">•</span>{% endif %}
         {% if news.category.label %}<span>{{ news.category.label }}</span>{% endif %}
         {% if news.department %}<span aria-hidden="true">•</span><span>{{ news.department }}</span>{% endif %}
@@ -30,6 +30,8 @@
     <div class="reg-news-article__body">{{ news.body }}</div>
 
     {% if news.tags %}<p class="reg-news-article__tags"><strong>{{ 'Topics'|t }}:</strong> {{ news.tags|join(', ') }}</p>{% endif %}
+
+    {% if news.translation %}<p class='reg-news-article__translation'><a href='{{ news.translation.url }}' hreflang='{{ news.translation.language }}'>{{ news.translation.label|t }} &rarr;</a></p>{% endif %}
 
     {% if news.video %}
       <section class="reg-news-article__video" aria-labelledby="reg-news-video-heading">
@@ -72,7 +74,7 @@
     <section class="reg-news-related" aria-labelledby="reg-news-related-heading">
       <div class="reg-container">
         <p class="reg-newsroom__eyebrow">{{ 'Continue reading'|t }}</p>
-        <h2 id="reg-news-related-heading">{{ 'Related News'|t }}</h2>
+        <h2 id="reg-news-related-heading">{{ news.section == 'sports' ? 'Related Sports News'|t : 'Related Corporate News'|t }}</h2>
         <div class="reg-news-grid">
           {% for item in news.related %}{% include '@reg_core/reg-news-card.html.twig' with {item: item, variant: 'card', analytics_event: 'news_related_click'} only %}{% endfor %}
         </div>
@@ -80,5 +82,5 @@
     </section>
   {% endif %}
 
-  <div class="reg-container reg-news-article__back"><a href="{{ news.back_url }}">← {{ 'Back to News'|t }}</a></div>
+  <div class="reg-container reg-news-article__back"><a href="{{ news.back_url }}">← {{ news.section == 'sports' ? 'Back to Sports News'|t : 'Back to News'|t }}</a></div>
 </article>

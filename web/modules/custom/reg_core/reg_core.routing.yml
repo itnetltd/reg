@@ -499,15 +499,51 @@ reg_core.job_detail:
     job: '\d+'
 
 reg_core.publications:
-  path: '/publications'
+  path: '/media/publications'
   defaults:
     _controller: '\Drupal\reg_core\Controller\PublicInformationController::publications'
     _title: 'Publications'
   requirements:
     _permission: 'access content'
 
+reg_core.press_releases:
+  path: '/media/press-releases'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationController::mediaPublications'
+    _title: 'Press Releases'
+    _publication_type: 'Press Release'
+  requirements:
+    _permission: 'access content'
+
+reg_core.announcements:
+  path: '/media/announcements'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationController::mediaPublications'
+    _title: 'Announcements'
+    _publication_type: 'Announcement Archive'
+  requirements:
+    _permission: 'access content'
+
+reg_core.newsletters:
+  path: '/media/newsletters'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationController::mediaPublications'
+    _title: 'Newsletters'
+    _publication_type: 'Newsletter'
+  requirements:
+    _permission: 'access content'
+
+reg_core.corporate_documents:
+  path: '/media/corporate-documents'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationController::mediaPublications'
+    _title: 'Corporate / Legal Documents'
+    _publication_type: 'Corporate / Legal Documents'
+  requirements:
+    _permission: 'access content'
+
 reg_core.publication_detail:
-  path: '/publications/{publication}'
+  path: '/media/publications/{publication}'
   defaults:
     _controller: '\Drupal\reg_core\Controller\PublicInformationController::publicationDetail'
     _title_callback: '\Drupal\reg_core\Controller\PublicInformationController::publicationTitle'
@@ -886,16 +922,18 @@ reg_core.sports_standings:
 reg_core.sports_news:
   path: '/sports/news'
   defaults:
-    _controller: '\Drupal\reg_core\Controller\SportsController::news'
+    _controller: '\Drupal\reg_core\Controller\NewsController::archive'
     _title: 'Sports News'
+    _news_section: 'sports'
   requirements:
     _permission: 'access content'
 
 reg_core.sports_news_detail:
   path: '/sports/news/{node}'
   defaults:
-    _controller: '\Drupal\reg_core\Controller\SportsController::newsDetail'
-    _title_callback: '\Drupal\reg_core\Controller\SportsController::newsTitle'
+    _controller: '\Drupal\reg_core\Controller\NewsController::detail'
+    _title_callback: '\Drupal\reg_core\Controller\NewsController::detailTitle'
+    _news_section: 'sports'
   requirements:
     _permission: 'access content'
     node: '\d+'
@@ -962,16 +1000,67 @@ reg_core.videos:
 reg_core.video_media_center:
   path: '/media'
   defaults:
-    _controller: '\Drupal\reg_core\Controller\VideoController::mediaCenter'
+    _controller: '\Drupal\reg_core\Controller\MediaCenterController::landing'
     _title: 'Media Center'
   requirements:
     _permission: 'access content'
 
 reg_core.news:
-  path: '/news'
+  path: '/media/news'
   defaults:
     _controller: '\Drupal\reg_core\Controller\NewsController::archive'
     _title: 'News & Insights'
+    _news_section: 'corporate'
+  requirements:
+    _permission: 'access content'
+
+reg_core.news_english:
+  path: '/media/news/english'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\NewsController::archive'
+    _title: 'English News'
+    _news_section: 'corporate'
+    _news_language: 'en'
+  requirements:
+    _permission: 'access content'
+
+reg_core.news_kinyarwanda:
+  path: '/media/news/kinyarwanda'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\NewsController::archive'
+    _title: 'Amakuru mu Kinyarwanda'
+    _news_section: 'corporate'
+    _news_language: 'rw'
+  requirements:
+    _permission: 'access content'
+
+reg_core.news_detail:
+  path: '/media/news/{node}'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\NewsController::detail'
+    _title_callback: '\Drupal\reg_core\Controller\NewsController::detailTitle'
+    _news_section: 'corporate'
+  requirements:
+    _permission: 'access content'
+    node: '\d+'
+
+reg_core.sports_news_english:
+  path: '/sports/news/english'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\NewsController::archive'
+    _title: 'English Sports News'
+    _news_section: 'sports'
+    _news_language: 'en'
+  requirements:
+    _permission: 'access content'
+
+reg_core.sports_news_kinyarwanda:
+  path: '/sports/news/kinyarwanda'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\NewsController::archive'
+    _title: 'Amakuru ya Siporo mu Kinyarwanda'
+    _news_section: 'sports'
+    _news_language: 'rw'
   requirements:
     _permission: 'access content'
 
@@ -984,6 +1073,14 @@ reg_core.news_admin:
     _permission: 'access reg communications administration'
   options:
     _admin_route: true
+
+reg_core.news_legacy_redirect:
+  path: '/media-center/news-details/news/{slug}'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\NewsController::legacy'
+  requirements:
+    _permission: 'access content'
+    slug: '[^/]+'
 
 reg_core.social_posts_admin:
   path: '/admin/content/social-posts'

@@ -1,0 +1,34 @@
+<div class='reg-media-center'>
+  {% set hero = section_hero|default({})|merge({
+    eyebrow: 'Media Center'|t,
+    title: 'Stay informed'|t,
+    description: 'Official REG news, announcements, publications and media.'|t
+  }) %}
+  {% include '@reg_core/reg-section-hero.html.twig' with {hero: hero} only %}
+
+  <main class='reg-container reg-media-center__body'>
+    <section aria-labelledby='media-featured'>
+      <div class='reg-media-center__heading'><div><span>{{ 'Featured Corporate News'|t }}</span><h2 id='media-featured'>{{ 'News & Insights'|t }}</h2></div><a href='{{ path('reg_core.news') }}'>{{ 'View all news'|t }} &rarr;</a></div>
+      {% if corporate %}<div class='reg-news-grid'>{% for item in corporate %}{% include '@reg_core/reg-news-card.html.twig' with {item: item, variant: loop.first ? 'featured' : 'card'} only %}{% endfor %}</div>{% endif %}
+    </section>
+
+    <section aria-labelledby='media-sports'>
+      <div class='reg-media-center__heading'><div><span>{{ 'REG Sports'|t }}</span><h2 id='media-sports'>{{ 'Sports News'|t }}</h2></div><a href='{{ path('reg_core.sports_news') }}'>{{ 'View all sports news'|t }} &rarr;</a></div>
+      {% if sports %}<div class='reg-news-grid'>{% for item in sports %}{% include '@reg_core/reg-news-card.html.twig' with {item: item, variant: 'card'} only %}{% endfor %}</div>{% endif %}
+    </section>
+
+    <section aria-labelledby='media-documents'>
+      <div class='reg-media-center__heading'><div><span>{{ 'Official Documents'|t }}</span><h2 id='media-documents'>{{ 'Press releases, publications and newsletters'|t }}</h2></div></div>
+      <div class='reg-media-center__documents'>
+        {% for key, items in documents %}
+          <div><h3>{{ key == 'press' ? 'Press Releases'|t : (key == 'newsletters' ? 'Newsletters'|t : 'Publications'|t) }}</h3>
+            {% for item in items %}<article><span>{{ item.date }}</span><h4><a href='{{ item.url }}'>{{ item.title }}</a></h4>{% if item.primary_document.url %}<a href='{{ item.primary_document.url }}'>{{ 'Download'|t }} &rarr;</a>{% endif %}</article>{% endfor %}
+            <a class='reg-media-center__all' href='{{ path(key == 'press' ? 'reg_core.press_releases' : (key == 'newsletters' ? 'reg_core.newsletters' : 'reg_core.publications')) }}'>{{ 'View archive'|t }} &rarr;</a>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section aria-labelledby='media-follow'><div class='reg-media-center__heading'><div><span>{{ 'Official channels'|t }}</span><h2 id='media-follow'>{{ 'Follow REG'|t }}</h2></div></div>{{ social }}</section>
+  </main>
+</div>

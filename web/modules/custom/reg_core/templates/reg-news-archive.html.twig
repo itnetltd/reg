@@ -7,7 +7,7 @@
   {% include '@reg_core/reg-section-hero.html.twig' with {hero: newsroom_hero} only %}
 
   <div class="reg-container reg-newsroom__body">
-    <form class="reg-news-filters" action="{{ path('reg_core.news') }}" method="get" data-reg-news-filter-form>
+    <form class="reg-news-filters" action="{{ path(section == 'sports' ? 'reg_core.sports_news' : 'reg_core.news') }}" method="get" data-reg-news-filter-form>
       <label>
         <span>{{ 'Search news'|t }}</span>
         <input type="search" name="search" value="{{ filters.search }}" placeholder="{{ 'Search by title or topic'|t }}">
@@ -37,11 +37,24 @@
       {% endif %}
       <div class="reg-news-filters__actions">
         <button type="submit">{{ 'Apply filters'|t }}</button>
-        {% if filters.search or filters.category or filters.year or filters.department %}<a href="{{ path('reg_core.news') }}">{{ 'Clear filters'|t }}</a>{% endif %}
+        {% if filters.search or filters.category or filters.year or filters.department %}<a href="{{ path(section == 'sports' ? 'reg_core.sports_news' : 'reg_core.news') }}">{{ 'Clear filters'|t }}</a>{% endif %}
       </div>
     </form>
 
     <p class="reg-newsroom__count" role="status">{{ '@count stories'|t({'@count': results_count}) }}</p>
+
+    <nav class='reg-news-language-tabs' aria-label='{{ 'News language'|t }}'>
+      <a class='{{ filters.language == '' ? 'is-active' }}' href='{{ path(section == 'sports' ? 'reg_core.sports_news' : 'reg_core.news') }}'>{{ 'All'|t }}</a>
+      <a class='{{ filters.language == 'en' ? 'is-active' }}' href='{{ path(section == 'sports' ? 'reg_core.sports_news_english' : 'reg_core.news_english') }}'>{{ 'English'|t }}</a>
+      <a class='{{ filters.language == 'rw' ? 'is-active' }}' href='{{ path(section == 'sports' ? 'reg_core.sports_news_kinyarwanda' : 'reg_core.news_kinyarwanda') }}'>{{ 'Kinyarwanda'|t }}</a>
+    </nav>
+
+    {% if section == 'sports' and sports %}
+      <form class='reg-news-sport-filter' action='{{ path('reg_core.sports_news') }}' method='get'>
+        <label><span>{{ 'Sport'|t }}</span><select name='sport'><option value='0'>{{ 'All sports'|t }}</option>{% for sport in sports %}<option value='{{ sport.id }}'{{ filters.sport == sport.id ? ' selected' }}>{{ sport.label }}</option>{% endfor %}</select></label>
+        <button type='submit'>{{ 'Apply filter'|t }}</button>
+      </form>
+    {% endif %}
 
     {% if lead %}
       <section class="reg-newsroom__featured" aria-labelledby="reg-newsroom-featured-title">

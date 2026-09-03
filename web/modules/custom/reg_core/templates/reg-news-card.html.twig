@@ -8,7 +8,8 @@
   </a>
   <div class="reg-news-card__body">
     <div class="reg-news-card__meta">
-      {% if item.category.label %}<span>{{ item.category.label }}</span>{% endif %}
+      <span>{{ item.section == 'sports' ? (item.sport ?: 'Sports News'|t) : 'Corporate News'|t }}</span>
+      <span class='reg-news-card__language'>{{ item.language|upper }}</span>
       {% if item.date %}<time datetime="{{ item.date_iso }}">{{ item.date }}</time>{% endif %}
     </div>
     <h3><a href="{{ item.url }}"{% if analytics_event %} data-reg-analytics-event="{{ analytics_event }}" data-reg-analytics-id="{{ item.id }}"{% endif %}>{{ item.title }}</a></h3>

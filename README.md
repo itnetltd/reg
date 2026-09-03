@@ -2,6 +2,9 @@
 
 A clean Drupal 11 codebase for the Rwanda Energy Group website, structured to reproduce the approved Figma homepage and to remain maintainable by REG content administrators.
 
+Server-side homepage X feed setup is documented in
+[`docs/X_API_FEED.md`](docs/X_API_FEED.md).
+
 ## Technology
 
 - Drupal 11.4+

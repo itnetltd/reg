@@ -7,6 +7,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Url;
 use Drupal\reg_core\Sports\SportsRepositoryInterface;
+use Drupal\reg_core\News\NewsRepositoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -20,6 +21,7 @@ final class SportsController extends ControllerBase {
     private readonly SportsRepositoryInterface $repository,
     private readonly PagerManagerInterface $regPagerManager,
     private readonly ConfigFactoryInterface $regConfigFactory,
+    private readonly NewsRepositoryInterface $newsRepository,
   ) {}
 
   /**
@@ -30,6 +32,7 @@ final class SportsController extends ControllerBase {
       $container->get('reg_core.sports_repository'),
       $container->get('pager.manager'),
       $container->get('config.factory'),
+      $container->get('reg_core.news_repository'),
     );
   }
 
@@ -38,6 +41,8 @@ final class SportsController extends ControllerBase {
    */
   public function landing(): array {
     $content = $this->repository->landing();
+    $sports_news = $this->newsRepository->archive(['section' => 'sports'], 0, 3);
+    $content['news'] = $sports_news['items'];
     if (!$content['teams']) {
       $content['teams'] = $this->teamNavigation();
     }

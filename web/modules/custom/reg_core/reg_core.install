@@ -298,6 +298,8 @@ function reg_core_schema(): array {
  */
 function reg_core_install(): void {
   reg_core_apply_foundation();
+  require_once __DIR__ . '/reg_core.media_center.inc';
+  reg_core_apply_media_center_migration();
   reg_core_apply_tender_upgrade();
   reg_core_apply_newsroom();
   require_once __DIR__ . '/reg_core.social_post.inc';
@@ -331,7 +333,19 @@ function reg_core_install(): void {
 function reg_core_apply_social_media_configuration(): void {
   $config = \Drupal::configFactory()->getEditable('reg_core.social_media');
   $defaults = [
-    'x' => ['display_name' => 'Rwanda Energy Group', 'show_utility' => TRUE, 'show_footer' => TRUE, 'show_homepage_feed' => TRUE],
+    'x' => [
+      'display_name' => 'Rwanda Energy Group',
+      'show_utility' => TRUE,
+      'show_footer' => TRUE,
+      'show_homepage_feed' => TRUE,
+      'api_enabled' => FALSE,
+      'api_username' => 'reg_rwanda',
+      'api_user_id' => '',
+      'api_cache_lifetime' => 900,
+      'api_homepage_post_count' => 3,
+      'api_exclude_replies' => TRUE,
+      'api_exclude_reposts' => TRUE,
+    ],
     'facebook' => ['show_utility' => TRUE, 'show_footer' => TRUE],
     'youtube' => ['show_utility' => TRUE, 'show_footer' => TRUE],
     'instagram' => ['show_utility' => FALSE, 'show_footer' => TRUE],

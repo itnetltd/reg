@@ -263,6 +263,9 @@ function reg_core_cron(): void {
   if (\Drupal::config('reg_core.settings')->get('outages.source') === 'ge_dms') {
     \Drupal::service('reg_core.dms_outage_synchronizer')->synchronizeIfDue();
   }
+  if (\Drupal::hasService('reg_core.x_feed')) {
+    \Drupal::service('reg_core.x_feed')->refreshIfDue();
+  }
   $cutoff = \Drupal::time()->getRequestTime() - 604800;
   if (\Drupal::database()->schema()->tableExists('reg_core_supplier_verification')) \Drupal::database()->delete('reg_core_supplier_verification')->condition('expires', $cutoff, '<')->execute();
   if (\Drupal::database()->schema()->tableExists('reg_core_supplier_invitation')) \Drupal::database()->delete('reg_core_supplier_invitation')->condition('expires', $cutoff, '<')->execute();
@@ -563,8 +566,13 @@ function reg_core_theme(): array {
         'categories' => [],
         'years' => [],
         'departments' => [],
+        'sports' => [],
+        'section' => 'corporate',
         'pager' => NULL,
       ],
+    ],
+    'reg_media_center' => [
+      'variables' => ['corporate' => [], 'sports' => [], 'documents' => [], 'social' => []],
     ],
     'reg_news_card' => [
       'variables' => ['item' => [], 'variant' => 'card', 'analytics_event' => ''],
@@ -824,6 +832,7 @@ function reg_core_preprocess(array &$variables, string $hook): void {
     'reg_sports_team',
     'reg_video_archive',
     'reg_news_archive',
+    'reg_media_center',
   ];
   if (in_array($hook, $supported, TRUE) && \Drupal::hasService('reg_core.section_hero_resolver')) {
     $variables['section_hero'] = \Drupal::service('reg_core.section_hero_resolver')->resolve();

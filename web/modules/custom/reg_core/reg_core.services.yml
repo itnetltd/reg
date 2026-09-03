@@ -293,6 +293,25 @@ services:
     arguments:
       - '@config.factory'
 
+  logger.channel.reg_x_feed:
+    parent: logger.channel_base
+    arguments: ['reg_x_feed']
+
+  Drupal\reg_core\Social\XFeedServiceInterface:
+    alias: reg_core.x_feed
+
+  reg_core.x_feed:
+    class: Drupal\reg_core\Social\XFeedService
+    arguments:
+      - '@http_client'
+      - '@config.factory'
+      - '@cache.data'
+      - '@cache_tags.invalidator'
+      - '@state'
+      - '@datetime.time'
+      - '@date.formatter'
+      - '@logger.channel.reg_x_feed'
+
   reg_core.supplier_manager:
     class: Drupal\reg_core\Supplier\SupplierManager
     arguments:
@@ -319,6 +338,20 @@ services:
       - '@file_url_generator'
       - '@cache.data'
       - '@datetime.time'
+
+  logger.channel.reg_media_center_migration:
+    parent: logger.channel_base
+    arguments: ['reg_media_center_migration']
+
+  Drupal\reg_core\Migration\MediaCenterLegacyImporter:
+    class: Drupal\reg_core\Migration\MediaCenterLegacyImporter
+    arguments:
+      - '@http_client'
+      - '@entity_type.manager'
+      - '@file.repository'
+      - '@file_system'
+      - '@datetime.time'
+      - '@logger.channel.reg_media_center_migration'
 
   Drupal\reg_core\Social\SocialPostRepositoryInterface:
     alias: reg_core.social_post_repository

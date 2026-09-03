@@ -136,6 +136,29 @@ final class PublicInformationController extends ControllerBase {
     return $this->listing('reg_publication', $request, 'all');
   }
 
+  /** Builds Media Center document archives on the shared publication model. */
+  public function mediaPublications(Request $request): array {
+    $type = (string) $request->attributes->get('_publication_type', '');
+    if ($type !== '') {
+      $ids = $this->entityTypeManager()->getStorage('taxonomy_term')->getQuery()
+        ->accessCheck(FALSE)->condition('vid', 'reg_publication_type')
+        ->condition('name', $type)->range(0, 1)->execute();
+      if ($ids) $request->query->set('category', (int) reset($ids));
+    }
+    $build = $this->listing('reg_publication', $request, 'all');
+    $labels = [
+      'Press Release' => ['Press Releases', 'Official REG media statements in English and Kinyarwanda.'],
+      'Announcement Archive' => ['Announcements', 'Archived public announcements. Historical outage notices are not live outage data.'],
+      'Newsletter' => ['Newsletters', 'REG newsletter issues and downloadable editions.'],
+      'Corporate / Legal Documents' => ['Corporate / Legal Documents', 'Company laws and historical corporate legal documents.'],
+    ];
+    if (isset($labels[$type])) {
+      $build['#heading'] = $this->t($labels[$type][0]);
+      $build['#intro'] = $this->t($labels[$type][1]);
+    }
+    return $build;
+  }
+
   /**
    * Builds one bundle listing with shared filters and presentation.
    */

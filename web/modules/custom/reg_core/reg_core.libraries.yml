@@ -171,7 +171,7 @@ newsroom:
     - core/once
 
 x_feed:
-  version: 1.x
+  version: 4.x
   css:
     component:
       css/x-feed.css: {}

@@ -6,6 +6,13 @@ platforms:
     show_utility: true
     show_footer: true
     show_homepage_feed: true
+    api_enabled: false
+    api_username: 'reg_rwanda'
+    api_user_id: ''
+    api_cache_lifetime: 900
+    api_homepage_post_count: 3
+    api_exclude_replies: true
+    api_exclude_reposts: true
   facebook:
     url: ''
     enabled: false
