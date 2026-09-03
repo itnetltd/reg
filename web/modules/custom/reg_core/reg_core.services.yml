@@ -353,6 +353,16 @@ services:
       - '@datetime.time'
       - '@logger.channel.reg_media_center_migration'
 
+  Drupal\reg_core\Migration\MediaCenterDocumentImporter:
+    class: Drupal\reg_core\Migration\MediaCenterDocumentImporter
+    arguments:
+      - '@http_client'
+      - '@entity_type.manager'
+      - '@file.repository'
+      - '@file_system'
+      - '@datetime.time'
+      - '@logger.channel.reg_media_center_migration'
+
   Drupal\reg_core\Social\SocialPostRepositoryInterface:
     alias: reg_core.social_post_repository
 

@@ -565,3 +565,23 @@ function reg_core_post_update_prepare_reg_news_migration(?array &$sandbox = NULL
   reg_core_apply_media_center_migration();
   return 'Prepared the existing REG News bundle with bilingual classification, source metadata, review status, translation pairing, and the existing Sports taxonomy.';
 }
+
+/**
+ * Prepares the existing REG Publication bundle for legacy document migration.
+ */
+function reg_core_post_update_prepare_reg_media_document_migration(?array &$sandbox = NULL): string {
+  require_once __DIR__ . '/reg_core.install';
+  require_once __DIR__ . '/reg_core.media_center.inc';
+  reg_core_apply_media_document_migration();
+  return 'Prepared the existing REG Publication bundle for controlled Press Release and Publication imports.';
+}
+
+/**
+ * Finalizes optional metadata fields for existing publication records.
+ */
+function reg_core_post_update_finalize_reg_media_document_migration(?array &$sandbox = NULL): string {
+  require_once __DIR__ . '/reg_core.install';
+  require_once __DIR__ . '/reg_core.media_center.inc';
+  reg_core_apply_media_document_migration();
+  return 'Finalized optional legacy metadata fields without changing existing publication records.';
+}

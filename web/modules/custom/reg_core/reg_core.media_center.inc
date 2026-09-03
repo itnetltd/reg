@@ -117,3 +117,62 @@ function reg_core_apply_media_center_migration(): void {
     }
   }
 }
+
+/**
+ * Prepares the existing REG Publication bundle for legacy document imports.
+ */
+function reg_core_apply_media_document_migration(): void {
+  $legacy_source_url = [
+    'type' => 'link',
+    'label' => 'Legacy Source URL',
+    'required' => FALSE,
+    'translatable' => FALSE,
+    'field_settings' => ['title' => 1, 'link_type' => 17],
+    'widget' => 'link_default',
+    'formatter' => 'link',
+  ];
+  $fields = [
+    'field_reg_external_url' => $legacy_source_url,
+    'field_reg_source_id' => reg_core_string_field('Legacy source ID', FALSE),
+    'field_reg_imported_date' => reg_core_date_field('Imported Date', FALSE),
+    'field_reg_source_hash' => reg_core_string_field('Source Hash', FALSE),
+    'field_reg_migration_status' => reg_core_list_field('Migration status', [
+      'imported' => 'Imported',
+      'updated' => 'Updated',
+      'unchanged' => 'Existing / Unchanged',
+      'needs_review' => 'Needs Review',
+    ], FALSE, FALSE),
+    'field_reg_migration_review' => reg_core_list_field('Migration review status', [
+      'verified' => 'Verified',
+      'needs_date' => 'Needs Date Verification',
+      'needs_language' => 'Needs Language Review',
+      'needs_classification' => 'Needs Classification Review',
+      'needs_file' => 'Needs File Review',
+      'duplicate_candidate' => 'Duplicate Candidate',
+    ], FALSE, FALSE),
+  ];
+  $weight = 32;
+  foreach ($fields as $name => $definition) {
+    reg_core_ensure_field('reg_publication', $name, $definition, $weight++);
+  }
+
+  // Preserve the established categories and add only the two source classes.
+  reg_core_ensure_field('reg_publication', 'field_reg_publication_category', reg_core_list_field('Publication category', [
+    'report' => 'Report',
+    'policy' => 'Policy',
+    'plan' => 'Plan',
+    'safeguard' => 'Safeguard',
+    'form' => 'Form',
+    'press_release' => 'Press Release',
+    'publication' => 'Publication',
+  ]), 11);
+  reg_core_ensure_field('reg_publication', 'field_reg_publication_date', reg_core_date_field('Original Publication Date'), 13);
+
+  $display = EntityViewDisplay::load('node.reg_publication.default');
+  if ($display) {
+    foreach (['field_reg_source_id', 'field_reg_imported_date', 'field_reg_source_hash', 'field_reg_migration_status', 'field_reg_migration_review'] as $name) {
+      $display->removeComponent($name);
+    }
+    $display->save();
+  }
+}
