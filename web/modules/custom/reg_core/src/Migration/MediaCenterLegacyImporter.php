@@ -15,12 +15,12 @@ use Drupal\taxonomy\Entity\Term;
 use GuzzleHttp\ClientInterface;
 use Psr\Log\LoggerInterface;
 
-/** Controlled, idempotent importer for the legacy REG Media Center. */
+/** Controlled, idempotent importer for legacy REG News & Events. */
 final class MediaCenterLegacyImporter {
 
   private const BASE = 'https://www.reg.rw';
-  private const SOURCE = 'Legacy REG Website';
-  private const TYPES = ['news', 'sports', 'press-releases', 'announcements', 'publications', 'newsletters', 'company-laws'];
+  private const LISTING = self::BASE . '/media-center/news-events/';
+  private const MAX_LISTING_PAGES = 500;
 
   /** @var array<string, string|null> */
   private array $responses = [];
@@ -36,54 +36,18 @@ final class MediaCenterLegacyImporter {
     private readonly LoggerInterface $logger,
   ) {}
 
-  /** Discovers, classifies, and optionally imports selected source sections. */
+  /** Discovers, classifies, and optionally imports legacy News records. */
   public function run(array $options = []): array {
-    $types = array_values(array_intersect(self::TYPES, array_unique($options['types'] ?? [])));
-    $types = $types ?: self::TYPES;
     $language = in_array(($options['language'] ?? ''), ['en', 'rw'], TRUE) ? $options['language'] : '';
     $dry_run = (bool) ($options['dry_run'] ?? FALSE);
     $update_existing = (bool) ($options['update_existing'] ?? FALSE);
     $limit = max(0, (int) ($options['limit'] ?? 0));
-    $report = $this->emptyReport($dry_run, $types, $language);
-    $records = [];
-
-    if (array_intersect($types, ['news', 'sports'])) {
-      foreach ($this->discoverNews($report) as $record) {
-        if (($record['section'] === 'sports' && in_array('sports', $types, TRUE))
-          || ($record['section'] === 'corporate' && in_array('news', $types, TRUE))) {
-          $records[] = $record;
-        }
-      }
-    }
-    foreach ([
-      'press-releases' => '/media-center/press-releases/',
-      'announcements' => '/media-center/announcements/',
-      'publications' => '/media-center/publications/',
-      'newsletters' => '/media-center/newsletter/',
-      'company-laws' => '/media-center/company-laws/',
-    ] as $type => $path) {
-      if (in_array($type, $types, TRUE)) {
-        array_push($records, ...$this->discoverDocuments($type, self::BASE . $path, $report));
-      }
-    }
-
-    $filtered = [];
-    $seen = [];
-    foreach ($records as $record) {
-      $key = $record['bundle'] . ':' . $record['source_id'];
-      if (isset($seen[$key]) || ($language && $record['langcode'] !== $language)) {
-        continue;
-      }
-      $seen[$key] = TRUE;
-      $filtered[] = $record;
-      if ($limit && count($filtered) >= $limit) {
-        break;
-      }
-    }
-
-    $report['discovered'] = count($filtered);
+    $report = $this->emptyReport($dry_run, $language);
+    $records = $this->discoverNews($report, $limit, $language);
+    $report['failed'] += count($report['source_failures']);
+    $report['discovered'] = count($records);
     $news_nodes = [];
-    foreach ($filtered as $record) {
+    foreach ($records as $record) {
       $bucket = $this->bucket($record);
       $report['breakdown'][$bucket]['discovered']++;
       foreach ($record['issues'] as $issue) {
@@ -106,7 +70,7 @@ final class MediaCenterLegacyImporter {
         $report['failed']++;
         $report['breakdown'][$bucket]['failed']++;
         $report['failures'][] = ['source_url' => $record['source_url'], 'reason' => $reason];
-        $this->logger->warning('Legacy Media Center record failed: @url (@reason)', ['@url' => $record['source_url'], '@reason' => $reason]);
+        $this->logger->warning('Legacy REG News record failed: @url (@reason)', ['@url' => $record['source_url'], '@reason' => $reason]);
       }
     }
     if (!$dry_run) {
@@ -116,18 +80,19 @@ final class MediaCenterLegacyImporter {
     return $report;
   }
 
-  /** Discovers official news detail URLs through bounded indexes. */
-  private function discoverNews(array &$report): array {
-    $queue = [self::BASE . '/home/', self::BASE . '/media-center/', self::BASE . '/media-center/news-events/'];
-    $seen = [];
-    $links = [];
-    while ($queue && count($seen) < 2500) {
+  /** Discovers News detail URLs while following bounded listing pagination. */
+  private function discoverNews(array &$report, int $limit, string $language): array {
+    $queue = [self::LISTING];
+    $seen_pages = [];
+    $seen_details = [];
+    $records = [];
+    while ($queue && count($seen_pages) < self::MAX_LISTING_PAGES) {
       $url = array_shift($queue);
       $key = $this->discoveryKey($url);
-      if (isset($seen[$key])) {
+      if (isset($seen_pages[$key])) {
         continue;
       }
-      $seen[$key] = TRUE;
+      $seen_pages[$key] = TRUE;
       $html = $this->fetch($url, $report);
       if ($html === NULL) {
         continue;
@@ -141,55 +106,34 @@ final class MediaCenterLegacyImporter {
         $path = (string) parse_url($href, PHP_URL_PATH);
         if (str_starts_with($path, '/media-center/news-details/news/')) {
           $source = $this->canonical($href);
-          $links[$source] ??= ['source_url' => $source, 'listing_date' => $this->listingDate($anchor, $url)];
+          if (isset($seen_details[$source])) {
+            continue;
+          }
+          $seen_details[$source] = TRUE;
+          $detail_html = $this->fetch($source, $report);
+          $record = $detail_html === NULL ? NULL : $this->parseNews([
+            'source_url' => $source,
+            'listing_date' => $this->listingDate($anchor, $url),
+          ], $detail_html);
+          if ($record === NULL) {
+            $report['skipped']++;
+            continue;
+          }
+          if ($language !== '' && $record['langcode'] !== $language) {
+            continue;
+          }
+          $records[] = $record;
+          if ($limit > 0 && count($records) >= $limit) {
+            break 2;
+          }
         }
         elseif ($this->newsIndex($path)) {
           $queue[] = $href;
         }
       }
     }
-    $report['source_pages_scanned'] += count($seen);
-    $records = [];
-    foreach ($links as $stub) {
-      $html = $this->fetch($stub['source_url'], $report);
-      $record = $html === NULL ? NULL : $this->parseNews($stub, $html);
-      $record ? $records[] = $record : $report['skipped']++;
-    }
+    $report['source_pages_scanned'] += count($seen_pages);
     return $records;
-  }
-
-  /** Discovers a document section and all its pagination pages. */
-  private function discoverDocuments(string $type, string $start_url, array &$report): array {
-    $queue = [$start_url];
-    $seen = [];
-    $records = [];
-    $start_path = (string) parse_url($start_url, PHP_URL_PATH);
-    while ($queue && count($seen) < 100) {
-      $url = array_shift($queue);
-      $key = $this->discoveryKey($url);
-      if (isset($seen[$key])) {
-        continue;
-      }
-      $seen[$key] = TRUE;
-      $html = $this->fetch($url, $report);
-      if ($html === NULL) {
-        continue;
-      }
-      [, $xpath] = $this->dom($html);
-      foreach ($xpath->query('//table//tbody/tr') ?: [] as $row) {
-        if ($record = $this->parseDocumentRow($type, $url, $row, $report)) {
-          $records[$record['source_id']] = $record;
-        }
-      }
-      foreach ($xpath->query('//ul[contains(@class,\'pagination\')]//a[@href] | //link[@rel=\'next\']') ?: [] as $link) {
-        $next = $this->resolve($link->getAttribute('href'));
-        if ($next && (string) parse_url($next, PHP_URL_PATH) === $start_path) {
-          $queue[] = $next;
-        }
-      }
-    }
-    $report['source_pages_scanned'] += count($seen);
-    return array_values($records);
   }
 
   private function parseNews(array $stub, string $html): ?array {
@@ -223,10 +167,14 @@ final class MediaCenterLegacyImporter {
     if (!$language_certain) $issues[] = 'needs_language';
     if (!$classification_certain) $issues[] = 'needs_classification';
     $images = [];
-    foreach ($xpath->query('//div[contains(@class,\'event_img\')]//img') ?: [] as $image) {
-      $url = $this->resolve($image->getAttribute('src'));
+    $image = $xpath->query('//meta[@property=\'og:image\']/@content')->item(0)
+      ?: $xpath->query('//div[contains(@class,\'news-single\')]//div[contains(@class,\'event_img\')]//img[1]')->item(0);
+    if ($image) {
+      $attribute = $image instanceof \DOMAttr ? $image->nodeValue : $image->getAttribute('src');
+      $url = $this->resolve($attribute);
       if ($url && str_starts_with((string) parse_url($url, PHP_URL_PATH), '/fileadmin/')) {
-        $images[$this->canonical($url)] = trim($image->getAttribute('alt'));
+        $alt = $image instanceof \DOMElement ? trim($image->getAttribute('alt')) : '';
+        $images[$this->canonical($url)] = $alt;
       }
     }
     $source_url = $this->canonical($stub['source_url']);
@@ -244,179 +192,109 @@ final class MediaCenterLegacyImporter {
     return $record;
   }
 
-  /** Parses a document row and resolves an optional detail-page download. */
-  private function parseDocumentRow(string $type, string $listing_url, \DOMNode $row, array &$report): ?array {
-    $xpath = new \DOMXPath($row->ownerDocument);
-    $cells = $xpath->query('./td', $row);
-    if (!$cells || $cells->length < 2 || ($title = $this->text($cells->item(1))) === '') {
-      return NULL;
-    }
-    $category = $cells->length > 2 ? $this->text($cells->item(2)) : '';
-    $detail_url = '';
-    $file_url = '';
-    foreach ($xpath->query('.//a[@href]', $row) ?: [] as $link) {
-      $url = $this->resolve($link->getAttribute('href'));
-      $path = (string) parse_url($url ?? '', PHP_URL_PATH);
-      if ($url && str_starts_with($path, '/fileadmin/')) {
-        $file_url = $this->canonical($url);
-      }
-      elseif ($url && str_starts_with($path, '/media-center/')) {
-        $detail_url = $this->canonical($url);
-      }
-    }
-    if (!$file_url && $detail_url && ($detail_html = $this->fetch($detail_url, $report))) {
-      [, $detail_xpath] = $this->dom($detail_html);
-      foreach ($detail_xpath->query('//a[@href]') ?: [] as $link) {
-        $candidate = $this->resolve($link->getAttribute('href'));
-        if ($candidate && str_starts_with((string) parse_url($candidate, PHP_URL_PATH), '/fileadmin/')) {
-          $file_url = $this->canonical($candidate);
-          break;
-        }
-      }
-    }
-    return $this->documentRecord($type, $listing_url, $title, $category, $detail_url, $file_url);
-  }
-
-  private function documentRecord(string $type, string $listing_url, string $title, string $category, string $detail_url, string $file_url): array {
-    $date = $this->dateFromText($title . ' ' . basename((string) parse_url($file_url, PHP_URL_PATH)));
-    [$langcode, $language_certain] = $this->language($title);
-    $issues = [];
-    if (!$date) $issues[] = 'needs_date';
-    if (!$language_certain) $issues[] = 'needs_language';
-    if (!$file_url) $issues[] = 'needs_file';
-    $publication_type = match ($type) {
-      'press-releases' => 'Press Release',
-      'announcements' => preg_match('/outage|interrupt|shutdown|maintenance|planned power|amashanyarazi|umuriro/i', $title) ? 'Legacy Outage Notice' : 'Announcement Archive',
-      'newsletters' => 'Newsletter',
-      'company-laws' => 'Corporate / Legal Documents',
-      default => $category ?: 'Publications',
-    };
-    preg_match('/issue\s*(?:no\.?\s*)?(\d+)/i', $title, $issue_match);
-    $source_url = $detail_url ?: ($file_url ?: $this->canonical($listing_url));
-    $source_id = $detail_url
-      ? basename(rtrim((string) parse_url($detail_url, PHP_URL_PATH), '/'))
-      : substr(hash('sha256', $type . '|' . $title . '|' . $file_url), 0, 32);
-    $record = [
-      'bundle' => 'reg_publication', 'type' => $type, 'title' => $title,
-      'summary' => '', 'body' => '', 'date' => $date, 'langcode' => $langcode,
-      'section' => '', 'sport' => '', 'category' => $publication_type,
-      'source_category' => $category, 'source_url' => $source_url,
-      'source_id' => $source_id, 'assets' => $file_url ? [$file_url] : [],
-      'asset_alts' => [], 'issue_number' => $issue_match[1] ?? '', 'issues' => $issues,
-    ];
-    $record['source_hash'] = $this->recordHash($record);
-    return $record;
-  }
-
   /** Performs duplicate-safe node creation or conservative enrichment. */
   private function upsert(array $record, bool $dry_run, bool $update_existing, array &$report): array {
     $existing = $this->findExisting($record);
+    if ($dry_run) {
+      return ['status' => $existing ? 'existing' : 'would_create'];
+    }
     if ($existing && $this->value($existing, 'field_reg_source_hash') === $record['source_hash']) {
       return ['status' => 'existing', 'node_id' => (int) $existing->id()];
     }
-    if ($existing && !$update_existing) {
-      if (!$dry_run) $this->enrichExisting($existing, $record, $report);
+    if ($existing && (!$update_existing || !$this->sourceManaged($existing, $record))) {
+      $this->enrichExisting($existing, $record, $report);
       return ['status' => 'existing', 'node_id' => (int) $existing->id()];
     }
-    if ($dry_run) return ['status' => $existing ? 'updated' : 'new'];
 
     $review = $this->primaryReviewStatus($record['issues']);
     if ($existing) {
       $node = $existing;
-      if ($this->value($node, 'field_reg_source_site') === self::SOURCE) {
-        $node->setTitle($record['title']);
-        if ($record['bundle'] === 'reg_news') {
-          $node->set('field_reg_summary', $record['summary']);
-          $node->set('body', ['value' => $record['body'], 'format' => 'basic_html']);
-        }
-      }
+      $node->setTitle($record['title']);
+      $node->set('field_reg_summary', $record['summary']);
+      $node->set('body', ['value' => $record['body'], 'format' => 'basic_html']);
     }
     else {
       $created = $record['date'] ? strtotime($record['date'] . ' UTC') : $this->time->getCurrentTime();
       $node = Node::create([
-        'type' => $record['bundle'], 'title' => $record['title'],
+        'type' => 'reg_news', 'title' => $record['title'],
         'langcode' => $record['langcode'], 'uid' => 1, 'created' => $created,
         'status' => $record['issues'] === [] ? NodeInterface::PUBLISHED : NodeInterface::NOT_PUBLISHED,
       ]);
       $node->set('field_reg_summary', $record['summary']);
-      if ($record['bundle'] === 'reg_news') {
-        $node->set('body', ['value' => $record['body'], 'format' => 'basic_html']);
-        $node->set('field_reg_news_category', 'news');
-      }
+      $node->set('body', ['value' => $record['body'], 'format' => 'basic_html']);
+      $node->set('field_reg_news_category', 'news');
     }
 
-    $now = gmdate('Y-m-d\TH:i:s', $this->time->getCurrentTime());
     $this->setIfField($node, 'field_reg_publication_date', $record['date'] ? $record['date'] . 'T12:00:00' : NULL);
-    $this->setIfField($node, 'field_reg_source_site', self::SOURCE);
-    $this->setIfField($node, 'field_reg_source_url', ['uri' => $record['source_url']]);
+    $this->setIfField($node, 'field_reg_external_url', ['uri' => $record['source_url']]);
     $this->setIfField($node, 'field_reg_source_id', $record['source_id']);
     $this->setIfField($node, 'field_reg_source_hash', $record['source_hash']);
-    $this->setIfField($node, 'field_reg_imported_date', $now);
-    $this->setIfField($node, 'field_reg_last_verified', $now);
+    if (!$existing || $node->get('field_reg_imported_date')->isEmpty()) {
+      $this->setIfField($node, 'field_reg_imported_date', gmdate('Y-m-d', $this->time->getCurrentTime()));
+    }
     $this->setIfField($node, 'field_reg_migration_status', $existing ? 'updated' : 'imported');
     $this->setIfField($node, 'field_reg_migration_review', $review);
-    $this->setIfField($node, 'field_reg_legacy_assets', implode(chr(10), $record['assets']));
     $this->setRecordFields($node, $record, $report);
     if ($node->hasField('moderation_state')) {
       $node->set('moderation_state', $record['issues'] === [] ? 'published' : 'draft');
     }
     $node->save();
-    return ['status' => $existing ? 'updated' : 'new', 'node_id' => (int) $node->id()];
+    return ['status' => $existing ? 'updated' : 'created', 'node_id' => (int) $node->id()];
   }
 
   private function setRecordFields(NodeInterface $node, array $record, array &$report): void {
-    if ($record['bundle'] === 'reg_news') {
-      $this->setIfField($node, 'field_reg_news_section', $record['section']);
-      $this->setIfField($node, 'field_reg_news_category_term', ['target_id' => $this->term('reg_news_category', $record['category'])]);
-      if ($record['sport']) {
-        $this->setIfField($node, 'field_reg_sports_sport', ['target_id' => $this->term('reg_sports_sport', $record['sport'])]);
+    $this->setIfField($node, 'field_reg_news_section', $record['section']);
+    $this->setIfField($node, 'field_reg_news_category_term', ['target_id' => $this->term('reg_news_category', $record['category'])]);
+    if ($record['sport']) {
+      $this->setIfField($node, 'field_reg_sports_sport', ['target_id' => $this->term('reg_sports_sport', $record['sport'])]);
+    }
+    if ($record['assets']) {
+      $alt = $record['asset_alts'][$record['assets'][0]] ?: $record['title'];
+      if ($media = $this->importImage($record['assets'][0], $alt, $report)) {
+        $this->setIfField($node, 'field_reg_featured_image', ['target_id' => $media->id()]);
       }
-    }
-    else {
-      $this->setIfField($node, 'field_reg_publication_type', ['target_id' => $this->term('reg_publication_type', $record['category'])]);
-      $this->setIfField($node, 'field_reg_document_language', $record['langcode']);
-      $this->setIfField($node, 'field_reg_issue_number', $record['issue_number']);
-    }
-    if (!$record['assets']) return;
-    $bundle = $record['bundle'] === 'reg_news' ? 'image' : 'document';
-    $field = $bundle === 'image' ? 'field_reg_featured_image' : 'field_reg_publication_document';
-    $alt = $bundle === 'image' ? ($record['asset_alts'][$record['assets'][0]] ?: $record['title']) : '';
-    if ($media = $this->importAsset($record['assets'][0], $bundle, $alt, $report)) {
-      $this->setIfField($node, $field, ['target_id' => $media->id()]);
     }
   }
 
   /** Locates duplicates in source URL, source ID, then title/date order. */
   private function findExisting(array $record): ?NodeInterface {
     $storage = $this->entityTypeManager->getStorage('node');
-    foreach ([['field_reg_source_url.uri', $record['source_url']], ['field_reg_source_id', $record['source_id']]] as [$field, $value]) {
+    foreach ([['field_reg_external_url.uri', $record['source_url']], ['field_reg_source_id', $record['source_id']]] as [$field, $value]) {
+      if ($value === '') {
+        continue;
+      }
       $ids = $storage->getQuery()->accessCheck(FALSE)->condition('type', $record['bundle'])
         ->condition($field, $value)->range(0, 1)->execute();
       if ($ids && ($node = $storage->load(reset($ids))) instanceof NodeInterface) return $node;
     }
-    $query = $storage->getQuery()->accessCheck(FALSE)->condition('type', $record['bundle'])
-      ->condition('langcode', $record['langcode'])->condition('title', $record['title']);
-    if ($record['date']) {
-      $query->condition('field_reg_publication_date', $record['date'] . 'T00:00:00', '>=')
-        ->condition('field_reg_publication_date', $record['date'] . 'T23:59:59', '<=');
+    if (!$record['date']) {
+      return NULL;
     }
+    $query = $storage->getQuery()->accessCheck(FALSE)->condition('type', $record['bundle'])
+      ->condition('langcode', $record['langcode'])
+      ->condition('title', $record['title'])
+      ->condition('field_reg_publication_date', $record['date'] . 'T00:00:00', '>=')
+      ->condition('field_reg_publication_date', $record['date'] . 'T23:59:59', '<=');
     $ids = $query->range(0, 1)->execute();
     $node = $ids ? $storage->load(reset($ids)) : NULL;
     return $node instanceof NodeInterface ? $node : NULL;
+  }
+
+  /** Whether an existing match carries this legacy record's stable identity. */
+  private function sourceManaged(NodeInterface $node, array $record): bool {
+    return $this->value($node, 'field_reg_external_url') === $record['source_url']
+      || ($record['source_id'] !== '' && $this->value($node, 'field_reg_source_id') === $record['source_id']);
   }
 
   /** Enriches a manual duplicate without replacing editorial fields. */
   private function enrichExisting(NodeInterface $node, array $record, array &$report): void {
     $changed = FALSE;
     foreach ([
-      'field_reg_source_site' => self::SOURCE,
-      'field_reg_source_url' => ['uri' => $record['source_url']],
+      'field_reg_external_url' => ['uri' => $record['source_url']],
       'field_reg_source_id' => $record['source_id'],
       'field_reg_source_hash' => $record['source_hash'],
-      'field_reg_last_verified' => gmdate('Y-m-d\TH:i:s', $this->time->getCurrentTime()),
       'field_reg_migration_status' => 'unchanged',
       'field_reg_migration_review' => $this->primaryReviewStatus($record['issues']),
-      'field_reg_legacy_assets' => implode(chr(10), $record['assets']),
     ] as $field => $value) {
       if ($node->hasField($field) && $node->get($field)->isEmpty()) {
         $node->set($field, $value);
@@ -427,30 +305,38 @@ final class MediaCenterLegacyImporter {
       $node->set('field_reg_publication_date', $record['date'] . 'T12:00:00');
       $changed = TRUE;
     }
-    $asset_field = $record['bundle'] === 'reg_news' ? 'field_reg_featured_image' : 'field_reg_publication_document';
-    if ($record['assets'] && $node->hasField($asset_field) && $node->get($asset_field)->isEmpty()) {
-      $bundle = $record['bundle'] === 'reg_news' ? 'image' : 'document';
-      $alt = $bundle === 'image' ? ($record['asset_alts'][$record['assets'][0]] ?: $record['title']) : '';
-      if ($media = $this->importAsset($record['assets'][0], $bundle, $alt, $report)) {
-        $node->set($asset_field, ['target_id' => $media->id()]);
+    if ($record['assets'] && $node->hasField('field_reg_featured_image') && $node->get('field_reg_featured_image')->isEmpty()) {
+      $alt = $record['asset_alts'][$record['assets'][0]] ?: $record['title'];
+      if ($media = $this->importImage($record['assets'][0], $alt, $report)) {
+        $node->set('field_reg_featured_image', ['target_id' => $media->id()]);
         $changed = TRUE;
       }
     }
     if ($changed) $node->save();
   }
 
-  /** Downloads an asset and reuses File/Media entities by content checksum. */
-  private function importAsset(string $url, string $bundle, string $alt, array &$report): ?MediaInterface {
+  /** Downloads an image and reuses File/Media entities by checksum. */
+  private function importImage(string $url, string $alt, array &$report): ?MediaInterface {
     $contents = $this->fetchBinary($url, $report);
     if ($contents === NULL) {
       $report['media']['missing']++;
       return NULL;
     }
     $hash = hash('sha256', $contents);
+    $image_info = @getimagesizefromstring($contents);
+    $extensions = [
+      'image/jpeg' => 'jpg',
+      'image/png' => 'png',
+      'image/gif' => 'gif',
+      'image/webp' => 'webp',
+    ];
+    $extension = $extensions[$image_info['mime'] ?? ''] ?? NULL;
+    if ($extension === NULL) {
+      $report['media']['missing']++;
+      return NULL;
+    }
     $path = (string) parse_url($url, PHP_URL_PATH);
-    $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-    $extension = preg_match('/^[a-z0-9]{2,5}$/', $extension) ? $extension : ($bundle === 'image' ? 'jpg' : 'pdf');
-    $directory = 'public://legacy-reg/' . ($bundle === 'image' ? 'images' : 'documents');
+    $directory = 'public://legacy-reg/images';
     $this->fileSystem->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
     $uri = $directory . '/' . $hash . '.' . $extension;
     $file_storage = $this->entityTypeManager->getStorage('file');
@@ -463,18 +349,18 @@ final class MediaCenterLegacyImporter {
       $file = $this->fileRepository->writeData($contents, $uri, FileExists::Replace);
       $file->setPermanent();
       $file->save();
-      $report['media'][$bundle === 'image' ? 'images_imported' : 'pdfs_imported']++;
+      $report['media']['images_imported']++;
     }
-    $source_field = $bundle === 'image' ? 'field_media_image' : 'field_media_document';
+    $source_field = 'field_media_image';
     $media_storage = $this->entityTypeManager->getStorage('media');
-    $media_ids = $media_storage->getQuery()->accessCheck(FALSE)->condition('bundle', $bundle)
+    $media_ids = $media_storage->getQuery()->accessCheck(FALSE)->condition('bundle', 'image')
       ->condition($source_field . '.target_id', $file->id())->range(0, 1)->execute();
     $media = $media_ids ? $media_storage->load(reset($media_ids)) : NULL;
     if (!$media instanceof MediaInterface) {
       $value = ['target_id' => $file->id()];
-      if ($bundle === 'image') $value['alt'] = Unicode::truncate(trim($alt), 512, TRUE, TRUE);
+      $value['alt'] = Unicode::truncate(trim($alt), 512, TRUE, TRUE);
       $media = $media_storage->create([
-        'bundle' => $bundle, 'name' => Unicode::truncate(basename($path), 250, TRUE, TRUE),
+        'bundle' => 'image', 'name' => Unicode::truncate(basename($path), 250, TRUE, TRUE),
         'uid' => 1, 'status' => 1, $source_field => $value,
       ]);
       $media->save();
@@ -585,7 +471,7 @@ final class MediaCenterLegacyImporter {
         'headers' => ['User-Agent' => 'REG Drupal controlled legacy migration/1.0'],
       ]);
       $contents = (string) $response->getBody();
-      return $contents !== '' && strlen($contents) <= 75 * 1024 * 1024 ? $contents : NULL;
+      return $contents !== '' && strlen($contents) <= 20 * 1024 * 1024 ? $contents : NULL;
     }
     catch (\Throwable $exception) {
       $report['media']['failures'][] = ['url' => $url, 'reason' => $this->safeError($exception->getMessage())];
@@ -597,7 +483,11 @@ final class MediaCenterLegacyImporter {
     $host = strtolower((string) parse_url($url, PHP_URL_HOST));
     $path = (string) parse_url($url, PHP_URL_PATH);
     if (!in_array($host, ['www.reg.rw', 'reg.rw'], TRUE)) return FALSE;
-    return $asset ? str_starts_with($path, '/fileadmin/') : (str_starts_with($path, '/media-center/') || $path === '/home/');
+    if ($asset) {
+      return str_starts_with($path, '/fileadmin/');
+    }
+    return str_starts_with($path, '/media-center/news-events')
+      || str_starts_with($path, '/media-center/news-details/news/');
   }
 
   private function resolve(string $href): ?string {
@@ -611,7 +501,7 @@ final class MediaCenterLegacyImporter {
 
   private function canonical(string $url, bool $keep_query = FALSE): string {
     $parts = parse_url(html_entity_decode($url, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
-    $path = preg_replace('@/+#@', '/', $parts['path'] ?? '/');
+    $path = preg_replace('@/{2,}@', '/', $parts['path'] ?? '/');
     $query = '';
     if ($keep_query && isset($parts['query'])) {
       parse_str($parts['query'], $params);
@@ -627,7 +517,7 @@ final class MediaCenterLegacyImporter {
     if (isset($parts['query'])) parse_str($parts['query'], $params);
     unset($params['cHash']);
     $query = $params ? '?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986) : '';
-    return self::BASE . preg_replace('@/+#@', '/', $parts['path'] ?? '/') . $query;
+    return self::BASE . preg_replace('@/{2,}@', '/', $parts['path'] ?? '/') . $query;
   }
 
   private function newsIndex(string $path): bool {
@@ -660,11 +550,9 @@ final class MediaCenterLegacyImporter {
       foreach ($candidates as $left) {
         foreach ($candidates as $right) {
           if ($left['node_id'] === $right['node_id'] || $left['langcode'] === $right['langcode'] || !$this->likelyPair($left['title'], $right['title'])) continue;
-          $group = 'legacy-' . substr(hash('sha256', $date . min($left['node_id'], $right['node_id']) . max($left['node_id'], $right['node_id'])), 0, 16);
           foreach ([[$left, $right], [$right, $left]] as [$source, $target]) {
             $node = $storage->load($source['node_id']);
             if ($node instanceof NodeInterface) {
-              $this->setIfField($node, 'field_reg_translation_group', $group);
               $this->setIfField($node, 'field_reg_related_translation', ['target_id' => $target['node_id']]);
               $node->save();
             }
@@ -697,17 +585,28 @@ final class MediaCenterLegacyImporter {
     return $record['type'];
   }
 
-  private function emptyReport(bool $dry_run, array $types, string $language): array {
-    $counts = ['discovered' => 0, 'new' => 0, 'existing' => 0, 'updated' => 0, 'skipped' => 0, 'needs_review' => 0, 'failed' => 0];
+  private function emptyReport(bool $dry_run, string $language): array {
+    $counts = [
+      'discovered' => 0,
+      'would_create' => 0,
+      'created' => 0,
+      'existing' => 0,
+      'updated' => 0,
+      'skipped' => 0,
+      'needs_review' => 0,
+      'failed' => 0,
+    ];
     $breakdown = [];
-    foreach (['corporate_en', 'corporate_rw', 'sports_en', 'sports_rw', 'press-releases', 'announcements', 'publications', 'newsletters', 'company-laws'] as $bucket) $breakdown[$bucket] = $counts;
+    foreach (['corporate_en', 'corporate_rw', 'sports_en', 'sports_rw'] as $bucket) {
+      $breakdown[$bucket] = $counts;
+    }
     return $counts + [
-      'dry_run' => $dry_run, 'types' => $types, 'language' => $language ?: 'all',
+      'dry_run' => $dry_run, 'language' => $language ?: 'all',
       'source' => self::BASE, 'started_at' => gmdate(DATE_ATOM, $this->time->getCurrentTime()),
       'completed_at' => NULL, 'source_pages_scanned' => 0, 'translation_pairs' => 0,
       'breakdown' => $breakdown,
-      'media' => ['images_imported' => 0, 'pdfs_imported' => 0, 'duplicates_reused' => 0, 'missing' => 0, 'failures' => []],
-      'quality' => ['needs_date' => 0, 'needs_language' => 0, 'needs_classification' => 0, 'needs_file' => 0, 'duplicate_candidate' => 0],
+      'media' => ['images_imported' => 0, 'duplicates_reused' => 0, 'missing' => 0, 'failures' => []],
+      'quality' => ['needs_date' => 0, 'needs_language' => 0, 'needs_classification' => 0, 'duplicate_candidate' => 0],
       'source_failures' => [], 'failures' => [],
     ];
   }
@@ -737,7 +636,8 @@ final class MediaCenterLegacyImporter {
   private function value(NodeInterface $node, string $field): string {
     if (!$node->hasField($field) || $node->get($field)->isEmpty()) return '';
     $item = $node->get($field)->first();
-    return trim((string) ($item?->get('value')->getValue() ?? $item?->get('uri')->getValue() ?? ''));
+    $values = $item?->getValue() ?? [];
+    return trim((string) ($values['value'] ?? $values['uri'] ?? $values['target_id'] ?? ''));
   }
 
   private function safeError(string $message): string {
