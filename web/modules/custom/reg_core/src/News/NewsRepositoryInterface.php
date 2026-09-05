@@ -15,6 +15,11 @@ interface NewsRepositoryInterface {
   public function homepage(): array;
 
   /**
+   * Returns the featured and latest Sports News for the Sports homepage.
+   */
+  public function sportsHomepage(int $limit = 6): array;
+
+  /**
    * Returns a filtered, paged public newsroom result.
    */
   public function archive(array $filters, int $page, int $limit): array;

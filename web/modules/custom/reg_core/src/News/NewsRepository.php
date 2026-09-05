@@ -73,6 +73,40 @@ final class NewsRepository implements NewsRepositoryInterface {
   /**
    * {@inheritdoc}
    */
+  public function sportsHomepage(int $limit = 6): array {
+    $limit = min(6, max(1, $limit));
+    $langcode = $this->languageManager->getCurrentLanguage()->getId();
+    $cid = 'reg_core:news:sports-homepage:' . $langcode . ':' . $limit;
+    if ($cached = $this->cache->get($cid)) {
+      return is_array($cached->data) ? $cached->data : [];
+    }
+
+    $ids = $this->publishedQuery()
+      ->condition('field_reg_news_section', 'sports')
+      ->sort('field_reg_featured', 'DESC')
+      ->sort('field_reg_publication_date', 'DESC')
+      ->sort('nid', 'DESC')
+      ->range(0, $limit)
+      ->execute();
+
+    $items = [];
+    $tags = $this->listCacheTags();
+    foreach ($this->loadTranslated($ids) as $index => $node) {
+      $item = $this->item(
+        $node,
+        $index === 0 ? 'reg_news_featured' : ($index < 3 ? 'reg_news_thumbnail' : 'reg_news_card'),
+        $index === 0 ? 'eager' : 'lazy',
+      );
+      $items[] = $item;
+      $tags = Cache::mergeTags($tags, $item['cache_tags']);
+    }
+    $this->cache->set($cid, $items, $this->time->getRequestTime() + self::CACHE_SECONDS, $tags);
+    return $items;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function archive(array $filters, int $page, int $limit): array {
     $requested_language = $filters['language'] ?? NULL;
     $language = in_array($requested_language, ['en', 'rw'], TRUE) ? $requested_language : ($requested_language === '' ? '' : NULL);

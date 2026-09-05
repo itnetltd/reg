@@ -7,8 +7,8 @@
       {% for key, tab in tabs %}<a href="{{ tab.url }}" class="outage-tabs__link{{ mode == key ? ' is-active' }}"{% if mode == key %} aria-current="page"{% endif %}>{{ tab.label }}</a>{% endfor %}
     </nav>
 
-    <form class="outage-filters" action="{{ tabs[mode].url }}" method="get" data-reg-analytics-submit="outage_search">
-      <div class="outage-filters__field outage-filters__field--search">
+    <form class="outage-filters reg-filter-bar reg-filter-bar--wide" action="{{ tabs[mode].url }}" method="get" data-reg-analytics-submit="outage_search">
+      <div class="outage-filters__field outage-filters__field--search reg-filter-field reg-filter-field--search">
         <label for="outage-search">{{ 'Search'|t }}</label>
         <input id="outage-search" name="search" type="search" value="{{ filters.search }}" placeholder="{{ 'Search district, sector, feeder or area'|t }}">
       </div>
@@ -16,9 +16,9 @@
       <div class="outage-filters__field"><label for="outage-sector">{{ 'Sector'|t }}</label><select id="outage-sector" name="sector"><option value="">{{ 'All sectors'|t }}</option>{% for sector in sectors %}<option value="{{ sector }}"{{ filters.sector == sector ? ' selected' }}>{{ sector }}</option>{% endfor %}</select></div>
       <div class="outage-filters__field"><label for="outage-date">{{ 'Date'|t }}</label><input id="outage-date" name="date" type="date" value="{{ filters.date }}"></div>
       <div class="outage-filters__field"><label for="outage-status">{{ 'Status'|t }}</label><select id="outage-status" name="status"><option value="">{{ 'Any status'|t }}</option>{% for key, label in statuses %}<option value="{{ key }}"{{ filters.status == key ? ' selected' }}>{{ label }}</option>{% endfor %}</select></div>
-      <details class="outage-filters__more"><summary>{{ 'More filters'|t }}</summary><div><label for="outage-type">{{ 'Outage type'|t }}</label><select id="outage-type" name="type"><option value="">{{ 'Any type'|t }}</option>{% for key, label in types %}<option value="{{ key }}"{{ filters.type == key ? ' selected' }}>{{ label }}</option>{% endfor %}</select></div></details>
-      <button type="submit">{{ 'Apply filters'|t }}</button>
-      {% if filters.search or filters.district or filters.sector or filters.date or filters.status or filters.type %}<a class="outage-filters__clear" href="{{ tabs[mode].url }}">{{ 'Clear'|t }}</a>{% endif %}
+      <details class="outage-filters__more reg-filter-more"><summary>{{ 'More filters'|t }}</summary><div><label for="outage-type">{{ 'Outage type'|t }}</label><select id="outage-type" name="type"><option value="">{{ 'Any type'|t }}</option>{% for key, label in types %}<option value="{{ key }}"{{ filters.type == key ? ' selected' }}>{{ label }}</option>{% endfor %}</select></div></details>
+      <button class="reg-filter-submit" type="submit">{{ 'Apply filters'|t }}</button>
+      {% if filters.search or filters.district or filters.sector or filters.date or filters.status or filters.type %}<a class="outage-filters__clear reg-filter-clear" href="{{ tabs[mode].url }}">{{ 'Clear'|t }}</a>{% endif %}
     </form>
 
     <div class="outage-center__summary"><p>{{ '@count outage notice(s)'|t({'@count': results_count}) }}</p>{% if last_updated %}<p>{{ 'Last updated: @time'|t({'@time': last_updated}) }}</p>{% endif %}</div>

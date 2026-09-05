@@ -15,13 +15,14 @@ use Drupal\taxonomy\Entity\Term;
 use GuzzleHttp\ClientInterface;
 use Psr\Log\LoggerInterface;
 
-/** Controlled legacy Press Release and Publication importer. */
+/** Controlled legacy Media Center document importer. */
 final class MediaCenterDocumentImporter {
 
   private const BASE = 'https://www.reg.rw';
   private const TYPES = [
     'press-releases' => [
       'listing' => '/media-center/press-releases/',
+      'detail_prefix' => '/media-center/details/news/',
       'label' => 'Press Release',
       'category' => 'press_release',
     ],
@@ -29,6 +30,22 @@ final class MediaCenterDocumentImporter {
       'listing' => '/media-center/publications/',
       'label' => 'Publication',
       'category' => 'publication',
+    ],
+    'announcements' => [
+      'listing' => '/media-center/announcements/',
+      'detail_prefix' => '/media-center/announcements/announcements-details/news/',
+      'label' => 'Announcement Archive',
+      'category' => 'archived_announcement',
+    ],
+    'newsletters' => [
+      'listing' => '/media-center/newsletter/',
+      'label' => 'Newsletter',
+      'category' => 'newsletter',
+    ],
+    'company-laws' => [
+      'listing' => '/media-center/company-laws/',
+      'label' => 'Corporate / Legal Documents',
+      'category' => 'corporate_legal',
     ],
   ];
 
@@ -51,7 +68,7 @@ final class MediaCenterDocumentImporter {
   public function run(array $options): array {
     $type = (string) ($options['type'] ?? '');
     if (!isset(self::TYPES[$type])) {
-      throw new \InvalidArgumentException('Type must be press-releases or publications.');
+      throw new \InvalidArgumentException('Unsupported Media Center document type.');
     }
     $dry_run = (bool) ($options['dry_run'] ?? FALSE);
     $limit = max(0, (int) ($options['limit'] ?? 0));
@@ -63,6 +80,7 @@ final class MediaCenterDocumentImporter {
     foreach (array_slice($records, 0, 5) as $record) {
       $report['sample'][] = array_intersect_key($record, array_flip([
         'title', 'date', 'language', 'category', 'publication_type',
+        'issue_number', 'archived_outage',
         'document_url', 'source_url', 'source_id',
       ]));
     }
@@ -200,6 +218,11 @@ final class MediaCenterDocumentImporter {
     [$language, $language_certain] = $this->language($title . ' ' . $stub['document_url']);
     $legacy_category = trim($stub['legacy_category'] ?? '');
     $category = $this->category($type, $stub['listing_url'], $title, $legacy_category);
+    $issue_number = $type === 'newsletters'
+      ? $this->issueNumber($title . ' ' . $stub['document_url'])
+      : '';
+    $archived_outage = $type === 'announcements'
+      && $this->historicalOutage($title);
     $source_url = $this->canonical($stub['source_url']);
     $source_id = pathinfo(basename(rtrim((string) parse_url($source_url, PHP_URL_PATH), '/')), PATHINFO_FILENAME);
     $issues = [];
@@ -210,6 +233,8 @@ final class MediaCenterDocumentImporter {
       'title' => $title, 'date' => $date, 'language' => $language,
       'category' => $category,
       'publication_type' => $legacy_category ?: self::TYPES[$type]['label'],
+      'issue_number' => $issue_number,
+      'archived_outage' => $archived_outage,
       'document_url' => $stub['document_url'], 'source_url' => $source_url,
       'source_id' => $source_id, 'issues' => $issues,
     ];
@@ -220,7 +245,7 @@ final class MediaCenterDocumentImporter {
   /** Determines the official document language without using page chrome. */
   public function language(string $text): array {
     $normal = ' ' . mb_strtolower($this->plain($text)) . ' ';
-    if (preg_match('/\b(kinyarwanda|ikinyarwanda|itangazo|amakuru|amashanyarazi|umushinga|abanyarwanda|inyandiko)\b/u', $normal)) {
+    if (preg_match('/\b(kinyarwanda|ikinyarwanda)\b/u', $normal)) {
       return ['rw', TRUE];
     }
     if (preg_match('/\b(french|francais|français)\b/u', $normal)) {
@@ -229,7 +254,15 @@ final class MediaCenterDocumentImporter {
     if (preg_match('/\b(multilingual|bilingual)\b/u', $normal)) {
       return ['multi', TRUE];
     }
-    if (preg_match('/\b(english|press release|report|plan|policy|project|publication|assessment|management|financial|annual)\b/u', $normal)) {
+    $rw = (bool) preg_match('/\b(itangazo|amakuru|amashanyarazi|umushinga|abanyarwanda|inyandiko|ibura|riteganyijwe)\b/u', $normal);
+    $en = (bool) preg_match('/\b(english|press release|report|plan|policy|project|publication|assessment|management|financial|annual|newsletter|issue|law|gazette|outage|electricity|interruption)\b/u', $normal);
+    if ($rw && $en) {
+      return ['multi', TRUE];
+    }
+    if ($rw) {
+      return ['rw', TRUE];
+    }
+    if ($en) {
       return ['en', TRUE];
     }
     return ['en', FALSE];
@@ -238,6 +271,9 @@ final class MediaCenterDocumentImporter {
   /** Maps legacy labels/slugs into the established publication categories. */
   public function category(string $type, string $listing_url, string $title, string $legacy_category = ''): string {
     if ($type === 'press-releases') return 'press_release';
+    if (isset(self::TYPES[$type]) && $type !== 'publications') {
+      return self::TYPES[$type]['category'];
+    }
     $normal = mb_strtolower($listing_url . ' ' . $legacy_category . ' ' . $title);
     if (preg_match('/\b(esf|esa|esia|esmps?|ehsps?|araps?|safeguard|resettlement|environmental|social impact)\b/u', $normal)) {
       return 'safeguard';
@@ -246,6 +282,22 @@ final class MediaCenterDocumentImporter {
       if (preg_match('/\b' . $category . 's?\b/u', $normal)) return $category;
     }
     return 'publication';
+  }
+
+  /** Extracts a structured newsletter issue identifier when supplied. */
+  public function issueNumber(string $text): string {
+    $text = $this->plain(str_replace(['_', '-'], ' ', $text));
+    return preg_match('/\bissue\s*(?:no\.?|number|#)?\s*([a-z0-9][a-z0-9.\/-]*)\b/iu', $text, $match)
+      ? trim($match[1], './-')
+      : '';
+  }
+
+  /** Identifies historical outage notices without creating outage entities. */
+  public function historicalOutage(string $text): bool {
+    return (bool) preg_match(
+      '/\b(outage|power interruption|electricity interruption|planned maintenance)|ibura\s+ry[’\x{2019}\x{0027}]?amashanyarazi/iu',
+      $this->plain($text),
+    );
   }
 
   /** Extracts a complete original date without using the import time. */
@@ -301,6 +353,8 @@ final class MediaCenterDocumentImporter {
     $this->setIfField($node, 'field_reg_publication_category', $record['category']);
     $this->setIfField($node, 'field_reg_publication_type', ['target_id' => $this->term($record['publication_type'])]);
     $this->setIfField($node, 'field_reg_publication_date', $record['date'] ? $record['date'] . 'T12:00:00' : NULL);
+    $this->setIfField($node, 'field_reg_issue_number', $record['issue_number']);
+    $this->setIfField($node, 'field_reg_archived_outage', $record['archived_outage'] ? 1 : 0);
     if ($media) $this->setIfField($node, 'field_reg_publication_document', ['target_id' => $media->id()]);
     $this->setIfField($node, 'field_reg_external_url', ['uri' => $record['source_url']]);
     $this->setIfField($node, 'field_reg_source_id', $record['source_id']);
@@ -440,7 +494,8 @@ final class MediaCenterDocumentImporter {
     if (!in_array($host, ['www.reg.rw', 'reg.rw'], TRUE)) return FALSE;
     if ($asset) return str_starts_with($path, '/fileadmin/') && $this->isDocumentPath($path);
     if ($this->isIndexPath($path, $type)) return TRUE;
-    return str_starts_with($path, '/media-center/details/news/');
+    $detail_prefix = self::TYPES[$type]['detail_prefix'] ?? '';
+    return $detail_prefix !== '' && str_starts_with($path, $detail_prefix);
   }
 
   private function resolve(string $href, string $type, bool $asset_only = FALSE): ?string {
@@ -474,7 +529,6 @@ final class MediaCenterDocumentImporter {
     $query = '';
     if ($keep_query && isset($parts['query'])) {
       parse_str($parts['query'], $params);
-      unset($params['cHash']);
       if ($params) $query = '?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986);
     }
     return self::BASE . $path . $query;

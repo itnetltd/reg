@@ -91,9 +91,8 @@
       {% else %}<div class="reg-sports-empty"><p>{{ 'Standings will be published when confirmed.'|t }}</p></div>{% endif %}
     </section>
 
-    <section aria-labelledby="reg-sports-news-home">
-      <div class="reg-sports-heading reg-sports-heading--split"><div><span class="reg-sports-kicker">{{ 'Latest news'|t }}</span><h2 id="reg-sports-news-home">{{ 'Sports news'|t }}</h2></div><a href="{{ path('reg_core.sports_news') }}">{{ 'All sports news'|t }} <span aria-hidden="true">→</span></a></div>
-      {% if content.news %}<div class="reg-sports-card-grid">{% for item in content.news %}<article class="reg-sports-content-card">{% if item.image.url %}<img src="{{ item.image.url }}"{% if item.image.srcset %} srcset="{{ item.image.srcset }}" sizes="{{ item.image.sizes }}"{% endif %} alt="{{ item.image.alt }}" loading="lazy">{% endif %}<div><span>{{ item.sport ?: 'Sports news'|t }}</span><h3><a href="{{ item.url }}" data-reg-analytics-event="sports_article_view" data-reg-analytics-id="{{ item.id }}">{{ item.title }}</a></h3><p>{{ item.summary }}</p>{% if item.date %}<time datetime="{{ item.date_iso }}">{{ item.date }}</time>{% endif %}</div></article>{% endfor %}</div>{% else %}<div class="reg-sports-empty"><p>{{ 'No sports news is currently published.'|t }}</p></div>{% endif %}
+    <section class="reg-sports-news" aria-labelledby="reg-sports-news-home">
+      {% include '@reg_core/reg-sports-news-homepage.html.twig' with {items: content.news} only %}
     </section>
 
     <section aria-labelledby="reg-sports-athletes-home">

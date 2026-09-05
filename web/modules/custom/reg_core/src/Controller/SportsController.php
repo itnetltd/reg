@@ -41,8 +41,7 @@ final class SportsController extends ControllerBase {
    */
   public function landing(): array {
     $content = $this->repository->landing();
-    $sports_news = $this->newsRepository->archive(['section' => 'sports'], 0, 3);
-    $content['news'] = $sports_news['items'];
+    $content['news'] = $this->newsRepository->sportsHomepage(6);
     if (!$content['teams']) {
       $content['teams'] = $this->teamNavigation();
     }

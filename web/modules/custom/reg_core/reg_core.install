@@ -347,9 +347,21 @@ function reg_core_apply_social_media_configuration(): void {
       'api_exclude_reposts' => TRUE,
     ],
     'facebook' => ['show_utility' => TRUE, 'show_footer' => TRUE],
-    'youtube' => ['show_utility' => TRUE, 'show_footer' => TRUE],
+    'youtube' => [
+      'show_utility' => TRUE,
+      'show_footer' => TRUE,
+      'channel_id' => '',
+      'videos_enabled' => FALSE,
+    ],
     'instagram' => ['show_utility' => FALSE, 'show_footer' => TRUE],
     'linkedin' => ['show_utility' => FALSE, 'show_footer' => TRUE],
+    'flickr' => [
+      'show_utility' => FALSE,
+      'show_footer' => TRUE,
+      'user_id' => '',
+      'album_id' => '',
+      'gallery_enabled' => FALSE,
+    ],
   ];
   $changed = FALSE;
 
@@ -372,6 +384,25 @@ function reg_core_apply_social_media_configuration(): void {
   if ($changed) {
     $config->save(TRUE);
   }
+}
+
+/**
+ * Seeds REG's verified public Flickr account when no Flickr account was set.
+ */
+function reg_core_apply_official_flickr_configuration(): void {
+  $config = \Drupal::configFactory()->getEditable('reg_core.social_media');
+  $url = trim((string) $config->get('platforms.flickr.url'));
+  $user_id = trim((string) $config->get('platforms.flickr.user_id'));
+  if ($url !== '' || $user_id !== '') {
+    return;
+  }
+
+  $config
+    ->set('platforms.flickr.url', 'https://www.flickr.com/photos/127491669@N07/albums/')
+    ->set('platforms.flickr.user_id', '127491669@N07')
+    ->set('platforms.flickr.enabled', TRUE)
+    ->set('platforms.flickr.gallery_enabled', TRUE)
+    ->save(TRUE);
 }
 
 /**
@@ -1256,6 +1287,43 @@ function reg_core_sync_what_we_do_navigation(): void {
 }
 
 /**
+ * Rebuilds only the module-owned Media Center subtree.
+ */
+function reg_core_sync_media_center_navigation(): void {
+  $storage = \Drupal::entityTypeManager()->getStorage('menu_link_content');
+  $ids = $storage->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('menu_name', 'main')
+    ->execute();
+  $managed = [];
+  foreach ($storage->loadMultiple($ids) as $link) {
+    $options = $link->get('link')->first()?->getValue()['options'] ?? [];
+    $key = is_array($options) ? ($options['reg_core_navigation_id'] ?? '') : '';
+    if ($key === 'main:media-center' || str_starts_with((string) $key, 'main:media-')) {
+      $managed[] = $link;
+    }
+  }
+  if ($managed) {
+    $storage->delete($managed);
+  }
+
+  $definitions = array_values(array_filter(
+    NavigationDefaults::main(),
+    static fn(array $item): bool => $item['id'] === 'media-center',
+  ));
+  $existing = [];
+  $remaining_ids = $storage->getQuery()->accessCheck(FALSE)->condition('menu_name', 'main')->execute();
+  foreach ($storage->loadMultiple($remaining_ids) as $link) {
+    $options = $link->get('link')->first()?->getValue()['options'] ?? [];
+    $key = is_array($options) ? ($options['reg_core_navigation_id'] ?? '') : '';
+    if (is_string($key) && $key !== '') {
+      $existing[$key] = $link;
+    }
+  }
+  reg_core_ensure_navigation_links('main', $definitions, '', $existing, \Drupal::config('reg_core.settings'));
+}
+
+/**
  * Installs privacy-preserving analytics and dashboard defaults.
  */
 function reg_core_apply_analytics_dashboards(): void {
@@ -1390,7 +1458,7 @@ function reg_core_field_definitions(): array {
       ]),
       'field_reg_publication_date' => array_replace($date, [
         'label' => 'Publication Date',
-        'required' => TRUE,
+        'required' => FALSE,
         'translatable' => FALSE,
       ]),
       'field_reg_news_category' => reg_core_list_field('News category', [

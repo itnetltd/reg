@@ -16,7 +16,7 @@ use Drupal\language\Entity\ConfigurableLanguage;
 function reg_core_apply_media_center_migration(): void {
   $review = reg_core_list_field('Migration review status', [
     'verified' => 'Verified',
-    'needs_date' => 'Needs Date Verification',
+    'needs_date' => 'Needs Date Review',
     'needs_language' => 'Needs Language Review',
     'needs_classification' => 'Needs Classification Review',
     'needs_file' => 'Needs File Review',
@@ -48,7 +48,7 @@ function reg_core_apply_media_center_migration(): void {
     // Reuse the existing publication-date and legacy-URL fields.
     'field_reg_publication_date' => array_replace(
       reg_core_date_field('Original Publication Date', FALSE),
-      ['required' => TRUE],
+      ['required' => FALSE],
     ),
     'field_reg_external_url' => $legacy_source_url,
     'field_reg_source_id' => reg_core_string_field('Legacy source ID', FALSE),
@@ -134,6 +134,8 @@ function reg_core_apply_media_document_migration(): void {
   $fields = [
     'field_reg_external_url' => $legacy_source_url,
     'field_reg_source_id' => reg_core_string_field('Legacy source ID', FALSE),
+    'field_reg_issue_number' => reg_core_string_field('Newsletter Issue Number', FALSE),
+    'field_reg_archived_outage' => reg_core_boolean_field('Historical Outage Notice', FALSE),
     'field_reg_imported_date' => reg_core_date_field('Imported Date', FALSE),
     'field_reg_source_hash' => reg_core_string_field('Source Hash', FALSE),
     'field_reg_migration_status' => reg_core_list_field('Migration status', [
@@ -144,7 +146,7 @@ function reg_core_apply_media_document_migration(): void {
     ], FALSE, FALSE),
     'field_reg_migration_review' => reg_core_list_field('Migration review status', [
       'verified' => 'Verified',
-      'needs_date' => 'Needs Date Verification',
+      'needs_date' => 'Needs Date Review',
       'needs_language' => 'Needs Language Review',
       'needs_classification' => 'Needs Classification Review',
       'needs_file' => 'Needs File Review',
@@ -156,7 +158,7 @@ function reg_core_apply_media_document_migration(): void {
     reg_core_ensure_field('reg_publication', $name, $definition, $weight++);
   }
 
-  // Preserve the established categories and add only the two source classes.
+  // Preserve established categories and add controlled legacy source classes.
   reg_core_ensure_field('reg_publication', 'field_reg_publication_category', reg_core_list_field('Publication category', [
     'report' => 'Report',
     'policy' => 'Policy',
@@ -165,12 +167,15 @@ function reg_core_apply_media_document_migration(): void {
     'form' => 'Form',
     'press_release' => 'Press Release',
     'publication' => 'Publication',
+    'archived_announcement' => 'Archived Announcement',
+    'newsletter' => 'Newsletter',
+    'corporate_legal' => 'Corporate / Legal Documents',
   ]), 11);
   reg_core_ensure_field('reg_publication', 'field_reg_publication_date', reg_core_date_field('Original Publication Date'), 13);
 
   $display = EntityViewDisplay::load('node.reg_publication.default');
   if ($display) {
-    foreach (['field_reg_source_id', 'field_reg_imported_date', 'field_reg_source_hash', 'field_reg_migration_status', 'field_reg_migration_review'] as $name) {
+    foreach (['field_reg_source_id', 'field_reg_archived_outage', 'field_reg_imported_date', 'field_reg_source_hash', 'field_reg_migration_status', 'field_reg_migration_review'] as $name) {
       $display->removeComponent($name);
     }
     $display->save();

@@ -13,19 +13,28 @@ use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\Entity\Term;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Exception\TransferException;
 use Psr\Log\LoggerInterface;
 
 /** Controlled, idempotent importer for legacy REG News & Events. */
 final class MediaCenterLegacyImporter {
 
   private const BASE = 'https://www.reg.rw';
+  private const HOME = self::BASE . '/';
   private const LISTING = self::BASE . '/media-center/news-events/';
-  private const MAX_LISTING_PAGES = 500;
+  private const SITEMAP = self::BASE . '/sitemap/';
+  private const MAX_DISCOVERY_PAGES = 750;
+  private const RECENT_WIDGET_LIMIT = 250;
+  private const REQUEST_DELAY_MICROSECONDS = 250000;
+  private const FETCH_ATTEMPTS = 3;
+  private const RETRY_BACKOFF_MICROSECONDS = 250000;
 
   /** @var array<string, string|null> */
   private array $responses = [];
   /** @var array<string, int> */
   private array $terms = [];
+  private float $lastRequestAt = 0.0;
 
   public function __construct(
     private readonly ClientInterface $httpClient,
@@ -41,13 +50,20 @@ final class MediaCenterLegacyImporter {
     $language = in_array(($options['language'] ?? ''), ['en', 'rw'], TRUE) ? $options['language'] : '';
     $dry_run = (bool) ($options['dry_run'] ?? FALSE);
     $update_existing = (bool) ($options['update_existing'] ?? FALSE);
+    $classification_report = (bool) ($options['classification_report'] ?? FALSE);
     $limit = max(0, (int) ($options['limit'] ?? 0));
     $report = $this->emptyReport($dry_run, $language);
-    $records = $this->discoverNews($report, $limit, $language);
-    $report['failed'] += count($report['source_failures']);
+    $records = $this->discoverNews($report, $limit, $language, $dry_run && $classification_report);
+    $report['year_coverage'] = $this->yearCoverage($records);
+    $counterparts = $classification_report ? $this->translationCounterparts($records) : [];
+    $report['skipped_fetch_failure'] = count($report['source_failures']);
     $report['discovered'] = count($records);
     $news_nodes = [];
     foreach ($records as $record) {
+      if ($classification_report) {
+        $report['date_records'][] = $record['date_diagnostic'];
+      }
+      $record_state = 'unknown';
       $bucket = $this->bucket($record);
       $report['breakdown'][$bucket]['discovered']++;
       foreach ($record['issues'] as $issue) {
@@ -59,10 +75,26 @@ final class MediaCenterLegacyImporter {
       }
       try {
         $outcome = $this->upsert($record, $dry_run, $update_existing, $report);
+        $record_state = $outcome['status'] === 'existing' ? 'existing' : 'new';
         $report[$outcome['status']]++;
         $report['breakdown'][$bucket][$outcome['status']]++;
+        if (!$dry_run && $outcome['status'] === 'created') {
+          if (in_array('needs_date', $record['issues'], TRUE)) {
+            $report['imported_needs_date_review']++;
+          }
+          elseif (!empty($outcome['published'])) {
+            $report['imported_published']++;
+          }
+        }
         if (!$dry_run && $record['bundle'] === 'reg_news' && isset($outcome['node_id'])) {
           $news_nodes[] = ['node_id' => $outcome['node_id']] + $record;
+        }
+        if (!$dry_run && in_array('needs_date', $record['issues'], TRUE) && isset($outcome['node_id'])) {
+          $report['date_review_nodes'][] = [
+            'node_id' => (int) $outcome['node_id'],
+            'title' => $record['title'],
+            'source_url' => $record['source_url'],
+          ];
         }
       }
       catch (\Throwable $exception) {
@@ -72,6 +104,23 @@ final class MediaCenterLegacyImporter {
         $report['failures'][] = ['source_url' => $record['source_url'], 'reason' => $reason];
         $this->logger->warning('Legacy REG News record failed: @url (@reason)', ['@url' => $record['source_url'], '@reason' => $reason]);
       }
+      if ($classification_report) {
+        $counterpart = $counterparts[$record['source_url']] ?? NULL;
+        $report['classification_records'][] = [
+          'title' => $record['title'],
+          'source_url' => $record['source_url'],
+          'publication_date' => $record['date'] ?? '',
+          'language' => $record['langcode'],
+          'language_reason' => $record['language_reason'],
+          'section' => $record['section'],
+          'section_reason' => $record['section_reason'],
+          'record_state' => $record_state,
+          'needs_review' => $record['issues'] !== [],
+          'translation_counterpart' => $counterpart
+            ? $counterpart['title'] . ' | ' . $counterpart['source_url']
+            : '',
+        ];
+      }
     }
     $this->linkTranslationPairs($dry_run ? $records : $news_nodes, $report, !$dry_run);
     $report['completed_at'] = gmdate(DATE_ATOM, $this->time->getCurrentTime());
@@ -79,12 +128,19 @@ final class MediaCenterLegacyImporter {
   }
 
   /** Discovers News detail URLs while following bounded listing pagination. */
-  private function discoverNews(array &$report, int $limit, string $language): array {
-    $queue = [self::LISTING];
+  private function discoverNews(array &$report, int $limit, string $language, bool $diagnostics): array {
+    $queue = [self::HOME, self::LISTING, self::SITEMAP];
+    $queued = [];
+    foreach ($queue as $seed) {
+      $queued[$this->discoveryKey($seed)] = TRUE;
+    }
     $seen_pages = [];
-    $seen_details = [];
+    $parsed_details = [];
+    $listing_dates = [];
+    $discovery_sources = [];
+    $expanded_recent_widget = FALSE;
     $records = [];
-    while ($queue && count($seen_pages) < self::MAX_LISTING_PAGES) {
+    while ($queue && count($seen_pages) < self::MAX_DISCOVERY_PAGES) {
       $url = array_shift($queue);
       $key = $this->discoveryKey($url);
       if (isset($seen_pages[$key])) {
@@ -93,45 +149,128 @@ final class MediaCenterLegacyImporter {
       $seen_pages[$key] = TRUE;
       $html = $this->fetch($url, $report);
       if ($html === NULL) {
+        $source = $this->canonical($url);
+        if ($diagnostics && $this->newsDetail((string) parse_url($url, PHP_URL_PATH))) {
+          $report['discovery_diagnostics'][] = [
+            'url' => $source,
+            'discovery_source' => $discovery_sources[$source] ?? $url,
+            'year' => '',
+            'decision' => 'rejected',
+            'reason' => 'article_fetch_failed',
+          ];
+        }
         continue;
       }
       [, $xpath] = $this->dom($html);
+      $path = (string) parse_url($url, PHP_URL_PATH);
+      if ($this->newsDetail($path)) {
+        $source = $this->canonical($url);
+        if (!isset($parsed_details[$source])) {
+          // Parse after discovery so an archive reached later can provide the
+          // only trustworthy year for a yearless article date badge.
+          $parsed_details[$source] = $html;
+        }
+      }
       foreach ($xpath->query('//a[@href]') ?: [] as $anchor) {
         $href = $this->resolve($anchor->getAttribute('href'));
         if (!$href) {
           continue;
         }
         $path = (string) parse_url($href, PHP_URL_PATH);
-        if (str_starts_with($path, '/media-center/news-details/news/')) {
+        if ($this->newsDetail($path)) {
           $source = $this->canonical($href);
-          if (isset($seen_details[$source])) {
-            continue;
+          $candidate = $source;
+          $evidence = $this->listingDateEvidence($anchor, $url);
+          if ($evidence && $this->betterListingDate($evidence, $listing_dates[$source] ?? NULL)) {
+            $listing_dates[$source] = $evidence;
+            $discovery_sources[$source] = $url;
           }
-          $seen_details[$source] = TRUE;
-          $detail_html = $this->fetch($source, $report);
-          $record = $detail_html === NULL ? NULL : $this->parseNews([
-            'source_url' => $source,
-            'listing_date' => $this->listingDate($anchor, $url),
-          ], $detail_html);
-          if ($record === NULL) {
-            $report['skipped']++;
-            continue;
+          else {
+            $discovery_sources[$source] ??= $url;
           }
-          if ($language !== '' && $record['langcode'] !== $language) {
-            continue;
-          }
-          $records[] = $record;
-          if ($limit > 0 && count($records) >= $limit) {
-            break 2;
+          // The current REG records live in the unpaginated Related News
+          // widget, not in the archive/category plugin storage used through
+          // 2022. Expand that first-party widget from the first homepage item.
+          if (!$expanded_recent_widget && $this->homepage($url)) {
+            $candidate = $this->recentWidgetUrl($source);
+            $expanded_recent_widget = TRUE;
           }
         }
         elseif ($this->newsIndex($path)) {
-          $queue[] = $href;
+          $candidate = $href;
+        }
+        else {
+          continue;
+        }
+        $candidate_key = $this->discoveryKey($candidate);
+        if (!isset($queued[$candidate_key]) && !isset($seen_pages[$candidate_key])) {
+          $queue[] = $candidate;
+          $queued[$candidate_key] = TRUE;
         }
       }
     }
     $report['source_pages_scanned'] += count($seen_pages);
+
+    foreach ($parsed_details as $source => $html) {
+      $record = $this->parseNews([
+        'source_url' => $source,
+        'listing_date' => $listing_dates[$source] ?? NULL,
+        'listing_url' => $discovery_sources[$source] ?? '',
+      ], $html);
+      if ($record === NULL) {
+        $report['skipped']++;
+        if ($diagnostics) {
+          $report['discovery_diagnostics'][] = [
+            'url' => $source,
+            'discovery_source' => $discovery_sources[$source] ?? '',
+            'year' => '',
+            'decision' => 'rejected',
+            'reason' => 'article_parse_failed',
+          ];
+        }
+        continue;
+      }
+      if ($language !== '' && $record['langcode'] !== $language) {
+        if ($diagnostics) {
+          $report['discovery_diagnostics'][] = [
+            'url' => $source,
+            'discovery_source' => $discovery_sources[$source] ?? '',
+            'year' => $record['date'] ? substr($record['date'], 0, 4) : '',
+            'decision' => 'rejected',
+            'reason' => 'language_filter',
+          ];
+        }
+        continue;
+      }
+      $records[] = $record;
+      if ($diagnostics) {
+        $report['discovery_diagnostics'][] = [
+          'url' => $source,
+          'discovery_source' => $discovery_sources[$source] ?? '',
+          'year' => $record['date'] ? substr($record['date'], 0, 4) : '',
+          'decision' => 'accepted',
+          'reason' => $record['date'] ? 'article_parsed' : 'article_parsed_date_unknown',
+        ];
+      }
+      if ($limit > 0 && count($records) >= $limit) {
+        break;
+      }
+    }
     return $records;
+  }
+  /** Counts discovered records by their preserved publication year. */
+  private function yearCoverage(array $records): array {
+    $coverage = array_fill_keys(range(2014, (int) gmdate('Y')), 0);
+    foreach ($records as $record) {
+      $year = $record['date'] ? substr($record['date'], 0, 4) : 'unknown';
+      $coverage[$year] = ($coverage[$year] ?? 0) + 1;
+    }
+    uksort($coverage, static function (string $left, string $right): int {
+      if ($left === 'unknown') return 1;
+      if ($right === 'unknown') return -1;
+      return $left <=> $right;
+    });
+    return $coverage;
   }
 
   private function parseNews(array $stub, string $html): ?array {
@@ -157,11 +296,29 @@ final class MediaCenterLegacyImporter {
   }
 
   private function newsRecord(array $stub, \DOMXPath $xpath, string $title, string $body, string $plain): array {
-    $date = $this->articleDate($xpath, $title . ' ' . $plain, $stub['listing_date']);
-    [$langcode, $language_certain] = $this->language($title . ' ' . $plain);
-    [$section, $sport, $classification_certain] = $this->classifyNews($title . ' ' . $plain);
+    $classification_text = $title . ' ' . $plain;
+    $existing_date = $this->legacyArticleDate($xpath, $classification_text, $stub['listing_date'] ?? NULL);
+    $date_diagnostic = $this->articleDateEvidence(
+      $xpath,
+      $title,
+      $stub['source_url'],
+      $existing_date,
+      $classification_text,
+      $stub['listing_date'] ?? NULL,
+      $stub['listing_url'] ?? '',
+    );
+    $date = $date_diagnostic['parsed_date'] ?: NULL;
+    [$langcode, $language_certain] = $this->language($classification_text);
+    [$section, $sport, $classification_certain] = $this->classifyNews($classification_text);
+    $suspicious_date = $date && $this->suspiciousPublicationDate($date_diagnostic);
     $issues = [];
-    if (!$date) $issues[] = 'needs_date';
+    if (!$date || $suspicious_date) $issues[] = 'needs_date';
+    if ($suspicious_date) {
+      $date_diagnostic['confidence'] = 'suspicious';
+      $date_diagnostic['needs_review'] = 'yes';
+      $date_diagnostic['reason'] = 'Suspicious pre-2000 date was not accepted without publication metadata confirmation; Needs Date Review. ' . $date_diagnostic['reason'];
+      $date = NULL;
+    }
     if (!$language_certain) $issues[] = 'needs_language';
     if (!$classification_certain) $issues[] = 'needs_classification';
     $images = [];
@@ -180,11 +337,14 @@ final class MediaCenterLegacyImporter {
       'bundle' => 'reg_news', 'type' => $section === 'sports' ? 'sports' : 'news',
       'title' => $title, 'summary' => Unicode::truncate($plain, 280, TRUE, TRUE),
       'body' => $body, 'date' => $date, 'langcode' => $langcode,
+      'language_reason' => $this->languageReason($classification_text, $langcode, $language_certain),
       'section' => $section, 'sport' => $sport,
+      'section_reason' => $this->sectionReason($classification_text, $section, $sport, $classification_certain),
       'category' => $section === 'sports' ? 'Sports' : 'Corporate News',
       'source_url' => $source_url,
       'source_id' => basename(rtrim((string) parse_url($source_url, PHP_URL_PATH), '/')),
       'assets' => array_keys($images), 'asset_alts' => $images, 'issues' => $issues,
+      'date_diagnostic' => $date_diagnostic,
     ];
     $record['source_hash'] = $this->recordHash($record);
     return $record;
@@ -199,47 +359,56 @@ final class MediaCenterLegacyImporter {
     if ($existing && $this->value($existing, 'field_reg_source_hash') === $record['source_hash']) {
       return ['status' => 'existing', 'node_id' => (int) $existing->id()];
     }
-    if ($existing && (!$update_existing || !$this->sourceManaged($existing, $record))) {
-      $this->enrichExisting($existing, $record, $report);
-      return ['status' => 'existing', 'node_id' => (int) $existing->id()];
+    if ($existing) {
+      $updated = $this->enrichExisting(
+        $existing,
+        $record,
+        $report,
+        $update_existing && $this->sourceManaged($existing, $record),
+      );
+      return ['status' => $updated ? 'updated' : 'existing', 'node_id' => (int) $existing->id(), 'published' => $existing->isPublished()];
     }
 
     $review = $this->primaryReviewStatus($record['issues']);
-    if ($existing) {
-      $node = $existing;
-      $node->setTitle($record['title']);
-      $node->set('field_reg_summary', $record['summary']);
-      $node->set('body', ['value' => $record['body'], 'format' => 'basic_html']);
-    }
-    else {
-      $created = $record['date'] ? strtotime($record['date'] . ' UTC') : $this->time->getCurrentTime();
-      $node = Node::create([
-        'type' => 'reg_news', 'title' => $record['title'],
-        'langcode' => $record['langcode'], 'uid' => 1, 'created' => $created,
-        'status' => $record['issues'] === [] ? NodeInterface::PUBLISHED : NodeInterface::NOT_PUBLISHED,
-      ]);
-      $node->set('field_reg_summary', $record['summary']);
-      $node->set('body', ['value' => $record['body'], 'format' => 'basic_html']);
-      $node->set('field_reg_news_category', 'news');
-    }
+    $created = $record['date'] ? strtotime($record['date'] . ' UTC') : $this->time->getCurrentTime();
+    $node = Node::create([
+      'type' => 'reg_news', 'title' => $record['title'],
+      'langcode' => $record['langcode'], 'uid' => 1, 'created' => $created,
+      'status' => $record['issues'] === [] ? NodeInterface::PUBLISHED : NodeInterface::NOT_PUBLISHED,
+    ]);
+    $node->set('field_reg_summary', $record['summary']);
+    $node->set('body', ['value' => $record['body'], 'format' => 'basic_html']);
+    $node->set('field_reg_news_category', 'news');
 
     $this->setIfField($node, 'field_reg_publication_date', $record['date'] ? $record['date'] . 'T12:00:00' : NULL);
     $this->setIfField($node, 'field_reg_external_url', ['uri' => $record['source_url']]);
     $this->setIfField($node, 'field_reg_source_id', $record['source_id']);
     $this->setIfField($node, 'field_reg_source_hash', $record['source_hash']);
-    if (!$existing || $node->get('field_reg_imported_date')->isEmpty()) {
+    if ($node->get('field_reg_imported_date')->isEmpty()) {
       $this->setIfField($node, 'field_reg_imported_date', gmdate('Y-m-d', $this->time->getCurrentTime()));
     }
-    $this->setIfField($node, 'field_reg_migration_status', $existing ? 'updated' : 'imported');
+    $this->setIfField($node, 'field_reg_migration_status', 'imported');
     $this->setIfField($node, 'field_reg_migration_review', $review);
     $this->setRecordFields($node, $record, $report);
     if ($node->hasField('moderation_state')) {
       $node->set('moderation_state', $record['issues'] === [] ? 'published' : 'draft');
     }
     $node->save();
-    return ['status' => $existing ? 'updated' : 'created', 'node_id' => (int) $node->id()];
+    return ['status' => $existing ? 'updated' : 'created', 'node_id' => (int) $node->id(), 'published' => $node->isPublished()];
   }
 
+  /** Flags implausibly old dates unless publication metadata confirms them. */
+  private function suspiciousPublicationDate(array $diagnostic): bool {
+    $date = (string) ($diagnostic['parsed_date'] ?? '');
+    if ($date === '' || (int) substr($date, 0, 4) >= 2000) return FALSE;
+    if (!empty($diagnostic['trusted_date_confirmation'])) return FALSE;
+    return !in_array($diagnostic['date_source'] ?? '', [
+      'structured_data',
+      'html_metadata',
+      'typo3_metadata',
+      'publication_element',
+    ], TRUE);
+  }
   private function setRecordFields(NodeInterface $node, array $record, array &$report): void {
     $this->setIfField($node, 'field_reg_news_section', $record['section']);
     $this->setIfField($node, 'field_reg_news_category_term', ['target_id' => $this->term('reg_news_category', $record['category'])]);
@@ -285,7 +454,7 @@ final class MediaCenterLegacyImporter {
   }
 
   /** Enriches a manual duplicate without replacing editorial fields. */
-  private function enrichExisting(NodeInterface $node, array $record, array &$report): void {
+  private function enrichExisting(NodeInterface $node, array $record, array &$report, bool $refresh_managed = FALSE): bool {
     $changed = FALSE;
     foreach ([
       'field_reg_external_url' => ['uri' => $record['source_url']],
@@ -302,6 +471,37 @@ final class MediaCenterLegacyImporter {
     if ($record['date'] && $node->hasField('field_reg_publication_date') && $node->get('field_reg_publication_date')->isEmpty()) {
       $node->set('field_reg_publication_date', $record['date'] . 'T12:00:00');
       $changed = TRUE;
+      if (!in_array('needs_date', $record['issues'], TRUE) && $node->hasField('field_reg_migration_review') && $this->value($node, 'field_reg_migration_review') === 'needs_date') {
+        $node->set('field_reg_migration_review', $this->primaryReviewStatus($record['issues']));
+      }
+    }
+    if ($refresh_managed) {
+      if ($node->hasField('field_reg_source_hash') && $this->value($node, 'field_reg_source_hash') !== $record['source_hash']) {
+        $node->set('field_reg_source_hash', $record['source_hash']);
+        $changed = TRUE;
+      }
+      if (in_array('needs_date', $record['issues'], TRUE)) {
+        if ($node->hasField('field_reg_migration_review') && $this->value($node, 'field_reg_migration_review') !== 'needs_date') {
+          $node->set('field_reg_migration_review', 'needs_date');
+          $changed = TRUE;
+        }
+        $suspicious_date = (string) ($record['date_diagnostic']['parsed_date'] ?? '');
+        if ($suspicious_date !== '' && $node->hasField('field_reg_publication_date') && str_starts_with($this->value($node, 'field_reg_publication_date'), $suspicious_date)) {
+          $node->set('field_reg_publication_date', NULL);
+          $changed = TRUE;
+        }
+        if ($node->isPublished()) {
+          $node->setUnpublished();
+          $changed = TRUE;
+        }
+        if ($node->hasField('moderation_state') && $this->value($node, 'moderation_state') !== 'draft') {
+          $node->set('moderation_state', 'draft');
+          $changed = TRUE;
+        }
+      }
+      if ($changed && $node->hasField('field_reg_migration_status')) {
+        $node->set('field_reg_migration_status', 'updated');
+      }
     }
     if ($record['assets'] && $node->hasField('field_reg_featured_image') && $node->get('field_reg_featured_image')->isEmpty()) {
       $alt = $record['asset_alts'][$record['assets'][0]] ?: $record['title'];
@@ -311,6 +511,7 @@ final class MediaCenterLegacyImporter {
       }
     }
     if ($changed) $node->save();
+    return $changed;
   }
 
   /** Downloads an image and reuses File/Media entities by checksum. */
@@ -368,64 +569,248 @@ final class MediaCenterLegacyImporter {
 
   /** Classifies sports only from clear text and known REG team names. */
   public function classifyNews(string $text): array {
-    $normal = mb_strtolower($this->plain($text));
-    $basketball = (bool) preg_match('/\b(reg basketball(?: club)?|reg bbc|reg wbbc|basketball)\b/u', $normal);
-    $volleyball = (bool) preg_match('/\b(reg volleyball(?: club)?|reg vc|volleyball)\b/u', $normal);
-    $known_team = (bool) preg_match('/\b(reg basketball club|reg bbc|reg wbbc|reg volleyball club|reg vc)\b/u', $normal);
-    $competition = (bool) preg_match('/\b(match(?:es)?|matchday|games?|league|champion(?:ship)?s?|tournaments?|sports? competitions?|fixtures?|finals?|semi-finals?|season|cup|imikino|imikino ngororamubiri|shampiyona|amarushanwa|irushanwa)\b/u', $normal);
-    $people = (bool) preg_match('/\b(players?|coaches?|athletes?|abakinnyi|umukinnyi|abatoza|umutoza)\b/u', $normal);
-    $result = (bool) preg_match('/\b(wins?|won|victory|beat|defeated?|scor(?:e|ed|ing)|bronze|silver|gold|runner-up|champions?|yatsinze|yegukanye|igikombe|amanota)\b/u', $normal);
+    $signals = $this->sectionSignals($text);
 
-    if ($known_team || $basketball || $volleyball || ($people && ($competition || $result)) || ($competition && $result)) {
-      $sport = $volleyball ? 'Volleyball' : ($basketball ? 'Basketball' : '');
+    if ($signals['known_team'] || $signals['basketball'] || $signals['volleyball'] || ($signals['people'] && ($signals['competition'] || $signals['result'])) || ($signals['competition'] && $signals['result'])) {
+      $sport = $signals['volleyball'] ? 'Volleyball' : ($signals['basketball'] ? 'Basketball' : '');
       return ['sports', $sport, TRUE];
     }
 
     // A lone generic sports word is not enough to override corporate. Flag it
     // for a person to review instead of trusting a legacy category.
-    $ambiguous = (bool) preg_match('/\b(reg (?:bc|club|team)|sports?|match(?:es)?|games?|champion(?:ship)?s?|tournaments?|league|players?|coaches?|imikino|shampiyona|amarushanwa)\b/u', $normal);
-    return ['corporate', '', !$ambiguous];
+    return ['corporate', '', !$signals['ambiguous']];
   }
 
   /** Determines language conservatively. */
   private function language(string $text): array {
-    $normal = ' ' . mb_strtolower($this->plain($text)) . ' ';
-    $rw_hits = preg_match_all('/\b(u rwanda|amakuru|itangazo|abanyarwanda|amashanyarazi|umuriro|umushinga|imishinga|yatangaje|yakiriye|igihugu|abakozi|mu rwego|kuri uyu|yegukanye|yatsinze|abakinnyi|umukinnyi|abatoza|umutoza|imikino|shampiyona|amarushanwa|irushanwa|igikombe|kugira ngo|binyuze mu|ku bufatanye)\b/u', $normal);
-    $en_hits = preg_match_all('/\b(the|and|with|from|this|energy|electricity|project|rwanda energy group|said|has|have|were|will|club|team|players?|coaches?|match(?:es)?|championships?|tournament|won|wins|hosted|announced|signed|during|through)\b/u', $normal);
+    [$rw_hits, $en_hits] = $this->languageEvidence($text);
     if ($rw_hits >= 2 && $rw_hits > $en_hits) return ['rw', TRUE];
     if ($en_hits >= 2 && $en_hits > $rw_hits) return ['en', TRUE];
     return [$rw_hits > 0 ? 'rw' : 'en', FALSE];
   }
 
-  /** Extracts a complete original date without inventing a year. */
-  private function articleDate(\DOMXPath $xpath, string $text, ?string $listing_date): ?string {
+  /** Returns an explanation of the unchanged language decision. */
+  private function languageReason(string $text, string $language, bool $certain): string {
+    [$rw_hits, $en_hits] = $this->languageEvidence($text);
+    $scores = sprintf('English keyword hits: %d; Kinyarwanda keyword hits: %d.', $en_hits, $rw_hits);
+    if ($certain) {
+      return sprintf('%s %s score exceeded the other language and met the two-hit threshold.', $scores, $language === 'rw' ? 'Kinyarwanda' : 'English');
+    }
+    return sprintf('%s Evidence was inconclusive; defaulted to %s.', $scores, $language === 'rw' ? 'Kinyarwanda because at least one Kinyarwanda keyword matched' : 'English');
+  }
+
+  /** Counts the existing language keywords without changing their rules. */
+  private function languageEvidence(string $text): array {
+    $normal = ' ' . mb_strtolower($this->plain($text)) . ' ';
+    $rw_hits = preg_match_all('/\b(u rwanda|amakuru|itangazo|abanyarwanda|amashanyarazi|umuriro|umushinga|imishinga|yatangaje|yakiriye|igihugu|abakozi|mu rwego|kuri uyu|yegukanye|yatsinze|abakinnyi|umukinnyi|abatoza|umutoza|imikino|shampiyona|amarushanwa|irushanwa|igikombe|kugira ngo|binyuze mu|ku bufatanye)\b/u', $normal);
+    $en_hits = preg_match_all('/\b(the|and|with|from|this|energy|electricity|project|rwanda energy group|said|has|have|were|will|club|team|players?|coaches?|match(?:es)?|championships?|tournament|won|wins|hosted|announced|signed|during|through)\b/u', $normal);
+    return [$rw_hits, $en_hits];
+  }
+
+  /** Returns the signals used by the existing section classifier. */
+  private function sectionSignals(string $text): array {
+    $normal = mb_strtolower($this->plain($text));
+    return [
+      'basketball' => (bool) preg_match('/\b(reg basketball(?: club)?|reg bbc|reg wbbc|basketball)\b/u', $normal),
+      'volleyball' => (bool) preg_match('/\b(reg volleyball(?: club)?|reg vc|volleyball)\b/u', $normal),
+      'known_team' => (bool) preg_match('/\b(reg basketball club|reg bbc|reg wbbc|reg volleyball club|reg vc)\b/u', $normal),
+      'competition' => (bool) preg_match('/\b(match(?:es)?|matchday|games?|league|champion(?:ship)?s?|tournaments?|sports? competitions?|fixtures?|finals?|semi-finals?|season|cup|imikino|imikino ngororamubiri|shampiyona|amarushanwa|irushanwa)\b/u', $normal),
+      'people' => (bool) preg_match('/\b(players?|coaches?|athletes?|abakinnyi|umukinnyi|abatoza|umutoza)\b/u', $normal),
+      'result' => (bool) preg_match('/\b(wins?|won|victory|beat|defeated?|scor(?:e|ed|ing)|bronze|silver|gold|runner-up|champions?|yatsinze|yegukanye|igikombe|amanota)\b/u', $normal),
+      'ambiguous' => (bool) preg_match('/\b(reg (?:bc|club|team)|sports?|match(?:es)?|games?|champion(?:ship)?s?|tournaments?|league|players?|coaches?|imikino|shampiyona|amarushanwa)\b/u', $normal),
+    ];
+  }
+
+  /** Returns an explanation of the unchanged section decision. */
+  private function sectionReason(string $text, string $section, string $sport, bool $certain): string {
+    $signals = $this->sectionSignals($text);
+    if ($section === 'sports') {
+      $matched = [];
+      foreach (['known_team', 'basketball', 'volleyball', 'people', 'competition', 'result'] as $signal) {
+        if ($signals[$signal]) $matched[] = str_replace('_', ' ', $signal);
+      }
+      return sprintf('High-confidence sports rule matched%s: %s.', $sport ? ' (' . $sport . ')' : '', implode(', ', $matched));
+    }
+    if (!$certain) {
+      return 'Only an ambiguous sports keyword matched; defaulted to corporate and flagged for classification review.';
+    }
+    return 'No sports classification signal matched; classified as corporate.';
+  }
+
+  /** Extracts publication evidence only from article-specific date contexts. */
+  private function articleDateEvidence(\DOMXPath $xpath, string $title, string $source_url, ?string $existing_date, string $body_text, ?array $listing, string $listing_url): array {
+    $groups = [
+      'existing_valid_date' => $existing_date ? [$existing_date] : [],
+      'structured_data' => $this->structuredDataDates($xpath),
+      'html_metadata' => $this->nodeValues($xpath, [
+        '//meta[@property="article:published_time"]/@content',
+        '//meta[@property="og:published_time"]/@content',
+        '//meta[translate(@name,"ABCDEFGHIJKLMNOPQRSTUVWXYZ","abcdefghijklmnopqrstuvwxyz")="datepublished"]/@content',
+        '//meta[translate(@name,"ABCDEFGHIJKLMNOPQRSTUVWXYZ","abcdefghijklmnopqrstuvwxyz")="date"]/@content',
+        '//*[@itemprop="datePublished"]/@content',
+        '//*[@itemprop="datePublished"]/@datetime',
+      ]),
+      'typo3_metadata' => $this->nodeValues($xpath, [
+        '//div[contains(concat(" ",normalize-space(@class)," ")," news-single ")]//*[@data-date]/@data-date',
+        '//div[contains(concat(" ",normalize-space(@class)," ")," news-single ")]//*[@data-datetime]/@data-datetime',
+        '//div[contains(concat(" ",normalize-space(@class)," ")," news-single ")]//*[contains(concat(" ",normalize-space(@class)," ")," news-list-date ")]',
+        '//meta[starts-with(translate(@name,"ABCDEFGHIJKLMNOPQRSTUVWXYZ","abcdefghijklmnopqrstuvwxyz"),"tx_news") and contains(translate(@name,"ABCDEFGHIJKLMNOPQRSTUVWXYZ","abcdefghijklmnopqrstuvwxyz"),"date")]/@content',
+      ]),
+      'publication_element' => $this->nodeValues($xpath, [
+        '//div[contains(concat(" ",normalize-space(@class)," ")," article ")]//time/@datetime',
+        '//div[contains(concat(" ",normalize-space(@class)," ")," article ")]//time',
+        '//div[contains(concat(" ",normalize-space(@class)," ")," article ")]//*[contains(concat(" ",normalize-space(@class)," ")," publication-date ")]',
+        '//div[contains(concat(" ",normalize-space(@class)," ")," article ")]//*[contains(concat(" ",normalize-space(@class)," ")," published-date ")]',
+      ]),
+      'heading_date' => $this->nodeValues($xpath, [
+        '//div[contains(concat(" ",normalize-space(@class)," ")," article ")]//div[contains(concat(" ",normalize-space(@class)," ")," event_img_date ")]',
+      ]),
+    ];
+
+    $selected = NULL;
+    foreach (['existing_valid_date', 'structured_data', 'html_metadata', 'typo3_metadata', 'publication_element', 'heading_date'] as $source) {
+      foreach ($groups[$source] as $raw) {
+        if ($parsed = $this->dateFromText($raw)) {
+          $selected = ['raw' => $raw, 'date' => $parsed, 'source' => $source, 'confidence' => 'high'];
+          break 2;
+        }
+      }
+    }
+
+    $heading_raw = $groups['heading_date'][0] ?? '';
+    if (!$selected && $heading_raw !== '' && $listing && !empty($listing['year'])) {
+      $parsed = $this->dateWithYear($heading_raw, (int) $listing['year']);
+      if ($parsed && (empty($listing['month']) || (int) substr($parsed, 5, 2) === (int) $listing['month'])) {
+        $selected = [
+          'raw' => $heading_raw . ' + archive year ' . $listing['year'],
+          'date' => $parsed,
+          'source' => 'article_heading_date_with_archive',
+          'confidence' => 'high',
+        ];
+      }
+    }
+    if (!$selected && $listing && !empty($listing['date'])) {
+      $selected = [
+        'raw' => $listing['raw'],
+        'date' => $listing['date'],
+        'source' => 'unique_listing_item',
+        'confidence' => 'high',
+      ];
+    }
+
+    $trusted_date_confirmation = FALSE;
+    if ($selected) {
+      foreach (['structured_data', 'html_metadata', 'typo3_metadata', 'publication_element'] as $source) {
+        foreach ($groups[$source] as $raw) {
+          if ($this->dateFromText($raw) === $selected['date']) {
+            $trusted_date_confirmation = TRUE;
+            break 2;
+          }
+        }
+      }
+    }
+    $reason = $selected
+      ? 'Accepted publication date from ' . $selected['source'] . '; later missing or weaker candidates did not replace it.'
+      : ($heading_raw !== '' && $this->dateWithoutYear($heading_raw)
+        ? 'Yearless article date has no unambiguous matching archive year; Needs Date Review.'
+        : 'No trustworthy publication date was present in article metadata, explicit article date context, or a uniquely matched listing; Needs Date Review.');
+    $detail_text = implode(' | ', array_values(array_unique(array_merge($groups['publication_element'], $groups['heading_date']))));
+    $rejected_body_candidate = $this->dateFromText($body_text);
+    $details = sprintf(
+      '%s listing_page=%s; listing_date_text=%s; detail_date_text=%s; html_metadata=%s; structured_data=%s; typo3_metadata=%s; rejected_body_only_candidate=%s; current_parsed_result=%s',
+      $reason,
+      $listing['listing_url'] ?? $listing_url,
+      $listing['raw'] ?? '',
+      $detail_text,
+      implode(' | ', $groups['html_metadata']),
+      implode(' | ', $groups['structured_data']),
+      implode(' | ', $groups['typo3_metadata']),
+      $rejected_body_candidate ?? '',
+      $selected['date'] ?? 'unknown',
+    );
+
+    return [
+      'title' => $title,
+      'source_url' => $source_url,
+      'raw_date' => $selected['raw'] ?? ($heading_raw ?: ($listing['raw'] ?? '')),
+      'parsed_date' => $selected['date'] ?? '',
+      'date_source' => $selected['source'] ?? 'none',
+      'trusted_date_confirmation' => $trusted_date_confirmation,
+      'confidence' => $selected['confidence'] ?? 'none',
+      'needs_review' => $selected ? 'no' : 'yes',
+      'reason' => $details,
+    ];
+  }
+
+  /** Preserves the valid date produced by the legacy extraction path. */
+  private function legacyArticleDate(\DOMXPath $xpath, string $text, ?array $listing): ?string {
     foreach (['//meta[@property=\'article:published_time\']/@content', '//meta[@name=\'date\']/@content', '//time/@datetime'] as $query) {
       foreach ($xpath->query($query) ?: [] as $node) {
         if ($date = $this->dateFromText($node->nodeValue)) return $date;
       }
     }
-    $context_date = $this->dateFromText($text) ?: $listing_date;
-    $display_node = $xpath->query('//div[contains(@class,\'event_img_date\')]')->item(0);
-    $display = $this->text($display_node);
-    if ($context_date && preg_match('/\b(\d{1,2})\s*(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\b/i', $display, $match)) {
-      try {
-        return (new \DateTimeImmutable($match[1] . ' ' . $match[2] . ' ' . substr($context_date, 0, 4), new \DateTimeZone('UTC')))->format('Y-m-d');
-      }
-      catch (\Throwable) {}
+    $context_date = $this->dateFromText($text) ?: ($listing['date'] ?? NULL);
+    $display = $this->text($xpath->query('//div[contains(@class,\'event_img_date\')]')->item(0));
+    if ($context_date && $display !== '') {
+      return $this->dateWithYear($display, (int) substr($context_date, 0, 4)) ?: $context_date;
     }
     return $context_date;
+  }
+  /** Returns values from publication-specific DOM queries. */
+  private function nodeValues(\DOMXPath $xpath, array $queries): array {
+    $values = [];
+    foreach ($queries as $query) {
+      foreach ($xpath->query($query) ?: [] as $node) {
+        $value = $node instanceof \DOMAttr ? trim($node->nodeValue) : $this->text($node);
+        if ($value !== '') $values[] = $value;
+      }
+    }
+    return array_values(array_unique($values));
+  }
+
+  /** Returns datePublished only from article-shaped JSON-LD objects. */
+  private function structuredDataDates(\DOMXPath $xpath): array {
+    $dates = [];
+    foreach ($xpath->query('//script[@type="application/ld+json"]') ?: [] as $node) {
+      try {
+        $data = json_decode($node->textContent, TRUE, 64, JSON_THROW_ON_ERROR);
+      }
+      catch (\Throwable) {
+        continue;
+      }
+      $stack = [$data];
+      while ($stack) {
+        $item = array_pop($stack);
+        if (!is_array($item)) continue;
+        $type = $item['@type'] ?? '';
+        $types = is_array($type) ? $type : [$type];
+        if (array_intersect($types, ['Article', 'NewsArticle', 'BlogPosting']) && is_string($item['datePublished'] ?? NULL)) {
+          $dates[] = trim($item['datePublished']);
+        }
+        foreach ($item as $value) {
+          if (is_array($value)) $stack[] = $value;
+        }
+      }
+    }
+    return array_values(array_unique(array_filter($dates)));
   }
 
   private function dateFromText(string $text): ?string {
     $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $text = str_ireplace(
+      ['Mutarama', 'Gashyantare', 'Werurwe', 'Mata', 'Gicurasi', 'Kamena', 'Nyakanga', 'Kanama', 'Nzeri', 'Ukwakira', 'Ugushyingo', 'Ukuboza'],
+      ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+      $text,
+    );
     $patterns = [
       ['/\b(20\d{2}|19\d{2})[-\/.](\d{1,2})[-\/.](\d{1,2})\b/', 'ymd'],
       ['/\b(\d{1,2})[-\/.](\d{1,2})[-\/.](20\d{2}|19\d{2})\b/', 'dmy'],
-      ['/\b(\d{1,2})(?:st|nd|rd|th)?\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s*,?\s*(20\d{2}|19\d{2})\b/iu', 'word'],
-      ['/\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})(?:st|nd|rd|th)?\s*,?\s*(20\d{2}|19\d{2})\b/iu', 'month'],
+      ['/\b(\d{1,2})(?:st|nd|rd|th)?\s*(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s*,?\s*(20\d{2}|19\d{2})\b/iu', 'word'],
+      ['/\b(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+(\d{1,2})(?:st|nd|rd|th)?\s*,?\s*(20\d{2}|19\d{2})\b/iu', 'month'],
     ];
     foreach ($patterns as [$pattern, $order]) {
       if (!preg_match($pattern, $text, $match)) continue;
+      if ($order === 'dmy' && (int) $match[1] <= 12 && (int) $match[2] <= 12) continue;
       try {
         $raw = match ($order) {
           'ymd' => sprintf('%04d-%02d-%02d', $match[1], $match[2], $match[3]),
@@ -433,38 +818,107 @@ final class MediaCenterLegacyImporter {
           'word' => $match[1] . ' ' . $match[2] . ' ' . $match[3],
           default => $match[2] . ' ' . $match[1] . ' ' . $match[3],
         };
-        return (new \DateTimeImmutable($raw, new \DateTimeZone('UTC')))->format('Y-m-d');
+        $date = new \DateTimeImmutable($raw, new \DateTimeZone('UTC'));
+        $errors = \DateTimeImmutable::getLastErrors();
+        if (is_array($errors) && ($errors['warning_count'] || $errors['error_count'])) continue;
+        $year = (int) $date->format('Y');
+        $month = (int) $date->format('m');
+        $day = (int) $date->format('d');
+        if ($year < 1900 || $year > (int) gmdate('Y') + 1 || !checkdate($month, $day, $year)) continue;
+        return $date->format('Y-m-d');
       }
       catch (\Throwable) {}
     }
     return NULL;
   }
 
-  private function listingDate(\DOMNode $anchor, string $listing_url): ?string {
+  /** Captures date evidence scoped to the exact listing item anchor. */
+  private function listingDateEvidence(\DOMNode $anchor, string $listing_url): ?array {
+    $xpath = new \DOMXPath($anchor->ownerDocument);
     $container = $anchor->parentNode;
     for ($i = 0; $i < 4 && $container; $i++, $container = $container->parentNode) {
-      if ($date = $this->dateFromText($this->text($container))) return $date;
+      $nodes = $xpath->query('.//*[contains(concat(" ",normalize-space(@class)," ")," event_img_date ") or self::time]', $container);
+      foreach ($nodes ?: [] as $node) {
+        $raw = $node instanceof \DOMElement && $node->hasAttribute('datetime') ? $node->getAttribute('datetime') : $this->text($node);
+        if ($raw === '') continue;
+        $date = $this->dateFromText($raw);
+        $year = NULL;
+        $month = NULL;
+        if (preg_match('@/archive-news/archive/(\d{1,2})/(20\d{2}|19\d{2})(?:/|$)@', (string) parse_url($listing_url, PHP_URL_PATH), $match)) {
+          $month = (int) $match[1];
+          $year = (int) $match[2];
+        }
+        return [
+          'raw' => $raw,
+          'date' => $date,
+          'year' => $year,
+          'month' => $month,
+          'listing_url' => $listing_url,
+        ];
+      }
     }
-    return $this->dateFromText(urldecode($listing_url));
+    return NULL;
   }
 
+  private function betterListingDate(array $candidate, ?array $current): bool {
+    if ($current === NULL) return TRUE;
+    $score = static fn(array $evidence): int => !empty($evidence['date']) ? 3 : (!empty($evidence['year']) ? 2 : 1);
+    return $score($candidate) > $score($current);
+  }
+
+  private function dateWithYear(string $text, int $year): ?string {
+    if (!$this->dateWithoutYear($text)) return NULL;
+    return $this->dateFromText(trim($text) . ' ' . $year);
+  }
+
+  private function dateWithoutYear(string $text): bool {
+    return (bool) preg_match('/\b\d{1,2}\s*(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?|Mutarama|Gashyantare|Werurwe|Mata|Gicurasi|Kamena|Nyakanga|Kanama|Nzeri|Ukwakira|Ugushyingo|Ukuboza)\b/iu', $text);
+  }
   /** Fetches a source page with strict host/path controls. */
   private function fetch(string $url, array &$report): ?string {
     $url = $this->canonical($url, TRUE);
     if (array_key_exists($url, $this->responses)) return $this->responses[$url];
     if (!$this->allowed($url)) return $this->responses[$url] = NULL;
-    try {
-      $response = $this->httpClient->request('GET', $url, [
-        'allow_redirects' => ['max' => 4, 'strict' => TRUE],
-        'connect_timeout' => 10, 'timeout' => 35,
-        'headers' => ['User-Agent' => 'REG Drupal controlled legacy migration/1.0'],
-      ]);
-      return $this->responses[$url] = (string) $response->getBody();
+    $exception = NULL;
+    for ($attempt = 0; $attempt < self::FETCH_ATTEMPTS; $attempt++) {
+      $this->throttle();
+      try {
+        $response = $this->httpClient->request('GET', $url, [
+          'allow_redirects' => ['max' => 4, 'strict' => TRUE],
+          'connect_timeout' => 10, 'timeout' => 35,
+          'http_errors' => TRUE,
+          'headers' => ['User-Agent' => 'REG Drupal controlled legacy migration/1.0'],
+        ]);
+        return $this->responses[$url] = (string) $response->getBody();
+      }
+      catch (\Throwable $error) {
+        $exception = $error;
+        if (!$this->retryableFetchFailure($error) || $attempt === self::FETCH_ATTEMPTS - 1) break;
+        usleep(self::RETRY_BACKOFF_MICROSECONDS * (2 ** $attempt));
+      }
     }
-    catch (\Throwable $exception) {
-      $report['source_failures'][] = ['url' => $url, 'reason' => $this->safeError($exception->getMessage())];
-      return $this->responses[$url] = NULL;
+    $report['source_failures'][] = ['url' => $url, 'reason' => $this->safeError($exception?->getMessage() ?? 'Request failed.')];
+    return $this->responses[$url] = NULL;
+  }
+
+  /** Returns TRUE only for HTTP and transport failures likely to be temporary. */
+  private function retryableFetchFailure(\Throwable $error): bool {
+    if ($error instanceof RequestException && $error->hasResponse()) {
+      return in_array($error->getResponse()->getStatusCode(), [429, 502, 503, 504], TRUE);
     }
+    if (!$error instanceof TransferException) return FALSE;
+
+    $context = method_exists($error, 'getHandlerContext') ? $error->getHandlerContext() : [];
+    if (in_array((int) ($context['errno'] ?? 0), [7, 28, 35, 52, 55, 56], TRUE)) return TRUE;
+
+    return (bool) preg_match('/connection (?:reset|timed out)|timed out|timeout|tls.*unexpected eof|unexpected eof.*tls|ssl connect error|temporarily unavailable/i', $error->getMessage());
+  }
+  /** Enforces a small delay between discovery requests to the legacy host. */
+  private function throttle(): void {
+    $elapsed = (microtime(TRUE) - $this->lastRequestAt) * 1000000;
+    $delay = self::REQUEST_DELAY_MICROSECONDS - (int) $elapsed;
+    if ($delay > 0) usleep($delay);
+    $this->lastRequestAt = microtime(TRUE);
   }
 
   private function fetchBinary(string $url, array &$report): ?string {
@@ -491,8 +945,11 @@ final class MediaCenterLegacyImporter {
     if ($asset) {
       return str_starts_with($path, '/fileadmin/');
     }
-    return str_starts_with($path, '/media-center/news-events')
-      || str_starts_with($path, '/media-center/news-details/news/');
+    return in_array($path, ['/', '/index.php', '/sitemap/'], TRUE)
+      || str_starts_with($path, '/media-center/news-events')
+      || str_starts_with($path, '/media-center/news-events-by-category/category/')
+      || str_starts_with($path, '/media-center/archive-news/archive/')
+      || $this->newsDetail($path);
   }
 
   private function resolve(string $href): ?string {
@@ -526,7 +983,25 @@ final class MediaCenterLegacyImporter {
   }
 
   private function newsIndex(string $path): bool {
-    return $path === '/media-center/' || str_starts_with($path, '/media-center/news-events');
+    return in_array($path, ['/', '/index.php', '/sitemap/', '/media-center/'], TRUE)
+      || str_starts_with($path, '/media-center/news-events')
+      || str_starts_with($path, '/media-center/news-events-by-category/category/')
+      || str_starts_with($path, '/media-center/archive-news/archive/');
+  }
+
+  private function homepage(string $url): bool {
+    return in_array((string) parse_url($url, PHP_URL_PATH), ['/', '/index.php', '/home/'], TRUE);
+  }
+
+  /** Expands the newer, otherwise unpaginated Related News plugin storage. */
+  private function recentWidgetUrl(string $detail_url): string {
+    return $detail_url . '?' . http_build_query([
+      'tx_news_pi1' => ['overwriteDemand' => ['limit' => self::RECENT_WIDGET_LIMIT]],
+    ], '', '&', PHP_QUERY_RFC3986);
+  }
+
+  private function newsDetail(string $path): bool {
+    return str_starts_with($path, '/media-center/news-details/news/');
   }
 
   private function dom(string $html): array {
@@ -576,6 +1051,31 @@ final class MediaCenterLegacyImporter {
         }
       }
     }
+  }
+
+  /** Finds the same high-confidence counterparts for diagnostic output. */
+  private function translationCounterparts(array $records): array {
+    $counterparts = [];
+    foreach ($records as $left) {
+      if (!$left['date']) {
+        continue;
+      }
+      foreach ($records as $right) {
+        if ($left['source_url'] === $right['source_url']
+          || $left['date'] !== $right['date']
+          || $left['langcode'] === $right['langcode']
+          || $left['section'] !== $right['section']
+          || !$this->likelyPair($left['title'], $right['title'])) {
+          continue;
+        }
+        $counterparts[$left['source_url']] = [
+          'title' => $right['title'],
+          'source_url' => $right['source_url'],
+        ];
+        break;
+      }
+    }
+    return $counterparts;
   }
 
   private function likelyPair(string $left, string $right): bool {
@@ -637,10 +1137,13 @@ final class MediaCenterLegacyImporter {
     $counts = [
       'discovered' => 0,
       'would_create' => 0,
+      'imported_published' => 0,
+      'imported_needs_date_review' => 0,
       'created' => 0,
       'existing' => 0,
       'updated' => 0,
       'skipped' => 0,
+      'skipped_fetch_failure' => 0,
       'needs_review' => 0,
       'failed' => 0,
     ];
@@ -652,15 +1155,19 @@ final class MediaCenterLegacyImporter {
       'dry_run' => $dry_run, 'language' => $language ?: 'all',
       'source' => self::BASE, 'started_at' => gmdate(DATE_ATOM, $this->time->getCurrentTime()),
       'completed_at' => NULL, 'source_pages_scanned' => 0, 'translation_pairs' => 0,
+      'discovery_sources' => [self::HOME, self::LISTING, self::SITEMAP],
+      'year_coverage' => [],
       'breakdown' => $breakdown,
       'media' => ['images_imported' => 0, 'duplicates_reused' => 0, 'missing' => 0, 'failures' => []],
       'quality' => ['needs_date' => 0, 'needs_language' => 0, 'needs_classification' => 0, 'duplicate_candidate' => 0],
-      'source_failures' => [], 'failures' => [],
+      'source_failures' => [], 'failures' => [], 'classification_records' => [],
+      'date_review_nodes' => [],
+      'date_records' => [], 'discovery_diagnostics' => [],
     ];
   }
 
   private function primaryReviewStatus(array $issues): string {
-    foreach (['needs_classification', 'needs_file', 'needs_date', 'needs_language', 'duplicate_candidate'] as $issue) {
+    foreach (['needs_date', 'needs_classification', 'needs_file', 'needs_language', 'duplicate_candidate'] as $issue) {
       if (in_array($issue, $issues, TRUE)) return $issue;
     }
     return 'verified';

@@ -20,6 +20,7 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
     'youtube' => 'YouTube',
     'instagram' => 'Instagram',
     'linkedin' => 'LinkedIn',
+    'flickr' => 'Flickr',
   ];
 
   /**
@@ -77,6 +78,41 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
         '#title' => $this->t('Show in footer'),
         '#default_value' => (bool) ($values['show_footer'] ?? FALSE),
       ];
+      if ($id === 'youtube') {
+        $form['platforms'][$id]['channel_id'] = [
+          '#type' => 'textfield',
+          '#title' => $this->t('YouTube Channel ID'),
+          '#default_value' => $values['channel_id'] ?? '',
+          '#maxlength' => 100,
+          '#description' => $this->t('Optional public channel identifier. API credentials must remain in the server environment.'),
+        ];
+        $form['platforms'][$id]['videos_enabled'] = [
+          '#type' => 'checkbox',
+          '#title' => $this->t('Videos enabled'),
+          '#default_value' => (bool) ($values['videos_enabled'] ?? FALSE),
+        ];
+      }
+      if ($id === 'flickr') {
+        $form['platforms'][$id]['user_id'] = [
+          '#type' => 'textfield',
+          '#title' => $this->t('Flickr User ID'),
+          '#default_value' => $values['user_id'] ?? '',
+          '#maxlength' => 100,
+          '#description' => $this->t('Used by the public Flickr feed. Do not enter API credentials here.'),
+        ];
+        $form['platforms'][$id]['album_id'] = [
+          '#type' => 'textfield',
+          '#title' => $this->t('Flickr Gallery/Album ID'),
+          '#default_value' => $values['album_id'] ?? '',
+          '#maxlength' => 100,
+          '#description' => $this->t('Optional. Leave empty to use the account public photo feed.'),
+        ];
+        $form['platforms'][$id]['gallery_enabled'] = [
+          '#type' => 'checkbox',
+          '#title' => $this->t('Photo Gallery enabled'),
+          '#default_value' => (bool) ($values['gallery_enabled'] ?? FALSE),
+        ];
+      }
       if ($id === 'x') {
         $form['platforms'][$id]['display_name'] = [
           '#type' => 'textfield',
@@ -212,6 +248,16 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
         $this->t('The optional X user ID must contain numbers only.'),
       );
     }
+    $flickr = (array) $form_state->getValue(['platforms', 'flickr']);
+    foreach (['user_id', 'album_id'] as $field) {
+      $value = trim((string) ($flickr[$field] ?? ''));
+      if ($value !== '' && !preg_match('/^[A-Za-z0-9@._-]+$/', $value)) {
+        $form_state->setErrorByName(
+          'platforms][flickr][' . $field,
+          $this->t('Use only letters, numbers, periods, underscores, hyphens, or @.'),
+        );
+      }
+    }
   }
 
   /**
@@ -238,6 +284,19 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
           'api_homepage_post_count' => max(1, min(5, (int) ($values['api_homepage_post_count'] ?? 3))),
           'api_exclude_replies' => (bool) ($values['api_exclude_replies'] ?? TRUE),
           'api_exclude_reposts' => (bool) ($values['api_exclude_reposts'] ?? TRUE),
+        ];
+      }
+      if ($id === 'youtube') {
+        $platform_config += [
+          'channel_id' => trim((string) ($values['channel_id'] ?? '')),
+          'videos_enabled' => (bool) ($values['videos_enabled'] ?? FALSE),
+        ];
+      }
+      if ($id === 'flickr') {
+        $platform_config += [
+          'user_id' => trim((string) ($values['user_id'] ?? '')),
+          'album_id' => trim((string) ($values['album_id'] ?? '')),
+          'gallery_enabled' => (bool) ($values['gallery_enabled'] ?? FALSE),
         ];
       }
       $config->set('platforms.' . $id, $platform_config);

@@ -7,19 +7,19 @@
   {% include '@reg_core/reg-section-hero.html.twig' with {hero: newsroom_hero} only %}
 
   <div class="reg-container reg-newsroom__body">
-    <form class="reg-news-filters" action="{{ path(section == 'sports' ? 'reg_core.sports_news' : 'reg_core.news') }}" method="get" data-reg-news-filter-form>
-      <label>
+    <form class="reg-news-filters reg-filter-bar{% if departments %} reg-filter-bar--news-department{% endif %}" action="{{ path(section == 'sports' ? 'reg_core.sports_news' : 'reg_core.news') }}" method="get" data-reg-news-filter-form>
+      <label class="reg-filter-field reg-filter-field--search">
         <span>{{ 'Search news'|t }}</span>
         <input type="search" name="search" value="{{ filters.search }}" placeholder="{{ 'Search by title or topic'|t }}">
       </label>
-      <label>
+      <label class="reg-filter-field">
         <span>{{ 'Category'|t }}</span>
         <select name="category">
           <option value="0">{{ 'All categories'|t }}</option>
           {% for category in categories %}<option value="{{ category.id }}"{{ filters.category == category.id ? ' selected' }}>{{ category.label }}</option>{% endfor %}
         </select>
       </label>
-      <label>
+      <label class="reg-filter-field">
         <span>{{ 'Year'|t }}</span>
         <select name="year">
           <option value="">{{ 'All years'|t }}</option>
@@ -27,7 +27,7 @@
         </select>
       </label>
       {% if departments %}
-        <label>
+        <label class="reg-filter-field">
           <span>{{ 'REG department'|t }}</span>
           <select name="department">
             <option value="">{{ 'All departments'|t }}</option>
@@ -35,28 +35,31 @@
           </select>
         </label>
       {% endif %}
-      <div class="reg-news-filters__actions">
-        <button type="submit">{{ 'Apply filters'|t }}</button>
-        {% if filters.search or filters.category or filters.year or filters.department %}<a href="{{ path(section == 'sports' ? 'reg_core.sports_news' : 'reg_core.news') }}">{{ 'Clear filters'|t }}</a>{% endif %}
+      <div class="reg-news-filters__actions reg-filter-actions">
+        <button class="reg-filter-submit" type="submit">{{ 'Apply filters'|t }}</button>
+        {% if filters.search or filters.category or filters.year or filters.department %}<a class="reg-filter-clear" href="{{ path(section == 'sports' ? 'reg_core.sports_news' : 'reg_core.news') }}">{{ 'Clear filters'|t }}</a>{% endif %}
       </div>
     </form>
 
-    <p class="reg-newsroom__count" role="status">{{ '@count stories'|t({'@count': results_count}) }}</p>
+    <div class="reg-filter-context">
+      <div class="reg-filter-context__groups">
+        <nav class="reg-news-language-tabs reg-filter-chips" aria-label="{{ 'News language'|t }}">
+          <span class="reg-news-filter-label">{{ 'Language'|t }}</span>
+          <a class="reg-filter-chip {{ filters.language == '' ? 'is-active' }}" href="{{ path(section == 'sports' ? 'reg_core.sports_news' : 'reg_core.news') }}">{{ 'All'|t }}</a>
+          <a class="reg-filter-chip {{ filters.language == 'en' ? 'is-active' }}" href="{{ path(section == 'sports' ? 'reg_core.sports_news_english' : 'reg_core.news_english') }}">{{ 'English'|t }}</a>
+          <a class="reg-filter-chip {{ filters.language == 'rw' ? 'is-active' }}" href="{{ path(section == 'sports' ? 'reg_core.sports_news_kinyarwanda' : 'reg_core.news_kinyarwanda') }}">{{ 'Kinyarwanda'|t }}</a>
+        </nav>
 
-    <nav class='reg-news-language-tabs' aria-label='{{ 'News language'|t }}'>
-      <span class='reg-news-filter-label'>{{ 'Language'|t }}</span>
-      <a class='{{ filters.language == '' ? 'is-active' }}' href='{{ path(section == 'sports' ? 'reg_core.sports_news' : 'reg_core.news') }}'>{{ 'All'|t }}</a>
-      <a class='{{ filters.language == 'en' ? 'is-active' }}' href='{{ path(section == 'sports' ? 'reg_core.sports_news_english' : 'reg_core.news_english') }}'>{{ 'English'|t }}</a>
-      <a class='{{ filters.language == 'rw' ? 'is-active' }}' href='{{ path(section == 'sports' ? 'reg_core.sports_news_kinyarwanda' : 'reg_core.news_kinyarwanda') }}'>{{ 'Kinyarwanda'|t }}</a>
-    </nav>
-
-    {% if section == 'sports' %}
-      <nav class='reg-news-sport-tabs' aria-label='{{ 'Filter sports news by sport'|t }}'>
-        <span class='reg-news-filter-label'>{{ 'Sport'|t }}</span>
-        <a class='{{ not filters.sport ? 'is-active' }}' href='{{ path('reg_core.sports_news') }}'>{{ 'All'|t }}</a>
-        {% for sport in sports %}<a class='{{ filters.sport == sport.id ? 'is-active' }}' href='{{ path('reg_core.sports_news', {}, {query: {sport: sport.id, language: filters.language}}) }}'>{{ sport.label }}</a>{% endfor %}
-      </nav>
-    {% endif %}
+        {% if section == 'sports' %}
+          <nav class="reg-news-sport-tabs reg-filter-chips" aria-label="{{ 'Filter sports news by sport'|t }}">
+            <span class="reg-news-filter-label">{{ 'Sport'|t }}</span>
+            <a class="reg-filter-chip {{ not filters.sport ? 'is-active' }}" href="{{ path('reg_core.sports_news') }}">{{ 'All'|t }}</a>
+            {% for sport in sports %}<a class="reg-filter-chip {{ filters.sport == sport.id ? 'is-active' }}" href="{{ path('reg_core.sports_news', {}, {query: {sport: sport.id, language: filters.language}}) }}">{{ sport.label }}</a>{% endfor %}
+          </nav>
+        {% endif %}
+      </div>
+      <p class="reg-newsroom__count reg-filter-results" role="status">{{ '@count stories'|t({'@count': results_count}) }}</p>
+    </div>
 
     {% if lead %}
       <section class="reg-newsroom__featured" aria-labelledby="reg-newsroom-featured-title">

@@ -1,13 +1,13 @@
 <main class="reg-support reg-branches">
   {% include '@reg_core/reg-section-hero.html.twig' with {hero: section_hero} only %}
   <div class="reg-container">
-    <form class="reg-branch-filters" method="get" data-reg-analytics-submit="branch_search">
+    <form class="reg-branch-filters reg-filter-bar reg-filter-bar--wide" method="get" data-reg-analytics-submit="branch_search">
       <label><span>{{ 'Search'|t }}</span><input name="q" type="search" maxlength="120" value="{{ filters.query }}" placeholder="{{ 'Branch, manager, email, district or entity'|t }}"></label>
       <label><span>{{ 'Province'|t }}</span><select name="province"><option value="0">{{ 'All provinces'|t }}</option>{% for id, label in provinces %}<option value="{{ id }}"{{ filters.province == id ? ' selected' : '' }}>{{ label }}</option>{% endfor %}</select></label>
       <label><span>{{ 'District'|t }}</span><select name="district"><option value="0">{{ 'All districts'|t }}</option>{% for id, label in districts %}<option value="{{ id }}"{{ filters.district == id ? ' selected' : '' }}>{{ label }}</option>{% endfor %}</select></label>
       <label><span>{{ 'REG entity'|t }}</span><select name="entity"><option value="">{{ 'All entities'|t }}</option>{% for id, label in entities %}<option value="{{ id }}"{{ filters.entity == id ? ' selected' : '' }}>{{ label }}</option>{% endfor %}</select></label>
       <label><span>{{ 'Service'|t }}</span><select name="service"><option value="0">{{ 'All services'|t }}</option>{% for id, label in services %}<option value="{{ id }}"{{ filters.service == id ? ' selected' : '' }}>{{ label }}</option>{% endfor %}</select></label>
-      <button type="submit">{{ 'Find branches'|t }}</button>
+      <button class="reg-filter-submit" type="submit">{{ 'Find branches'|t }}</button>
     </form>
 
     <div class="reg-branch-toolbar">

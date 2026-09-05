@@ -238,6 +238,22 @@ function reg_theme_main_active_section(string $route_name): string {
   ) {
     return 'main:customer-services';
   }
+  if (in_array($route_name, [
+    'reg_core.video_media_center',
+    'reg_core.videos',
+    'reg_core.news',
+    'reg_core.news_english',
+    'reg_core.news_kinyarwanda',
+    'reg_core.press_releases',
+    'reg_core.announcements',
+    'reg_core.publications',
+    'reg_core.newsletters',
+    'reg_core.corporate_documents',
+    'reg_core.media_gallery',
+    'reg_core.media_social',
+  ], TRUE)) {
+    return 'main:media-center';
+  }
   if (
     str_starts_with($route_name, 'reg_core.public_information')
     || str_starts_with($route_name, 'reg_core.tender')
@@ -248,9 +264,6 @@ function reg_theme_main_active_section(string $route_name): string {
   }
   if (str_starts_with($route_name, 'reg_core.sports')) {
     return 'main:sports';
-  }
-  if (str_starts_with($route_name, 'reg_core.video')) {
-    return 'main:media-center';
   }
   if (in_array($route_name, ['reg_core.contact', 'reg_core.complaints'], TRUE)) {
     return 'main:contact';

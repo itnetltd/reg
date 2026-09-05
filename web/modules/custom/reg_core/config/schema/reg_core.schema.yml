@@ -215,6 +215,9 @@ reg_core.social_media:
         linkedin:
           type: reg_core.social_media_platform
           label: 'LinkedIn'
+        flickr:
+          type: reg_core.social_media_platform
+          label: 'Flickr'
 
 reg_core.social_media_platform:
   type: mapping
@@ -238,6 +241,21 @@ reg_core.social_media_platform:
     show_homepage_feed:
       type: boolean
       label: 'Show feed on homepage'
+    channel_id:
+      type: string
+      label: 'YouTube Channel ID'
+    videos_enabled:
+      type: boolean
+      label: 'Enable videos'
+    user_id:
+      type: string
+      label: 'Flickr User ID'
+    album_id:
+      type: string
+      label: 'Flickr Gallery or Album ID'
+    gallery_enabled:
+      type: boolean
+      label: 'Enable photo gallery'
     api_enabled:
       type: boolean
       label: 'Enable X API feed'

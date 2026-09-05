@@ -9,6 +9,7 @@ use Drupal\Core\Url;
 use Drupal\reg_core\PublicInformation\PublicInformationRepositoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -138,32 +139,46 @@ final class PublicInformationController extends ControllerBase {
 
   /** Builds Media Center document archives on the shared publication model. */
   public function mediaPublications(Request $request): array {
-    $type = (string) $request->attributes->get('_publication_type', '');
-    if ($type !== '') {
-      $ids = $this->entityTypeManager()->getStorage('taxonomy_term')->getQuery()
-        ->accessCheck(FALSE)->condition('vid', 'reg_publication_type')
-        ->condition('name', $type)->range(0, 1)->execute();
-      if ($ids) $request->query->set('category', (int) reset($ids));
-    }
-    $build = $this->listing('reg_publication', $request, 'all');
+    $scope = (string) $request->attributes->get('_publication_scope', '');
+    $build = $this->listing('reg_publication', $request, 'all', [
+      'publication_scope' => $scope,
+    ]);
     $labels = [
-      'Press Release' => ['Press Releases', 'Official REG media statements in English and Kinyarwanda.'],
-      'Announcement Archive' => ['Announcements', 'Archived public announcements. Historical outage notices are not live outage data.'],
-      'Newsletter' => ['Newsletters', 'REG newsletter issues and downloadable editions.'],
-      'Corporate / Legal Documents' => ['Corporate / Legal Documents', 'Company laws and historical corporate legal documents.'],
+      'publications' => ['Publications', 'Reports, policies, plans, safeguards, forms and approved REG publications.'],
+      'press_release' => ['Press Releases', 'Official REG media statements in English and Kinyarwanda.'],
+      'archived_announcement' => ['Announcements', 'Archived public announcements. Historical outage notices are not live outage data.'],
+      'newsletter' => ['Newsletters', 'REG newsletter issues and downloadable editions.'],
+      'corporate_legal' => ['Corporate / Legal Documents', 'Company laws and historical corporate legal documents.'],
     ];
-    if (isset($labels[$type])) {
-      $build['#heading'] = $this->t($labels[$type][0]);
-      $build['#intro'] = $this->t($labels[$type][1]);
+    if (isset($labels[$scope])) {
+      $build['#heading'] = $this->t($labels[$scope][0]);
+      $build['#intro'] = $this->t($labels[$scope][1]);
     }
     return $build;
+  }
+
+  /** Redirects a published imported legacy document detail slug. */
+  public function legacyPublication(string $slug): RedirectResponse {
+    $ids = $this->entityTypeManager()->getStorage('node')->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('type', 'reg_publication')
+      ->condition('field_reg_source_id', $slug)
+      ->condition('status', 1)
+      ->range(0, 1)
+      ->execute();
+    if (!$ids) {
+      throw new NotFoundHttpException();
+    }
+    return new RedirectResponse(Url::fromRoute('reg_core.publication_detail', [
+      'publication' => (int) reset($ids),
+    ])->toString(), 301);
   }
 
   /**
    * Builds one bundle listing with shared filters and presentation.
    */
-  private function listing(string $bundle, Request $request, string $mode): array {
-    $filters = $this->filters($request) + ['mode' => $mode];
+  private function listing(string $bundle, Request $request, string $mode, array $additional_filters = []): array {
+    $filters = $this->filters($request) + ['mode' => $mode] + $additional_filters;
     $all_items = $this->repository->search([$bundle], $filters);
     $items = $this->paginate($all_items);
     $settings = $this->regConfigFactory->get('reg_core.settings');

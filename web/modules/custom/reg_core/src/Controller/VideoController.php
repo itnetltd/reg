@@ -2,7 +2,9 @@
 
 namespace Drupal\reg_core\Controller;
 
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Block\BlockManagerInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
@@ -22,6 +24,7 @@ final class VideoController implements ContainerInjectionInterface {
     private readonly PagerManagerInterface $pagerManager,
     private readonly PagerParametersInterface $pagerParameters,
     private readonly BlockManagerInterface $blockManager,
+    private readonly ConfigFactoryInterface $configFactory,
   ) {}
 
   /**
@@ -33,6 +36,7 @@ final class VideoController implements ContainerInjectionInterface {
       $container->get('pager.manager'),
       $container->get('pager.parameters'),
       $container->get('plugin.manager.block'),
+      $container->get('config.factory'),
     );
   }
 
@@ -71,6 +75,22 @@ final class VideoController implements ContainerInjectionInterface {
         ->createInstance('reg_core_social_media_follow')
         ->build();
     }
+    $youtube = $this->configFactory->get('reg_core.social_media')->get('platforms.youtube');
+    $youtube = is_array($youtube) ? $youtube : [];
+    $channel_url = trim((string) ($youtube['url'] ?? ''));
+    $parts = parse_url($channel_url);
+    if (
+      empty($youtube['enabled'])
+      || empty($youtube['videos_enabled'])
+      || !UrlHelper::isValid($channel_url, TRUE)
+      || !is_array($parts)
+      || strtolower((string) ($parts['scheme'] ?? '')) !== 'https'
+      || !in_array(strtolower((string) ($parts['host'] ?? '')), ['youtube.com', 'www.youtube.com'], TRUE)
+      || isset($parts['user'])
+      || isset($parts['pass'])
+    ) {
+      $channel_url = '';
+    }
 
     return [
       '#theme' => 'reg_video_archive',
@@ -85,6 +105,7 @@ final class VideoController implements ContainerInjectionInterface {
       '#years' => $options['years'],
       '#pager' => ['#type' => 'pager'],
       '#social_follow' => $social_follow,
+      '#youtube_channel_url' => $channel_url,
       '#attached' => ['library' => ['reg_core/featured_videos']],
       '#cache' => [
         'contexts' => ['languages:language_interface', 'url.query_args:search', 'url.query_args:category', 'url.query_args:year', 'url.query_args:page'],

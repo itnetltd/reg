@@ -585,3 +585,60 @@ function reg_core_post_update_finalize_reg_media_document_migration(?array &$san
   reg_core_apply_media_document_migration();
   return 'Finalized optional legacy metadata fields without changing existing publication records.';
 }
+
+/**
+ * Extends the publication importer for archived Media Center documents.
+ */
+function reg_core_post_update_extend_reg_media_document_sources(?array &$sandbox = NULL): string {
+  require_once __DIR__ . '/reg_core.install';
+  require_once __DIR__ . '/reg_core.media_center.inc';
+  reg_core_apply_media_document_migration();
+  return 'Added archived announcements, newsletters, corporate/legal categories, newsletter issue numbers, and historical-outage classification to REG Publication.';
+}
+
+/**
+ * Corrects Task 8 metadata attachment without removing populated fields.
+ */
+function reg_core_post_update_repair_reg_media_document_metadata_fields(?array &$sandbox = NULL): string {
+  require_once __DIR__ . '/reg_core.install';
+  require_once __DIR__ . '/reg_core.media_center.inc';
+  reg_core_apply_media_document_migration();
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  foreach (['field_reg_issue_number', 'field_reg_archived_outage'] as $field_name) {
+    $field = \Drupal\field\Entity\FieldConfig::loadByName('node', 'reg_news', $field_name);
+    if (!$field) continue;
+    $values = $storage->getQuery()->accessCheck(FALSE)
+      ->condition('type', 'reg_news')->exists($field_name)->range(0, 1)->execute();
+    if (!$values) $field->delete();
+  }
+  return 'Attached Task 8 metadata to REG Publication and removed unintended empty REG News field instances.';
+}
+
+/**
+ * Allows safely imported REG News records to retain an unknown legacy date.
+ */
+function reg_core_post_update_allow_undated_reg_news_migration(?array &$sandbox = NULL): string {
+  require_once __DIR__ . '/reg_core.install';
+  require_once __DIR__ . '/reg_core.media_center.inc';
+  reg_core_apply_media_center_migration();
+  return 'Made the original REG News publication date optional and labelled undated imports as Needs Date Review.';
+}
+
+/**
+ * Applies the final Media Center navigation and channel configuration.
+ */
+function reg_core_post_update_final_media_center_navigation(?array &$sandbox = NULL): string {
+  require_once __DIR__ . '/reg_core.install';
+  reg_core_apply_social_media_configuration();
+  reg_core_sync_media_center_navigation();
+  return 'Applied the final Media Center menu hierarchy and centralized Flickr and YouTube channel settings.';
+}
+
+/**
+ * Seeds REG's verified Flickr gallery when the setting remains empty.
+ */
+function reg_core_post_update_seed_official_flickr_gallery(?array &$sandbox = NULL): string {
+  require_once __DIR__ . '/reg_core.install';
+  reg_core_apply_official_flickr_configuration();
+  return 'Configured the verified Rwanda Energy Group Flickr gallery for the Media Center.';
+}

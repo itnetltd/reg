@@ -13,12 +13,12 @@
       </nav>
     {% endif %}
 
-    <form class="reg-pi-filter" method="get" role="search">
-      <div class="reg-pi-filter__search">
+    <form class="reg-pi-filter reg-filter-bar reg-filter-bar--dense{% if bundle != 'reg_tender' %} reg-filter-bar--documents{% endif %}" method="get" role="search">
+      <div class="reg-pi-filter__search reg-filter-field reg-filter-field--search">
         <label for="reg-pi-q">{{ bundle == 'reg_tender' ? 'Keyword'|t : 'Search'|t }}</label>
         <input id="reg-pi-q" name="q" type="search" maxlength="120" value="{{ filters.query }}" placeholder="{{ 'Title, reference or keyword'|t }}">
       </div>
-      <div>
+      <div class="reg-filter-field">
         <label for="reg-pi-entity">{{ bundle == 'reg_tender' ? 'Entity'|t : 'Company'|t }}</label>
         <select id="reg-pi-entity" name="entity">
           <option value="">{{ 'All companies'|t }}</option>
@@ -26,7 +26,7 @@
         </select>
       </div>
       {% if category_options %}
-        <div>
+        <div class="reg-filter-field">
           <label for="reg-pi-category">{{ bundle == 'reg_tender' ? 'Category'|t : 'Publication type'|t }}</label>
           <select id="reg-pi-category" name="category">
             <option value="">{{ 'All types'|t }}</option>
@@ -35,7 +35,7 @@
         </div>
       {% endif %}
       {% if status_options %}
-        <div>
+        <div class="reg-filter-field">
           <label for="reg-pi-status">{{ 'Status'|t }}</label>
           <select id="reg-pi-status" name="status">
             <option value="">{{ 'Route default'|t }}</option>
@@ -44,7 +44,7 @@
         </div>
       {% endif %}
       {% if bundle == 'reg_publication' or bundle == 'reg_tender' %}
-        <div>
+        <div class="reg-filter-field">
           <label for="reg-pi-year">{{ bundle == 'reg_tender' ? 'Publication year'|t : 'Year'|t }}</label>
           <select id="reg-pi-year" name="year">
             <option value="">{{ 'All years'|t }}</option>
@@ -52,29 +52,29 @@
           </select>
         </div>
         {% if bundle == 'reg_tender' %}
-          <div>
+          <div class="reg-filter-field">
             <label for="reg-pi-closing">{{ 'Closing on or after'|t }}</label>
             <input id="reg-pi-closing" name="closing" type="date" value="{{ filters.closing }}">
           </div>
         {% endif %}
       {% else %}
-        <div>
+        <div class="reg-filter-field">
           <label for="reg-pi-from">{{ 'Published from'|t }}</label>
           <input id="reg-pi-from" name="from" type="date" value="{{ filters.from }}">
         </div>
-        <div>
+        <div class="reg-filter-field">
           <label for="reg-pi-to">{{ 'Published to'|t }}</label>
           <input id="reg-pi-to" name="to" type="date" value="{{ filters.to }}">
         </div>
       {% endif %}
-      <div>
+      <div class="reg-filter-field">
         <label for="reg-pi-language">{{ 'File language'|t }}</label>
         <select id="reg-pi-language" name="language">
           <option value="">{{ 'All languages'|t }}</option>
           {% for value, label in language_options %}<option value="{{ value }}"{% if filters.language == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
         </select>
       </div>
-      <div>
+      <div class="reg-filter-field">
         <label for="reg-pi-sort">{{ 'Sort by'|t }}</label>
         <select id="reg-pi-sort" name="sort">
           <option value="newest"{% if filters.sort == 'newest' %} selected{% endif %}>{{ 'Newest first'|t }}</option>
@@ -83,13 +83,13 @@
           <option value="title"{% if filters.sort == 'title' %} selected{% endif %}>{{ 'Title A–Z'|t }}</option>
         </select>
       </div>
-      <button type="submit">{{ 'Apply filters'|t }}</button>
+      <button class="reg-filter-submit" type="submit">{{ 'Apply filters'|t }}</button>
     </form>
 
-    <div class="reg-pi-results-heading" aria-live="polite">
+    <div class="reg-pi-results-heading reg-filter-results" aria-live="polite">
       <strong>{{ results_count }} {{ results_count == 1 ? 'result'|t : 'results'|t }}</strong>
       {% if filters.query or filters.entity or filters.category or filters.status or filters.language or filters.from or filters.to or filters.year or filters.closing %}
-        <a href="?">{{ 'Clear filters'|t }}</a>
+        <a class="reg-filter-clear" href="?">{{ 'Clear filters'|t }}</a>
       {% endif %}
     </div>
 

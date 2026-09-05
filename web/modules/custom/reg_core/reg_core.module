@@ -572,7 +572,13 @@ function reg_core_theme(): array {
       ],
     ],
     'reg_media_center' => [
-      'variables' => ['corporate' => [], 'sports' => [], 'documents' => [], 'social' => []],
+      'variables' => ['featured' => [], 'corporate' => [], 'sports' => [], 'documents' => [], 'gallery' => [], 'videos' => [], 'social' => [], 'social_available' => FALSE],
+    ],
+    'reg_media_gallery' => [
+      'variables' => ['gallery' => []],
+    ],
+    'reg_media_social' => [
+      'variables' => ['social' => [], 'social_available' => FALSE],
     ],
     'reg_news_card' => [
       'variables' => ['item' => [], 'variant' => 'card', 'analytics_event' => ''],
@@ -596,6 +602,7 @@ function reg_core_theme(): array {
         'years' => [],
         'pager' => NULL,
         'social_follow' => NULL,
+        'youtube_channel_url' => '',
       ],
     ],
     'reg_faq_assistant' => [
@@ -833,6 +840,8 @@ function reg_core_preprocess(array &$variables, string $hook): void {
     'reg_video_archive',
     'reg_news_archive',
     'reg_media_center',
+    'reg_media_gallery',
+    'reg_media_social',
   ];
   if (in_array($hook, $supported, TRUE) && \Drupal::hasService('reg_core.section_hero_resolver')) {
     $variables['section_hero'] = \Drupal::service('reg_core.section_hero_resolver')->resolve();
@@ -853,7 +862,10 @@ function reg_core_preprocess_page(array &$variables): void {
   if (in_array($route_name, ['system.403', 'system.404', '<front>'], TRUE)) {
     return;
   }
-  $custom_routes = [
+  // These controllers/templates own their page-specific hero. Keeping them
+  // out of the page-level fallback prevents a parent section hero from being
+  // rendered immediately before the archive or detail hero.
+  $content_owned_hero_routes = [
     'reg_core.contact',
     'reg_core.customer_services',
     'reg_core.complaints',
@@ -879,6 +891,10 @@ function reg_core_preprocess_page(array &$variables): void {
     'reg_core.jobs_archive',
     'reg_core.job_detail',
     'reg_core.publications',
+    'reg_core.press_releases',
+    'reg_core.announcements',
+    'reg_core.newsletters',
+    'reg_core.corporate_documents',
     'reg_core.publication_detail',
     'reg_core.sports',
     'reg_core.sports_team_basketball_men',
@@ -888,6 +904,8 @@ function reg_core_preprocess_page(array &$variables): void {
     'reg_core.sports_results',
     'reg_core.sports_standings',
     'reg_core.sports_news',
+    'reg_core.sports_news_english',
+    'reg_core.sports_news_kinyarwanda',
     'reg_core.sports_news_detail',
     'reg_core.sports_players',
     'reg_core.sports_player',
@@ -898,12 +916,17 @@ function reg_core_preprocess_page(array &$variables): void {
     'reg_core.sports_search',
     'reg_core.videos',
     'reg_core.video_media_center',
+    'reg_core.media_gallery',
+    'reg_core.media_social',
     'reg_core.news',
+    'reg_core.news_english',
+    'reg_core.news_kinyarwanda',
+    'reg_core.news_detail',
   ];
   if (str_starts_with($route_name, 'reg_core.about')) {
     return;
   }
-  if (!in_array($route_name, $custom_routes, TRUE)) {
+  if (!in_array($route_name, $content_owned_hero_routes, TRUE)) {
     $route_node = \Drupal::routeMatch()->getParameter('node');
     if ($route_name === 'entity.node.canonical' && $route_node instanceof \Drupal\node\NodeInterface && $route_node->bundle() === 'reg_news') {
       return;

@@ -27,4 +27,15 @@ final class PublicInformationRepositoryTest extends UnitTestCase {
     self::assertNull(PublicInformationRepository::daysUntil('not-a-date', $now));
   }
 
+  /** Ensures Media Center archive scopes are strictly allowlisted. */
+  public function testPublicationScopeNormalization(): void {
+    $repository = (new \ReflectionClass(PublicInformationRepository::class))
+      ->newInstanceWithoutConstructor();
+    $method = new \ReflectionMethod(PublicInformationRepository::class, 'normalizeFilters');
+    $newsletter = $method->invoke($repository, ['publication_scope' => 'newsletter']);
+    $invalid = $method->invoke($repository, ['publication_scope' => 'reg_outage']);
+    self::assertSame('newsletter', $newsletter['publication_scope']);
+    self::assertSame('', $invalid['publication_scope']);
+  }
+
 }

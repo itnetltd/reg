@@ -140,6 +140,20 @@ final class PublicInformationRepository implements PublicInformationRepositoryIn
         $query->condition($field . '.target_id', $filters['category']);
       }
     }
+    if ($bundles === ['reg_publication'] && $filters['publication_scope'] !== '') {
+      $field = 'field_reg_publication_category';
+      if ($filters['publication_scope'] === 'publications') {
+        $query->condition($field, [
+          'press_release',
+          'archived_announcement',
+          'newsletter',
+          'corporate_legal',
+        ], 'NOT IN');
+      }
+      else {
+        $query->condition($field, $filters['publication_scope']);
+      }
+    }
 
     $this->applyStatusFilter($query, $bundles, $filters);
     $date_field = $this->dateField($bundles);
@@ -675,6 +689,13 @@ final class PublicInformationRepository implements PublicInformationRepositoryIn
       'entity' => in_array(($filters['entity'] ?? ''), ['reg', 'eucl', 'edcl'], TRUE) ? (string) $filters['entity'] : '',
       'language' => in_array(($filters['language'] ?? ''), ['en', 'rw', 'fr', 'multi'], TRUE) ? (string) $filters['language'] : '',
       'category' => max(0, (int) ($filters['category'] ?? 0)),
+      'publication_scope' => in_array(($filters['publication_scope'] ?? ''), [
+        'publications',
+        'press_release',
+        'archived_announcement',
+        'newsletter',
+        'corporate_legal',
+      ], TRUE) ? (string) $filters['publication_scope'] : '',
       'status' => preg_match('/^[a-z_]+$/', (string) ($filters['status'] ?? '')) ? (string) $filters['status'] : '',
       'mode' => in_array(($filters['mode'] ?? ''), ['current', 'awarded', 'archive', 'results'], TRUE) ? (string) $filters['mode'] : '',
       'from' => $date($filters['from'] ?? ''),

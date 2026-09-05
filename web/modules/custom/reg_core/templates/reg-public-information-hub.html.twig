@@ -2,10 +2,10 @@
   {% include '@reg_core/reg-section-hero.html.twig' with {hero: section_hero} only %}
 
   <div class="reg-container reg-pi__body">
-    <form class="reg-pi-search" action="{{ search_url }}" method="get" role="search">
+    <form class="reg-pi-search reg-filter-bar reg-filter-bar--compact" action="{{ search_url }}" method="get" role="search">
       <label class="visually-hidden" for="reg-pi-hub-search">{{ 'Search public information'|t }}</label>
       <input id="reg-pi-hub-search" name="q" type="search" maxlength="120" placeholder="{{ 'Search tenders, jobs, reports and policies'|t }}">
-      <button type="submit">{{ 'Search'|t }}</button>
+      <button class="reg-filter-submit" type="submit">{{ 'Search'|t }}</button>
     </form>
     <section aria-labelledby="reg-pi-portals">
       <div class="reg-pi-heading">

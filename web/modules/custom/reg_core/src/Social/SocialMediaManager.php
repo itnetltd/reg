@@ -34,6 +34,10 @@ final class SocialMediaManager {
       'label' => 'LinkedIn',
       'aria_label' => 'Follow REG on LinkedIn',
     ],
+    'flickr' => [
+      'label' => 'Flickr',
+      'aria_label' => 'View REG photos on Flickr',
+    ],
   ];
 
   public function __construct(

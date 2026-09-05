@@ -9,8 +9,8 @@
       {% endfor %}
     </nav>
 
-    <form class="faq-search" method="get" action="{{ clear_url }}" role="search">
-      <div class="faq-search__query">
+    <form class="faq-search reg-filter-bar" method="get" action="{{ clear_url }}" role="search">
+      <div class="faq-search__query reg-filter-field reg-filter-field--search">
         <label for="faq-query">{{ 'Search approved FAQs'|t }}</label>
         <input id="faq-query" name="q" type="search" value="{{ query }}" maxlength="120" placeholder="{{ 'For example: check a power outage'|t }}">
       </div>
@@ -23,17 +23,17 @@
           {% endfor %}
         </select>
       </div>
-      <button type="submit">{{ 'Search FAQs'|t }}</button>
-      {% if query or current_category %}<a class="faq-search__clear" href="{{ clear_url }}">{{ 'Clear'|t }}</a>{% endif %}
+      <button class="reg-filter-submit" type="submit">{{ 'Search FAQs'|t }}</button>
+      {% if query or current_category %}<a class="faq-search__clear reg-filter-clear" href="{{ clear_url }}">{{ 'Clear'|t }}</a>{% endif %}
     </form>
 
-    <nav class="faq-categories" aria-label="{{ 'All FAQ categories'|t }}">
+    <nav class="faq-categories reg-filter-chips" aria-label="{{ 'All FAQ categories'|t }}">
       {% for category in category_links %}
         <a class="{{ category.active ? 'is-active' }}" href="{{ category.url }}"{{ category.active ? ' aria-current="page"' }}>{{ category.label }}</a>
       {% endfor %}
     </nav>
 
-    <div class="faq-page__summary" aria-live="polite">
+    <div class="faq-page__summary reg-filter-results" aria-live="polite">
       <p>{{ '@count approved answer(s)'|t({'@count': results_count}) }}</p>
     </div>
 

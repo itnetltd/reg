@@ -4,6 +4,12 @@ portal:
     component:
       css/reg-core.css: {}
 
+public_filters:
+  version: 1.x
+  css:
+    component:
+      css/public-filters.css: {}
+
 homepage_counters:
   version: 1.x
   js:
@@ -64,6 +70,8 @@ faq_page:
   css:
     component:
       css/faq-page.css: {}
+  dependencies:
+    - reg_core/public_filters
 
 faq_admin:
   version: 1.x
@@ -82,18 +90,24 @@ outage_center:
   css:
     component:
       css/outage-center.css: {}
+  dependencies:
+    - reg_core/public_filters
 
 public_information:
   version: 1.x
   css:
     component:
       css/public-information.css: {}
+  dependencies:
+    - reg_core/public_filters
 
 plans:
   version: 1.x
   css:
     component:
       css/plans.css: {}
+  dependencies:
+    - reg_core/public_filters
 
 tenders:
   version: 1.x
@@ -114,6 +128,8 @@ sports_portal:
   css:
     component:
       css/sports-portal.css: {}
+  dependencies:
+    - reg_core/public_filters
 
 customer_support:
   version: 1.x
@@ -123,6 +139,7 @@ customer_support:
   js:
     js/branches.js: {}
   dependencies:
+    - reg_core/public_filters
     - core/drupal
     - core/drupalSettings
     - core/once
@@ -150,6 +167,7 @@ featured_videos:
   js:
     js/featured-videos.js: {}
   dependencies:
+    - reg_core/public_filters
     - core/drupal
     - core/once
 
@@ -167,6 +185,7 @@ newsroom:
   js:
     js/newsroom.js: {}
   dependencies:
+    - reg_core/public_filters
     - core/drupal
     - core/once
 

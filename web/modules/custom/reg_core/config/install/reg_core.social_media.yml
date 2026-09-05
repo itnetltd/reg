@@ -23,6 +23,8 @@ platforms:
     enabled: false
     show_utility: true
     show_footer: true
+    channel_id: ''
+    videos_enabled: false
   instagram:
     url: ''
     enabled: false
@@ -33,3 +35,11 @@ platforms:
     enabled: false
     show_utility: false
     show_footer: true
+  flickr:
+    url: 'https://www.flickr.com/photos/127491669@N07/albums/'
+    enabled: true
+    show_utility: false
+    show_footer: true
+    user_id: '127491669@N07'
+    album_id: ''
+    gallery_enabled: true

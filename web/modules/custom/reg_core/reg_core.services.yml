@@ -293,6 +293,14 @@ services:
     arguments:
       - '@config.factory'
 
+  reg_core.flickr_gallery:
+    class: Drupal\reg_core\Media\FlickrGallery
+    arguments:
+      - '@http_client'
+      - '@config.factory'
+      - '@cache.data'
+      - '@logger.factory'
+
   logger.channel.reg_x_feed:
     parent: logger.channel_base
     arguments: ['reg_x_feed']

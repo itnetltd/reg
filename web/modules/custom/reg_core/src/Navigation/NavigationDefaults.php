@@ -100,14 +100,18 @@ final class NavigationDefaults {
         self::item('public-safeguards', 'Safeguards', 'Ingamba zo kurengera'),
         self::item('public-safety', 'Safety', 'Umutekano', 'reg_core.faq', TRUE, [], ['query' => ['category' => 'safety']]),
       ], ['layout' => 'mega']),
-      self::item('media-center', 'Media Center', 'Itangazamakuru', NULL, FALSE, [
-        self::item('media-news', 'News', 'Amakuru'),
-        self::item('media-press', 'Press Releases', "Itangazo ku banyamakuru"),
-        self::item('media-announcements', 'Announcements', 'Amatangazo'),
-        self::item('media-events', 'Events', 'Ibikorwa'),
-        self::item('media-gallery', 'Photo Gallery', 'Amafoto'),
+      self::item('media-center', 'Media Center', 'Itangazamakuru', 'reg_core.video_media_center', TRUE, [
+        self::item('media-news', 'News', 'Amakuru', NULL, TRUE, [
+          self::item('media-news-corporate', 'Corporate News', 'Amakuru ya REG', 'reg_core.news', TRUE),
+          self::item('media-news-sports', 'Sports News', "Amakuru y'imikino", 'reg_core.sports_news', TRUE),
+        ]),
+        self::item('media-press', 'Press Releases', "Itangazo ku banyamakuru", 'reg_core.press_releases', TRUE),
+        self::item('media-announcements', 'Announcements', 'Amatangazo', 'reg_core.announcements', TRUE),
+        self::item('media-publications', 'Publications', 'Inyandiko', 'reg_core.publications', TRUE),
+        self::item('media-newsletters', 'Newsletters', "Ibinyamakuru bya REG", 'reg_core.newsletters', TRUE),
+        self::item('media-gallery', 'Photo Gallery', 'Amafoto', 'reg_core.media_gallery', TRUE),
         self::item('media-videos', 'Videos', 'Amashusho', 'reg_core.videos', TRUE),
-        self::item('media-social', 'Social Media', 'Imbuga nkoranyambaga'),
+        self::item('media-social', 'Social Media', 'Imbuga nkoranyambaga', 'reg_core.media_social', TRUE),
       ]),
       self::item('sports', 'Sports', 'Imikino', 'reg_core.sports', TRUE, [
         self::item('sports-home', 'Sports Home', "Ahabanza h'imikino", 'reg_core.sports', TRUE),

@@ -501,8 +501,9 @@ reg_core.job_detail:
 reg_core.publications:
   path: '/media/publications'
   defaults:
-    _controller: '\Drupal\reg_core\Controller\PublicInformationController::publications'
+    _controller: '\Drupal\reg_core\Controller\PublicInformationController::mediaPublications'
     _title: 'Publications'
+    _publication_scope: 'publications'
   requirements:
     _permission: 'access content'
 
@@ -511,7 +512,7 @@ reg_core.press_releases:
   defaults:
     _controller: '\Drupal\reg_core\Controller\PublicInformationController::mediaPublications'
     _title: 'Press Releases'
-    _publication_type: 'Press Release'
+    _publication_scope: 'press_release'
   requirements:
     _permission: 'access content'
 
@@ -520,7 +521,7 @@ reg_core.announcements:
   defaults:
     _controller: '\Drupal\reg_core\Controller\PublicInformationController::mediaPublications'
     _title: 'Announcements'
-    _publication_type: 'Announcement Archive'
+    _publication_scope: 'archived_announcement'
   requirements:
     _permission: 'access content'
 
@@ -529,7 +530,7 @@ reg_core.newsletters:
   defaults:
     _controller: '\Drupal\reg_core\Controller\PublicInformationController::mediaPublications'
     _title: 'Newsletters'
-    _publication_type: 'Newsletter'
+    _publication_scope: 'newsletter'
   requirements:
     _permission: 'access content'
 
@@ -538,9 +539,73 @@ reg_core.corporate_documents:
   defaults:
     _controller: '\Drupal\reg_core\Controller\PublicInformationController::mediaPublications'
     _title: 'Corporate / Legal Documents'
-    _publication_type: 'Corporate / Legal Documents'
+    _publication_scope: 'corporate_legal'
   requirements:
     _permission: 'access content'
+
+reg_core.media_legacy:
+  path: '/media-center'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\MediaCenterController::legacy'
+    destination_route: 'reg_core.video_media_center'
+  requirements:
+    _permission: 'access content'
+
+reg_core.press_releases_legacy:
+  path: '/media-center/press-releases'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\MediaCenterController::legacy'
+    destination_route: 'reg_core.press_releases'
+  requirements:
+    _permission: 'access content'
+
+reg_core.publications_legacy:
+  path: '/media-center/publications'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\MediaCenterController::legacy'
+    destination_route: 'reg_core.publications'
+  requirements:
+    _permission: 'access content'
+
+reg_core.announcements_legacy:
+  path: '/media-center/announcements'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\MediaCenterController::legacy'
+    destination_route: 'reg_core.announcements'
+  requirements:
+    _permission: 'access content'
+
+reg_core.newsletters_legacy:
+  path: '/media-center/newsletter'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\MediaCenterController::legacy'
+    destination_route: 'reg_core.newsletters'
+  requirements:
+    _permission: 'access content'
+
+reg_core.corporate_documents_legacy:
+  path: '/media-center/company-laws'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\MediaCenterController::legacy'
+    destination_route: 'reg_core.corporate_documents'
+  requirements:
+    _permission: 'access content'
+
+reg_core.press_release_detail_legacy:
+  path: '/media-center/details/news/{slug}'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationController::legacyPublication'
+  requirements:
+    _permission: 'access content'
+    slug: '[^/]+'
+
+reg_core.announcement_detail_legacy:
+  path: '/media-center/announcements/announcements-details/news/{slug}'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\PublicInformationController::legacyPublication'
+  requirements:
+    _permission: 'access content'
+    slug: '[^/]+'
 
 reg_core.publication_detail:
   path: '/media/publications/{publication}'
@@ -1002,6 +1067,22 @@ reg_core.video_media_center:
   defaults:
     _controller: '\Drupal\reg_core\Controller\MediaCenterController::landing'
     _title: 'Media Center'
+  requirements:
+    _permission: 'access content'
+
+reg_core.media_gallery:
+  path: '/media/gallery'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\MediaCenterController::gallery'
+    _title: 'Photo Gallery'
+  requirements:
+    _permission: 'access content'
+
+reg_core.media_social:
+  path: '/media/social-media'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\MediaCenterController::social'
+    _title: 'Social Media'
   requirements:
     _permission: 'access content'
 

@@ -113,6 +113,34 @@ final class NavigationDefaultsTest extends TestCase {
   }
 
   /**
+   * Ensures Media Center keeps one canonical news hierarchy.
+   */
+  public function testMediaCenterInformationArchitecture(): void {
+    $media_center = array_values(array_filter(
+      NavigationDefaults::main(),
+      static fn(array $item): bool => $item['id'] === 'media-center',
+    ))[0];
+
+    $this->assertSame('reg_core.video_media_center', $media_center['route']);
+    $this->assertSame([
+      'News',
+      'Press Releases',
+      'Announcements',
+      'Publications',
+      'Newsletters',
+      'Photo Gallery',
+      'Videos',
+      'Social Media',
+    ], array_column($media_center['children'], 'title'));
+    $this->assertSame([
+      'Corporate News',
+      'Sports News',
+    ], array_column($media_center['children'][0]['children'], 'title'));
+    $this->assertSame('reg_core.news', $media_center['children'][0]['children'][0]['route']);
+    $this->assertSame('reg_core.sports_news', $media_center['children'][0]['children'][1]['route']);
+  }
+
+  /**
    * Recursively validates definition shape and depth.
    */
   private function assertDefinitions(array $definitions, int $depth, array &$seen): void {
