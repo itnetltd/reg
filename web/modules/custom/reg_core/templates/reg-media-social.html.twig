@@ -1,0 +1,18 @@
+<div class="reg-media-center reg-media-social">
+  {% set hero = section_hero|default({})|merge({
+    eyebrow: 'Media Center'|t,
+    title: 'Social Media'|t,
+    description: 'Connect with Rwanda Energy Group through verified official channels.'|t
+  }) %}
+  {% include '@reg_core/reg-section-hero.html.twig' with {hero: hero} only %}
+  <main class="reg-container reg-media-center__body">
+    {% if social_available %}
+      {{ social }}
+    {% else %}
+      <section class="reg-media-center__fallback">
+        <h2>{{ 'Official REG channels'|t }}</h2>
+        <p>{{ 'Official social-media links are temporarily unavailable. They can be enabled in the central REG social-media settings.'|t }}</p>
+      </section>
+    {% endif %}
+  </main>
+</div>

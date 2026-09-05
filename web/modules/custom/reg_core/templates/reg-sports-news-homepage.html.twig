@@ -1,0 +1,56 @@
+{% macro card(item, modifier, compact_cta) %}
+  <article class="reg-sports-news-card reg-sports-news-card--{{ modifier }}">
+    <a href="{{ item.url }}" data-reg-analytics-event="sports_article_view" data-reg-analytics-id="{{ item.id }}">
+      <div class="reg-sports-news-card__media">
+        {% if item.image.render %}
+          {{ item.image.render }}
+        {% else %}
+          <span class="reg-sports-news-card__fallback" aria-hidden="true"><span>REG SPORTS</span></span>
+        {% endif %}
+      </div>
+      <div class="reg-sports-news-card__content">
+        <div class="reg-sports-news-card__meta">
+          <span>{{ item.sport ?: item.category.label ?: 'Sports news'|t }}</span>
+          {% if item.date %}<time datetime="{{ item.date_iso }}">{{ item.date }}</time>{% endif %}
+        </div>
+        <h3>{{ item.title }}</h3>
+        {% if item.summary %}<p>{{ item.summary|striptags }}</p>{% endif %}
+        <strong>
+          {% if compact_cta %}<span class="visually-hidden">{{ 'Read story'|t }}</span>{% else %}{{ 'Read story'|t }}{% endif %}
+          <span aria-hidden="true">&rarr;</span>
+        </strong>
+      </div>
+    </a>
+  </article>
+{% endmacro %}
+
+<div class="reg-sports-heading reg-sports-heading--split">
+  <div>
+    <span class="reg-sports-kicker">{{ 'Latest news'|t }}</span>
+    <h2 id="reg-sports-news-home">{{ 'Sports news'|t }}</h2>
+  </div>
+  <a href="{{ path('reg_core.sports_news') }}">{{ 'All sports news'|t }} <span aria-hidden="true">&rarr;</span></a>
+</div>
+
+{% if items %}
+  <div class="reg-sports-news__lead">
+    {{ _self.card(items|first, 'featured', false) }}
+    {% if items|length > 1 %}
+      <div class="reg-sports-news__secondary">
+        {% for item in items|slice(1, 2) %}
+          {{ _self.card(item, 'secondary', true) }}
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  {% if items|length > 3 %}
+    <div class="reg-sports-news__additional">
+      {% for item in items|slice(3, 3) %}
+        {{ _self.card(item, 'additional', false) }}
+      {% endfor %}
+    </div>
+  {% endif %}
+{% else %}
+  <div class="reg-sports-empty"><p>{{ 'No sports news is currently published.'|t }}</p></div>
+{% endif %}

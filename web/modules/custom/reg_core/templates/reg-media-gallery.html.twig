@@ -1,0 +1,32 @@
+<div class="reg-media-center reg-media-gallery">
+  {% set hero = section_hero|default({})|merge({
+    eyebrow: 'Media Center'|t,
+    title: 'Photo Gallery'|t,
+    description: 'Photos published through Rwanda Energy Group\'s official Flickr gallery.'|t
+  }) %}
+  {% include '@reg_core/reg-section-hero.html.twig' with {hero: hero} only %}
+
+  <main class="reg-container reg-media-center__body">
+    {% if gallery.items %}
+      <div class="reg-media-gallery__grid">
+        {% for photo in gallery.items %}
+          <a href="{{ photo.url }}" target="_blank" rel="noopener noreferrer">
+            <span class="reg-media-gallery__image"><img src="{{ photo.image_url }}" alt="{{ photo.title }}" width="640" height="480" loading="lazy"></span>
+            <span>{{ photo.title }}</span>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <section class="reg-media-center__fallback">
+        <h2>{{ 'REG photo gallery'|t }}</h2>
+        <p>{{ gallery.enabled ? 'The Flickr gallery is temporarily unavailable. Please use the official gallery link.'|t : 'The official Flickr gallery has not yet been enabled in REG social-media settings.'|t }}</p>
+        {% if gallery.profile_url %}
+          <a href="{{ gallery.profile_url }}" target="_blank" rel="noopener noreferrer">{{ 'View REG photo gallery on Flickr'|t }} &rarr;</a>
+        {% endif %}
+      </section>
+    {% endif %}
+    {% if gallery.items and gallery.profile_url %}
+      <a class="reg-media-center__external" href="{{ gallery.profile_url }}" target="_blank" rel="noopener noreferrer">{{ 'View REG photo gallery on Flickr'|t }} &rarr;</a>
+    {% endif %}
+  </main>
+</div>

@@ -1,0 +1,209 @@
+/* Shared public-facing filter pattern. Scope every rule to .reg-filter-bar. */
+.reg-filter-bar.reg-filter-bar {
+  display: grid;
+  grid-template-columns: minmax(17.5rem, 2fr) repeat(2, minmax(9.5rem, .85fr)) minmax(9rem, auto);
+  align-items: end;
+  gap: 12px 14px;
+  margin: 0 0 20px;
+  padding: 20px;
+  border: 1px solid #e3ddda;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(40, 23, 21, .04);
+}
+
+.reg-filter-bar.reg-filter-bar--dense { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.reg-filter-bar.reg-filter-bar--documents { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.reg-filter-bar.reg-filter-bar--news-department { grid-template-columns: minmax(17.5rem, 2fr) repeat(3, minmax(8rem, .8fr)) minmax(9rem, auto); }
+.reg-filter-bar.reg-filter-bar--wide { grid-template-columns: minmax(15rem, 1.7fr) repeat(4, minmax(8rem, 1fr)) minmax(9rem, auto); }
+.reg-filter-bar.reg-filter-bar--with-clear { grid-template-columns: minmax(17.5rem, 2fr) repeat(2, minmax(9rem, .8fr)) minmax(9rem, auto) auto; }
+.reg-filter-bar.reg-filter-bar--compact { grid-template-columns: minmax(0, 1fr) auto; }
+.reg-filter-bar .reg-filter-field { min-width: 0; }
+.reg-filter-bar--dense .reg-filter-field--search { grid-column: span 2; }
+.reg-filter-bar--wide .reg-filter-field--search { grid-column: auto; }
+
+.reg-filter-bar .reg-filter-field > label,
+.reg-filter-bar label.reg-filter-field,
+.reg-filter-bar label {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  color: #281715;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.reg-filter-bar.reg-filter-bar input,
+.reg-filter-bar.reg-filter-bar select {
+  width: 100%;
+  min-height: 48px;
+  margin: 0;
+  padding: 9px 12px;
+  border: 1px solid #cfc7c5;
+  border-radius: 10px;
+  color: #281715;
+  background: #fff;
+  font: inherit;
+}
+
+.reg-filter-bar.reg-filter-bar input:focus,
+.reg-filter-bar.reg-filter-bar select:focus {
+  border-color: #da291c;
+  outline: 3px solid rgba(218, 41, 28, .2);
+  outline-offset: 1px;
+}
+
+.reg-filter-bar .reg-filter-submit,
+.reg-filter-bar > button[type="submit"] {
+  display: inline-flex;
+  width: min(100%, 10.5rem);
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 18px;
+  border: 0;
+  border-radius: 10px;
+  color: #fff;
+  background: #da291c;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.reg-filter-bar .reg-filter-submit:hover,
+.reg-filter-bar .reg-filter-submit:focus-visible,
+.reg-filter-bar > button[type="submit"]:hover,
+.reg-filter-bar > button[type="submit"]:focus-visible { background: #aa2017; }
+
+.reg-filter-bar .reg-filter-clear {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: #b91f15;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.reg-filter-bar .reg-filter-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.reg-filter-bar .reg-filter-more { position: relative; align-self: end; }
+.reg-filter-bar .reg-filter-more > summary {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  padding: 9px 10px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.reg-filter-context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 20px;
+  margin: 0 0 20px;
+}
+
+.reg-filter-context__groups {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+}
+
+.reg-filter-chips.reg-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+}
+
+.reg-filter-chips.reg-filter-chips .reg-filter-chip,
+.reg-filter-chips.reg-filter-chips a {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  padding: 8px 14px;
+  border: 1px solid #d9d3d1;
+  border-radius: 999px;
+  color: #281715;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1;
+  text-decoration: none;
+  text-transform: none;
+}
+
+.reg-filter-chips.reg-filter-chips .reg-filter-chip.is-active,
+.reg-filter-chips.reg-filter-chips a.is-active,
+.reg-filter-chips.reg-filter-chips .reg-filter-chip:hover,
+.reg-filter-chips.reg-filter-chips a:hover,
+.reg-filter-chips.reg-filter-chips .reg-filter-chip:focus-visible,
+.reg-filter-chips.reg-filter-chips a:focus-visible {
+  border-color: #da291c;
+  color: #fff;
+  background: #da291c;
+}
+
+.reg-filter-results.reg-filter-results {
+  margin: 0 0 20px;
+  color: #685a57;
+  font-size: 13px;
+}
+.reg-filter-context .reg-filter-results { flex: 0 0 auto; margin: 0; }
+.reg-filter-results .reg-filter-clear { color: #b91f15; font-weight: 800; }
+.reg-news-filters.reg-filter-bar { margin-bottom: 12px; }
+.reg-newsroom .reg-filter-context { margin-bottom: 16px; }
+
+@media (max-width: 1100px) {
+  .reg-filter-bar.reg-filter-bar,
+  .reg-filter-bar.reg-filter-bar--dense,
+  .reg-filter-bar.reg-filter-bar--documents,
+  .reg-filter-bar.reg-filter-bar--news-department,
+  .reg-filter-bar.reg-filter-bar--wide,
+  .reg-filter-bar.reg-filter-bar--with-clear {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 18px;
+  }
+  .reg-filter-bar .reg-filter-field--search,
+  .reg-filter-bar--dense .reg-filter-field--search { grid-column: 1 / -1; }
+}
+
+@media (max-width: 640px) {
+  .reg-filter-bar.reg-filter-bar,
+  .reg-filter-bar.reg-filter-bar--dense,
+  .reg-filter-bar.reg-filter-bar--documents,
+  .reg-filter-bar.reg-filter-bar--news-department,
+  .reg-filter-bar.reg-filter-bar--wide,
+  .reg-filter-bar.reg-filter-bar--with-clear,
+  .reg-filter-bar.reg-filter-bar--compact {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 16px;
+    border-radius: 14px;
+  }
+  .reg-filter-bar .reg-filter-field--search,
+  .reg-filter-bar--dense .reg-filter-field--search { grid-column: auto; }
+  .reg-filter-bar .reg-filter-submit,
+  .reg-filter-bar > button[type="submit"],
+  .reg-filter-bar .reg-filter-actions { width: 100%; }
+  .reg-filter-context,
+  .reg-filter-context__groups { align-items: flex-start; flex-direction: column; }
+  .reg-filter-chips.reg-filter-chips {
+    flex-wrap: nowrap;
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: 3px;
+  }
+}
