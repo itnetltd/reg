@@ -8,36 +8,7 @@
   color: var(--pi-ink);
   background: #fff;
 }
-
-.reg-pi-hero {
-  position: relative;
-  overflow: hidden;
-  color: #fff;
-  background: linear-gradient(125deg, #281715 0%, #4a211d 64%, #7d241c 100%);
-}
-
-.reg-pi-hero::after {
-  position: absolute;
-  inset: 0 0 0 auto;
-  width: min(42vw, 620px);
-  background: radial-gradient(circle at 60% 40%, rgba(218, 41, 28, .8), transparent 55%);
-  content: "";
-  pointer-events: none;
-}
-
-.reg-pi-hero__inner {
-  position: relative;
-  z-index: 1;
-  padding-block: clamp(72px, 10vw, 128px);
-}
-
-.reg-pi-hero--compact .reg-pi-hero__inner { padding-block: clamp(56px, 8vw, 88px); }
-.reg-pi-hero--detail .reg-pi-hero__inner { max-width: 980px; padding-block: clamp(48px, 7vw, 80px); }
-.reg-pi-hero h1 { max-width: 900px; margin: 0 0 18px; font-size: clamp(2.5rem, 6vw, 5rem); letter-spacing: -.045em; }
-.reg-pi-hero--compact h1, .reg-pi-hero--detail h1 { font-size: clamp(2.35rem, 5vw, 4rem); }
-.reg-pi-hero p { max-width: 760px; margin-bottom: 30px; color: rgba(255, 255, 255, .82); font-size: clamp(1rem, 2vw, 1.2rem); }
 .reg-pi-kicker, .reg-pi-type { color: var(--pi-red); font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
-.reg-pi-hero .reg-pi-kicker { color: #ffb4ad; }
 .reg-pi__body { padding-block: clamp(48px, 6vw, 80px); }
 .reg-pi-heading { margin-bottom: 30px; }
 .reg-pi-heading h2 { margin: 7px 0 0; font-size: clamp(2rem, 4vw, 3rem); }
@@ -124,10 +95,6 @@
 .reg-pi-action-note .reg-pi-button { width: 100%; margin-top: 8px; text-align: center; }
 .reg-pi-form-note { max-width: 760px; color: var(--pi-muted); font-size: .9rem; }
 
-.reg-pi .pager { margin-top: 36px; }
-.reg-pi .pager__items { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; padding: 0; }
-.reg-pi .pager__item a { display: inline-flex; min-width: 42px; min-height: 42px; align-items: center; justify-content: center; border: 1px solid var(--pi-border); border-radius: 8px; }
-.reg-pi .pager__item.is-active a, .reg-pi .pager__item a:hover { border-color: var(--pi-red); color: #fff; background: var(--pi-red); }
 
 @media (max-width: 1050px) {
   .reg-pi-hub-grid, .reg-pi-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -140,8 +107,7 @@
 }
 
 @media (max-width: 700px) {
-  .reg-pi-hero__inner, .reg-pi__body { padding-inline: 20px; }
-  .reg-pi-hero::after { width: 100%; opacity: .55; }
+  .reg-pi__body { padding-inline: 20px; }
   .reg-pi-search { flex-direction: column; }
   .reg-pi-search button { width: 100%; }
   .reg-pi-hub-grid, .reg-pi-list, .reg-pi-filter, .reg-pi-filter--search, .reg-pi-detail__layout, .reg-pi-handoff { grid-template-columns: 1fr; }

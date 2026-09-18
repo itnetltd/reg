@@ -1,0 +1,47 @@
+{#
+  Public REG pager. Drupal supplies every URL, including active query filters.
+  Retain core classes, link attributes and the unique accessible heading.
+#}
+{% if items %}
+  {{ attach_library('reg_theme/pager') }}
+  <nav class="pager reg-pager" aria-label="{{ 'Pagination'|t }}" aria-labelledby="{{ heading_id }}">
+    <{{ pagination_heading_level }} id="{{ heading_id }}" class="visually-hidden">{{ 'Pagination'|t }}</{{ pagination_heading_level }}>
+    <ul class="pager__items js-pager__items reg-pager__items" role="list">
+      {% if items.first %}
+        <li class="pager__item pager__item--first reg-pager__item reg-pager__item--edge">
+          <a href="{{ items.first.href }}" title="{{ 'Go to first page'|t }}"{{ items.first.attributes.addClass('reg-pager__link')|without('href', 'title') }}>{{ 'First'|t }}</a>
+        </li>
+      {% endif %}
+      {% if items.previous %}
+        <li class="pager__item pager__item--previous reg-pager__item">
+          <a href="{{ items.previous.href }}" title="{{ 'Go to previous page'|t }}" rel="prev"{{ items.previous.attributes.addClass('reg-pager__link')|without('href', 'title', 'rel') }}><span aria-hidden="true">←</span><span class="reg-pager__label">{{ 'Previous'|t }}</span></a>
+        </li>
+      {% endif %}
+      {% if ellipses.previous %}
+        <li class="pager__item pager__item--ellipsis reg-pager__item reg-pager__item--ellipsis" role="presentation">&hellip;</li>
+      {% endif %}
+      {% for key, item in items.pages %}
+        {% set active = current == key %}
+        <li class="pager__item reg-pager__item{{ active ? ' is-active reg-pager__item--active' : '' }}{{ key < current - 1 or key > current + 1 ? ' reg-pager__item--distant' : '' }}">
+          {% set title = active ? 'Current page'|t : 'Go to page @key'|t({'@key': key}) %}
+          <a href="{{ item.href }}" title="{{ title }}"{{ item.attributes.addClass('reg-pager__link')|without('href', 'title') }}>
+            <span class="visually-hidden">{{ 'Page'|t }} </span>{{- key -}}
+          </a>
+        </li>
+      {% endfor %}
+      {% if ellipses.next %}
+        <li class="pager__item pager__item--ellipsis reg-pager__item reg-pager__item--ellipsis" role="presentation">&hellip;</li>
+      {% endif %}
+      {% if items.next %}
+        <li class="pager__item pager__item--next reg-pager__item">
+          <a href="{{ items.next.href }}" title="{{ 'Go to next page'|t }}" rel="next"{{ items.next.attributes.addClass('reg-pager__link')|without('href', 'title', 'rel') }}><span class="reg-pager__label">{{ 'Next'|t }}</span><span aria-hidden="true">→</span></a>
+        </li>
+      {% endif %}
+      {% if items.last %}
+        <li class="pager__item pager__item--last reg-pager__item reg-pager__item--edge">
+          <a href="{{ items.last.href }}" title="{{ 'Go to last page'|t }}"{{ items.last.attributes.addClass('reg-pager__link')|without('href', 'title') }}>{{ 'Last'|t }}</a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endif %}

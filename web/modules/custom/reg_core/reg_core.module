@@ -547,7 +547,7 @@ function reg_core_theme(): array {
       'variables' => ['partners' => []],
     ],
     'reg_homepage_energy_tools' => [
-      'variables' => ['tools' => []],
+      'variables' => ['tools' => [], 'video' => []],
     ],
     'reg_homepage_videos' => [
       'variables' => ['videos' => [], 'view_all_url' => ''],

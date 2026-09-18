@@ -13,6 +13,11 @@ interface VideoRepositoryInterface {
   public function featured(int $limit = 5): array;
 
   /**
+   * Returns one featured Customer Education or Energy Awareness video.
+   */
+  public function educational(): array;
+
+  /**
    * Returns a filtered archive page and total result count.
    */
   public function archive(array $filters, int $page, int $limit = 9): array;

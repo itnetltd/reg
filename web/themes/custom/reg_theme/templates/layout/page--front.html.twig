@@ -29,9 +29,9 @@
       <div class="reg-container">
         <div class="section-heading"><span class="section-kicker">{{ 'Immediate actions'|t }}</span><h2>{{ 'Quick Services'|t }}</h2><p>{{ 'Access the most requested REG and EUCL services through one consistent gateway.'|t }}</p></div>
         {% if page.quick_services %}{{ page.quick_services }}{% else %}
-          <div class="service-grid">
+          <div class="quick-services-grid">
             {% for item in reg_fallback.services %}
-              {{ include('reg_theme:service-card', {item: item}, with_context = false) }}
+              {{ include('reg_theme:quick-service', {item: item, featured: loop.first}, with_context = false) }}
             {% endfor %}
           </div>
         {% endif %}

@@ -1,0 +1,108 @@
+.education-video {
+  min-width: 0;
+  border: 1px solid #e5dfdc;
+  border-top: 4px solid #da291c;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(40, 23, 21, .08);
+}
+
+.education-video__layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.education-video__thumbnail {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 100%;
+  aspect-ratio: 3 / 1;
+  overflow: hidden;
+  border: 0;
+  border-radius: 12px 12px 0 0;
+  padding: 0;
+  background: #281715;
+  cursor: pointer;
+}
+
+.education-video__thumbnail img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.education-video__play {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #b51e14;
+  color: #fff;
+  font-size: 15px;
+}
+
+.education-video__copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  padding: 12px 16px;
+}
+
+.education-video__copy .section-kicker {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.education-video__copy h3 {
+  margin: 6px 0;
+  font-size: 26px;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.education-video__copy p {
+  margin: 0 0 6px;
+  color: #655a57;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.education-video__copy h3,
+.education-video__copy p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.education-video__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  margin-top: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #b51e14;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.education-video__cta:hover { text-decoration: underline; }
+.education-video button:focus-visible { outline: 3px solid #da291c; outline-offset: 4px; }

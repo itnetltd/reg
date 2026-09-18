@@ -13,9 +13,6 @@
 body.reg-video-modal-open { overflow: hidden; }
 
 .reg-video-archive { padding-block: 72px 96px; }
-.reg-video-archive__header { max-width: 760px; margin-bottom: 38px; }
-.reg-video-archive__header h1 { margin: 8px 0 12px; font-size: clamp(2.6rem, 6vw, 4.8rem); text-transform: uppercase; }
-.reg-video-archive__header p { color: #685a57; font-size: 18px; }
 .reg-video-filters { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(170px, .45fr) minmax(140px, .3fr) auto auto; align-items: end; gap: 14px; margin-bottom: 24px; padding: 22px; border: 1px solid #e7dcda; border-radius: 12px; background: #fbf7f6; }
 .reg-video-filters label { display: grid; gap: 7px; color: #281715; font-size: 12px; font-weight: 750; letter-spacing: .04em; text-transform: uppercase; }
 .reg-video-filters input, .reg-video-filters select { min-height: 46px; width: 100%; padding: 10px 12px; border: 1px solid #d8cac7; border-radius: 8px; color: #281715; background: #fff; font: inherit; font-size: 15px; text-transform: none; }

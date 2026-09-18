@@ -114,9 +114,6 @@
 .reg-tender-homepage-empty p { margin: 0; }
 
 .reg-tender-detail { color: var(--tender-ink); background: #fff; }
-.reg-tender-detail .reg-section-hero__content { width: min(100%, 1050px); }
-.reg-tender-detail .reg-section-hero h1 { max-width: 1050px; line-height: 1.03; }
-.reg-tender-detail .reg-section-hero p { display: -webkit-box; max-width: 850px; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .reg-tender-detail__body { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(290px, .75fr); gap: clamp(36px, 6vw, 76px); padding-block: clamp(38px, 5vw, 64px); }
 .reg-tender-detail__status-line { justify-content: flex-start; flex-wrap: wrap; margin-bottom: 32px; color: var(--tender-muted); font-size: .82rem; }
 .reg-tender-detail__status-line > span + span { overflow-wrap: anywhere; }
@@ -170,7 +167,6 @@
   .reg-tender-feature-grid--count-1,
   .reg-tender-feature-grid--count-2 { max-width: none; grid-template-columns: 1fr; }
   .reg-tender-feature-card { min-height: 0; }
-  .reg-tender-detail .reg-section-hero h1 { line-height: 1.04; }
   .reg-tender-detail__body { padding-inline: 20px; }
   .reg-tender-detail__aside { order: -1; }
   .reg-tender-documents li,

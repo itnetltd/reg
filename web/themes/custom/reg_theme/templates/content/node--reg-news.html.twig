@@ -1,18 +1,23 @@
+{{ attach_library('reg_core/section_hero') }}
 {{ attach_library('reg_core/newsroom') }}
 <article{{ attributes.addClass('reg-news-article') }} data-reg-analytics-event="news_view" data-reg-analytics-id="{{ news.id }}">
-  <header class="reg-news-article__header">
-    <div class="reg-news-article__header-inner">
-      <p class="reg-news-article__kicker">{{ news.section == 'sports' ? 'REG Sports'|t : 'Media Center'|t }} / {{ news.section == 'sports' ? 'Sports News'|t : 'Corporate News'|t }}</p>
-      <h1>{{ news.title }}</h1>
-      {% if news.summary %}<p class="reg-news-article__summary">{{ news.summary }}</p>{% endif %}
-      <div class="reg-news-article__meta">
-        {% if news.date %}<time datetime="{{ news.date_iso }}">{{ 'Published:'|t }} {{ news.date }}</time>{% endif %}
-        {% if news.date and news.category.label %}<span aria-hidden="true">•</span>{% endif %}
-        {% if news.category.label %}<span>{{ news.category.label }}</span>{% endif %}
-        {% if news.department %}<span aria-hidden="true">•</span><span>{{ news.department }}</span>{% endif %}
+  <header class="reg-page-hero reg-page-hero--detail reg-news-article__header">
+    <div class="reg-page-hero__inner reg-news-article__header-inner">
+      <div class="reg-page-hero__content">
+        <p class="reg-page-hero__eyebrow reg-news-article__kicker">{{ news.section == 'sports' ? 'REG Sports'|t : 'Media Center'|t }} / {{ news.section == 'sports' ? 'Sports News'|t : 'Corporate News'|t }}</p>
+        <h1 class="reg-page-hero__title">{{ news.title }}</h1>
+        <div class="reg-news-article__meta">
+          {% if news.date %}<time datetime="{{ news.date_iso }}">{{ 'Published:'|t }} {{ news.date }}</time>{% endif %}
+          {% if news.date and news.category.label %}<span aria-hidden="true">•</span>{% endif %}
+          {% if news.category.label %}<span>{{ news.category.label }}</span>{% endif %}
+          {% if news.department %}<span aria-hidden="true">•</span><span>{{ news.department }}</span>{% endif %}
+        </div>
       </div>
     </div>
   </header>
+  {% if news.summary %}
+    <div class="reg-page-hero-summary"><p class="reg-news-article__summary">{{ news.summary }}</p></div>
+  {% endif %}
 
   {% if news.image.render %}
     <figure class="reg-news-article__hero">

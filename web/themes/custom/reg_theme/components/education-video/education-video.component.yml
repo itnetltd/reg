@@ -1,0 +1,8 @@
+name: Customer education video
+status: stable
+props:
+  type: object
+  required: [video]
+  properties:
+    video:
+      type: object

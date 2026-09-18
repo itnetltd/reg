@@ -7,6 +7,7 @@ use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\reg_core\Energy\EnergyToolRepositoryInterface;
+use Drupal\reg_core\Video\VideoRepositoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -24,6 +25,7 @@ final class HomepageEnergyToolsBlock extends BlockBase implements ContainerFacto
     $plugin_id,
     $plugin_definition,
     private readonly EnergyToolRepositoryInterface $repository,
+    private readonly VideoRepositoryInterface $videos,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
@@ -37,6 +39,7 @@ final class HomepageEnergyToolsBlock extends BlockBase implements ContainerFacto
       $plugin_id,
       $plugin_definition,
       $container->get(EnergyToolRepositoryInterface::class),
+      $container->get(VideoRepositoryInterface::class),
     );
   }
 
@@ -45,15 +48,15 @@ final class HomepageEnergyToolsBlock extends BlockBase implements ContainerFacto
    */
   public function build(): array {
     $tools = $this->repository->homepageTools(3);
-    if ($tools === []) {
-      return [];
-    }
+    $video = $this->videos->educational();
     return [
       '#theme' => 'reg_homepage_energy_tools',
       '#tools' => $tools,
+      '#video' => $video,
+      '#attached' => ['library' => $video ? ['reg_core/featured_videos'] : []],
       '#cache' => [
-        'contexts' => ['languages:language_interface'],
-        'tags' => ['node_list:reg_energy_tool', 'media_list', 'file_list', 'config:reg_core.settings'],
+        'contexts' => ['languages:language_interface', 'languages:language_content', 'user.permissions', 'user.node_grants:view'],
+        'tags' => ['node_list', 'node_list:reg_energy_tool', 'node_list:reg_video', 'taxonomy_term_list:reg_video_category', 'taxonomy_term_list', 'media_list', 'file_list', 'config:reg_core.settings', 'config:image.style.reg_homepage_video_small', 'config:image.style.reg_homepage_video', 'config:image.style.reg_homepage_video_large'],
         'max-age' => 300,
       ],
     ];

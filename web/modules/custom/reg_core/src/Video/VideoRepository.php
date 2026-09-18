@@ -70,6 +70,41 @@ final class VideoRepository implements VideoRepositoryInterface {
   /**
    * {@inheritdoc}
    */
+  public function educational(): array {
+    $langcode = $this->regLanguageManager->getCurrentLanguage()->getId();
+    $categories = $this->regEntityTypeManager->getStorage('taxonomy_term')->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('vid', 'reg_video_category')
+      ->condition('name', ['Customer Education', 'Energy Awareness'], 'IN')
+      ->execute();
+    if (!$categories) {
+      return [];
+    }
+    $storage = $this->regEntityTypeManager->getStorage('node');
+    $ids = $storage->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('type', 'reg_video')
+      ->condition('status', NodeInterface::PUBLISHED)
+      ->condition('langcode', $langcode)
+      ->condition('field_reg_featured', 1)
+      ->condition('field_reg_video_category.target_id', array_values($categories), 'IN')
+      ->sort('field_reg_order', 'ASC')
+      ->sort('field_reg_publication_date', 'DESC')
+      ->sort('nid', 'DESC')
+      ->execute();
+    foreach ($ids as $id) {
+      $node = $storage->load($id);
+      $item = $node instanceof NodeInterface ? $this->normalize($node, $langcode) : [];
+      if ($item !== []) {
+        return $item;
+      }
+    }
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function archive(array $filters, int $page, int $limit = 9): array {
     $langcode = $this->regLanguageManager->getCurrentLanguage()->getId();
     $storage = $this->regEntityTypeManager->getStorage('node');

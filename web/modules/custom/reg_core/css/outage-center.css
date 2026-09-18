@@ -1,8 +1,4 @@
 .outage-center { color: #281715; background: #f8f9fa; }
-.outage-center__hero { padding-block: clamp(52px, 8vw, 96px); color: #fff; background: radial-gradient(circle at 82% 28%, rgba(218, 41, 28, .48), transparent 24%), linear-gradient(125deg, #281715, #111); }
-.outage-center__hero-inner { max-width: 1280px; }
-.outage-center__hero h1 { max-width: 760px; margin: 0 0 16px; font-size: clamp(2.7rem, 6vw, 5rem); font-weight: 400; letter-spacing: -.035em; }
-.outage-center__hero p { max-width: 680px; margin: 0; color: rgba(255, 255, 255, .78); font-size: 18px; }
 .outage-center__kicker { display: block; margin-bottom: 12px; color: #ff8b82; font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
 .outage-center__content { padding-block: 40px 96px; }
 .outage-center__notice { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 28px; padding: 16px 18px; border: 1px solid #b9d8ef; border-radius: 12px; color: #15344f; background: #edf6ff; }
@@ -46,10 +42,7 @@
 .outage-empty > span { display: grid; width: 42px; height: 42px; flex: 0 0 auto; place-items: center; border-radius: 50%; color: #246140; background: #e7f6ed; font-weight: 900; }
 .outage-empty h2 { margin-bottom: 6px; font-size: 24px; }
 .outage-empty p { margin: 0; color: #5d5e61; }
-.outage-center__hero--detail { padding-block: 58px; }
 .outage-detail__back { display: inline-block; margin-bottom: 28px; color: rgba(255, 255, 255, .8); font-weight: 700; }
-.outage-center__hero--detail .outage-card__topline { color: rgba(255, 255, 255, .72); }
-.outage-center__hero--detail h1 { font-size: clamp(2.3rem, 5vw, 4rem); }
 .outage-detail__layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(260px, .8fr); align-items: start; gap: 24px; }
 .outage-detail__main, .outage-detail__help { padding: clamp(22px, 4vw, 34px); border: 1px solid #e0e0e0; border-radius: 16px; background: #fff; }
 .outage-detail__main > h2, .outage-detail__help h2 { font-size: 26px; }
@@ -95,7 +88,6 @@
 
 @media (max-width: 620px) {
   .outage-center__content { padding-block: 28px 64px; }
-  .outage-center__hero p { font-size: 16px; }
   .outage-filters { grid-template-columns: 1fr; padding: 18px; }
   .outage-filters__field--search { grid-column: auto; }
   .outage-filters button, .outage-filters__clear { width: 100%; text-align: center; }

@@ -1,5 +1,5 @@
 <main class="reg-support reg-branches">
-  {% include '@reg_core/reg-section-hero.html.twig' with {hero: section_hero} only %}
+  {% include '@reg_core/reg-section-hero.html.twig' with {hero: section_hero, variant: 'archive'} only %}
   <div class="reg-container">
     <form class="reg-branch-filters reg-filter-bar reg-filter-bar--wide" method="get" data-reg-analytics-submit="branch_search">
       <label><span>{{ 'Search'|t }}</span><input name="q" type="search" maxlength="120" value="{{ filters.query }}" placeholder="{{ 'Branch, manager, email, district or entity'|t }}"></label>

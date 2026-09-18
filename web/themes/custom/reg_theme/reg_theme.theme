@@ -102,14 +102,10 @@ function reg_theme_preprocess_page(array &$variables): void {
   ];
 
   $fallback_services = [
-    ['eyebrow' => $translation->translate('Digital services'), 'title' => $translation->translate('Online Services'), 'description' => $translation->translate('Open the official service gateway.'), 'url' => $variables['reg_links']['online_services']],
-    ['eyebrow' => $translation->translate('Connection'), 'title' => $translation->translate('New Connection'), 'description' => $translation->translate('Start the electricity connection process.'), 'url' => $variables['reg_links']['new_connection']],
-    ['eyebrow' => $translation->translate('Billing'), 'title' => $translation->translate('Pay Bill'), 'description' => $translation->translate('Access approved payment channels.'), 'url' => $variables['reg_links']['payments']],
-    ['eyebrow' => $translation->translate('Outages'), 'title' => $translation->translate('Check Outages'), 'description' => $translation->translate('Search current and planned interruptions.'), 'url' => $variables['reg_links']['outages']],
-    ['eyebrow' => $translation->translate('Pricing'), 'title' => $translation->translate('Bill Estimator'), 'description' => $translation->translate('Estimate cost using validated assumptions.'), 'url' => $variables['reg_links']['bill_estimator']],
-    ['eyebrow' => $translation->translate('Support'), 'title' => $translation->translate('Report a Problem'), 'description' => $translation->translate('Use an official complaint or fault channel.'), 'url' => $variables['reg_links']['complaints']],
-    ['eyebrow' => $translation->translate('Contacts'), 'title' => $translation->translate('Branch Locator'), 'description' => $translation->translate('Find a REG, EUCL or EDCL service point.'), 'url' => $variables['reg_links']['branches']],
-    ['eyebrow' => $translation->translate('Knowledge'), 'title' => $translation->translate('Help & FAQs'), 'description' => $translation->translate('Read approved customer-support answers.'), 'url' => $variables['reg_links']['faq']],
+    ['eyebrow' => $translation->translate('Digital services'), 'title' => $translation->translate('Online Services'), 'description' => $translation->translate("Access REG's online customer service portal to apply for services, manage requests and get support digitally."), 'url' => $variables['reg_links']['online_services'], 'cta' => $translation->translate('Open online services')],
+    ['eyebrow' => $translation->translate('Outages'), 'title' => $translation->translate('Check Outages'), 'description' => $translation->translate('View current and planned electricity interruptions.'), 'url' => $variables['reg_links']['outages'], 'cta' => $translation->translate('Check outages')],
+    ['eyebrow' => $translation->translate('Contacts'), 'title' => $translation->translate('Branch Locator'), 'description' => $translation->translate('Find the nearest REG, EUCL or EDCL service point.'), 'url' => $variables['reg_links']['branches'], 'cta' => $translation->translate('Find a branch')],
+    ['eyebrow' => $translation->translate('Knowledge'), 'title' => $translation->translate('Help & FAQs'), 'description' => $translation->translate('Find answers to common customer questions and service issues.'), 'url' => $variables['reg_links']['faq'], 'cta' => $translation->translate('Get help')],
   ];
 
   $variables['reg_fallback'] = [
@@ -119,6 +115,9 @@ function reg_theme_preprocess_page(array &$variables): void {
     'tenders' => reg_theme_tender_items(),
     'sports' => reg_theme_sports_items(),
   ];
+  $variables['page']['#cache']['tags'][] = 'node_list:reg_service';
+  $variables['page']['#cache']['tags'][] = 'config:reg_core.settings';
+  $variables['page']['#cache']['contexts'][] = 'user.permissions';
   $variables['reg_fallback']['news']['x_feed'] = $social_media->homepageXFeed();
   if ($variables['reg_fallback']['news']['x_feed'] !== [] && \Drupal::hasService('reg_core.x_feed')) {
     $x_feed = \Drupal::service('reg_core.x_feed')->homepageFeed();
@@ -305,18 +304,25 @@ function reg_theme_service_items(array $fallback): array {
     return $fallback;
   }
 
-  $items = [];
+  // Keep the four homepage destinations, while retaining matching CMS copy.
+  $items = $fallback;
   $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
   foreach ($nodes as $node) {
+    if (!$node->access('view')) {
+      continue;
+    }
+    $source_title = (string) $node->getUntranslated()->label();
     if ($node->hasTranslation($langcode) && $node->getTranslation($langcode)->isPublished()) {
       $node = $node->getTranslation($langcode);
     }
-    $items[] = [
-      'eyebrow' => reg_theme_field($node, 'field_reg_service_category') ?: 'Service',
-      'title' => $node->label(),
-      'description' => reg_theme_field($node, 'field_reg_summary'),
-      'url' => reg_theme_link_field($node, 'field_reg_url') ?: $node->toUrl()->toString(),
-    ];
+    foreach (['Online Services', 'Check Outages', 'Branch Locator', 'Help & FAQs'] as $index => $title) {
+      if ($source_title !== $title) {
+        continue;
+      }
+      $items[$index]['title'] = $node->label();
+      $items[$index]['description'] = reg_theme_field($node, 'field_reg_summary') ?: $fallback[$index]['description'];
+      // Destinations and order belong to the compact homepage gateway.
+    }
   }
   return $items;
 }

@@ -1,0 +1,25 @@
+<article class="quick-service{{ featured ? ' quick-service--featured' }}">
+  <div class="quick-service__copy">
+    <span class="quick-service__eyebrow">{{ item.eyebrow }}</span>
+    <h3>{{ item.title }}</h3>
+    <p>{{ item.description }}</p>
+    <a class="quick-service__cta" href="{{ item.url }}"{% if featured %} target="_blank" rel="noopener noreferrer"{% endif %}>
+      {{ item.cta }} <span aria-hidden="true">→</span>{% if featured %}<span class="visually-hidden">{{ ' (opens in a new tab)'|t }}</span>{% endif %}
+    </a>
+  </div>
+  {% if featured %}
+    <div class="quick-service__offerings">
+      <p>{{ 'Available in the portal'|t }}</p>
+      <ul>
+        <li>{{ 'New connection'|t }}</li>
+        <li>{{ 'Title transfer'|t }}</li>
+        <li>{{ 'Electricity purchases & receipts'|t }}</li>
+        <li>{{ 'Prepaid arrears'|t }}</li>
+        <li>{{ 'Meter faults'|t }}</li>
+        <li>{{ 'No power supply'|t }}</li>
+        <li>{{ 'Customer complaints'|t }}</li>
+        <li>{{ 'Other customer requests'|t }}</li>
+      </ul>
+    </div>
+  {% endif %}
+</article>

@@ -1,6 +1,8 @@
+{{ attach_library('reg_core/section_hero') }}
 <article class="reg-sports reg-sports-detail" data-reg-analytics-event="{{ analytics_event }}" data-reg-analytics-id="{{ item.id }}">
   {% if item.image.url %}
-  <header class="reg-sports-detail-head"><div class="reg-container">{% if item.image.url %}<img src="{{ item.image.url }}"{% if item.image.srcset %} srcset="{{ item.image.srcset }}" sizes="{{ item.image.sizes }}"{% endif %} alt="{{ item.image.alt }}">{% endif %}<div><span class="reg-sports-kicker">{{ item.category ?: item.kind }}</span><h1>{{ item.title }}</h1>{% if item.summary %}<p>{{ item.summary }}</p>{% endif %}<small>{{ item.team }}{% if item.date %} · <time datetime="{{ item.date_iso }}">{{ item.date }}</time>{% endif %}</small></div></div></header>
+  <header class="reg-page-hero reg-page-hero--detail reg-sports-detail-head"><div class="reg-container reg-page-hero__inner">{% if item.image.url %}<img src="{{ item.image.url }}"{% if item.image.srcset %} srcset="{{ item.image.srcset }}" sizes="{{ item.image.sizes }}"{% endif %} alt="{{ item.image.alt }}">{% endif %}<div class="reg-page-hero__content"><span class="reg-page-hero__eyebrow reg-sports-kicker">{{ item.category ?: item.kind }}</span><h1 class="reg-page-hero__title">{{ item.title }}</h1><small>{{ item.team }}{% if item.date %} · <time datetime="{{ item.date_iso }}">{{ item.date }}</time>{% endif %}</small></div></div></header>
+  {% if item.summary %}<div class="reg-page-hero-summary"><p>{{ item.summary }}</p></div>{% endif %}
   {% else %}
     {% set detail_hero = section_hero|merge({eyebrow: item.category ?: item.kind, title: item.title, description: item.summary, meta: item.team}) %}
     {% include '@reg_core/reg-section-hero.html.twig' with {hero: detail_hero} only %}

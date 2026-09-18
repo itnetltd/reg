@@ -642,3 +642,24 @@ function reg_core_post_update_seed_official_flickr_gallery(?array &$sandbox = NU
   reg_core_apply_official_flickr_configuration();
   return 'Configured the verified Rwanda Energy Group Flickr gallery for the Media Center.';
 }
+
+
+/**
+ * Adds the editor category for the homepage educational video feature.
+ */
+function reg_core_post_update_homepage_customer_education_category(?array &$sandbox = NULL): string {
+  $storage = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
+  $existing = $storage->getQuery()->accessCheck(FALSE)
+    ->condition('vid', 'reg_video_category')
+    ->condition('name', 'Customer Education')
+    ->execute();
+  if (!$existing) {
+    $storage->create([
+      'vid' => 'reg_video_category',
+      'name' => 'Customer Education',
+      'langcode' => 'en',
+      'description' => ['value' => 'Practical customer guidance featured in homepage Energy Awareness.', 'format' => 'plain_text'],
+    ])->save();
+  }
+  return 'Prepared Customer Education video categorization; no videos were published or recategorized.';
+}

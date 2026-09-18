@@ -1,11 +1,12 @@
+{{ attach_library('reg_core/section_hero') }}
 <div class="reg-sports" data-reg-analytics-event="team_page_view" data-reg-analytics-id="{{ team.id }}">
   {% if team.image.url %}
-  <section class="reg-sports-team-hero"{% if team.image.url %} style="--sports-hero-image: url('{{ team.image.url }}')"{% endif %}>
-    <div class="reg-container reg-sports-team-hero__inner">{% if team.logo.url %}<img src="{{ team.logo.url }}"{% if team.logo.srcset %} srcset="{{ team.logo.srcset }}" sizes="{{ team.logo.sizes }}"{% endif %} alt="{{ team.logo.alt }}">{% endif %}<span class="reg-sports-kicker">{{ team.sport ?: 'REG Sports'|t }}</span><h1>{{ team.title }}</h1>{% if team.description %}<p>{{ team.description }}</p>{% endif %}<dl>{% if team.competition %}<div><dt>{{ 'Competition'|t }}</dt><dd>{{ team.competition }}</dd></div>{% endif %}{% if team.season %}<div><dt>{{ 'Season'|t }}</dt><dd>{{ team.season }}</dd></div>{% endif %}{% if team.coach %}<div><dt>{{ 'Head coach'|t }}</dt><dd>{{ team.coach }}</dd></div>{% endif %}{% if team.venue %}<div><dt>{{ 'Home venue'|t }}</dt><dd>{{ team.venue }}</dd></div>{% endif %}</dl></div>
+  <section class="reg-page-hero reg-page-hero--landing reg-sports-team-hero"{% if team.image.url %} style="--sports-hero-image: url('{{ team.image.url }}')"{% endif %}>
+    <div class="reg-container reg-page-hero__inner reg-sports-team-hero__inner">{% if team.logo.url %}<img src="{{ team.logo.url }}"{% if team.logo.srcset %} srcset="{{ team.logo.srcset }}" sizes="{{ team.logo.sizes }}"{% endif %} alt="{{ team.logo.alt }}">{% endif %}<span class="reg-page-hero__eyebrow reg-sports-kicker">{{ team.sport ?: 'REG Sports'|t }}</span><h1 class="reg-page-hero__title">{{ team.title }}</h1>{% if team.description %}<p class="reg-page-hero__intro">{{ team.description }}</p>{% endif %}<dl>{% if team.competition %}<div><dt>{{ 'Competition'|t }}</dt><dd>{{ team.competition }}</dd></div>{% endif %}{% if team.season %}<div><dt>{{ 'Season'|t }}</dt><dd>{{ team.season }}</dd></div>{% endif %}{% if team.coach %}<div><dt>{{ 'Head coach'|t }}</dt><dd>{{ team.coach }}</dd></div>{% endif %}{% if team.venue %}<div><dt>{{ 'Home venue'|t }}</dt><dd>{{ team.venue }}</dd></div>{% endif %}</dl></div>
   </section>
   {% else %}
     {% set team_hero = section_hero|merge({eyebrow: team.sport ?: 'REG Sports'|t, title: team.title, description: team.description}) %}
-    {% include '@reg_core/reg-section-hero.html.twig' with {hero: team_hero} only %}
+    {% include '@reg_core/reg-section-hero.html.twig' with {hero: team_hero, variant: 'landing'} only %}
   {% endif %}
   <nav class="reg-sports-nav" aria-label="{{ 'Sports Portal navigation'|t }}"><div class="reg-container">{% for link in links %}<a href="{{ link.url }}">{{ link.label }}</a>{% endfor %}</div></nav>
   <main class="reg-container reg-sports__body">

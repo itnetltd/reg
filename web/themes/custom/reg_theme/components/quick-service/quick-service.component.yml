@@ -1,0 +1,10 @@
+name: Homepage quick service
+status: stable
+props:
+  type: object
+  required: [item]
+  properties:
+    item:
+      type: object
+    featured:
+      type: boolean

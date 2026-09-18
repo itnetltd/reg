@@ -1,0 +1,19 @@
+<div class="education-video" data-reg-video-context>
+  <article class="education-video__layout" data-reg-video-item data-reg-video-id="{{ video.id }}"
+    data-reg-video-provider="{{ video.provider }}" data-reg-video-url="{{ video.public_url }}"
+    data-reg-video-embed-url="{{ video.embed_url }}" data-reg-video-direct-url="{{ video.direct_video_url }}"
+    data-reg-video-title="{{ video.title }}">
+    <button class="education-video__thumbnail" type="button" data-reg-video-play aria-label="{{ 'Play @title'|t({'@title': video.title}) }}">
+      <img src="{{ video.thumbnail.url }}"{% if video.thumbnail.srcset %} srcset="{{ video.thumbnail.srcset }}" sizes="(max-width: 600px) calc(100vw - 40px), (max-width: 1100px) 45vw, 25vw"{% endif %} alt="{{ video.thumbnail.alt }}" loading="lazy" width="960" height="540">
+      <span class="education-video__play" aria-hidden="true">▶</span>
+    </button>
+    <div class="education-video__copy">
+      <span class="section-kicker">{{ 'Customer education'|t }}</span>
+      <h3 title="{{ video.title }}">{{ video.title }}</h3>
+      <p>{{ video.description ?: 'Practical guidance for your electricity service.'|t }}</p>
+      <button class="education-video__cta" type="button" data-reg-video-play>{{ 'Watch video'|t }} <span aria-hidden="true">→</span></button>
+      <noscript><a href="{{ video.public_url }}" target="_blank" rel="noopener noreferrer">{{ 'Watch on the video provider website'|t }}</a></noscript>
+    </div>
+  </article>
+  {% include '@reg_core/reg-video-modal.html.twig' with {modal_id: 'reg-education-video-modal'} only %}
+</div>
