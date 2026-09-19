@@ -107,6 +107,92 @@
         </div>
       </section>
 
+    {% elseif page.key == 'history' %}
+      <section class="reg-about-history__intro reg-about-section" aria-labelledby="reg-about-history-intro">
+        <div class="reg-about-heading">
+          <span>{{ 'Our journey'|t }}</span>
+          <h2 id="reg-about-history-intro">{{ 'Building Rwanda’s Energy Sector'|t }}</h2>
+        </div>
+        {% if history.intro %}<p>{{ history.intro }}</p>{% endif %}
+      </section>
+
+      {% if history.milestones %}
+        <section class="reg-about-history__timeline-section reg-about-section" aria-labelledby="reg-about-history-timeline">
+          <div class="reg-about-heading">
+            <span>{{ 'History timeline'|t }}</span>
+            <h2 id="reg-about-history-timeline">{{ 'The reform and creation of REG'|t }}</h2>
+          </div>
+          <ol class="reg-about-history__timeline">
+            {% for milestone in history.milestones %}
+              <li class="reg-about-history__milestone">
+                <span class="reg-about-history__milestone-label">{{ milestone.label }}</span>
+                <span class="reg-about-history__rail" aria-hidden="true"></span>
+                <article class="reg-about-history__milestone-card">
+                  <h3>{{ milestone.title }}</h3>
+                  {% for paragraph in milestone.body %}<p>{{ paragraph }}</p>{% endfor %}
+                  {% if milestone.key == 'group_structure' %}
+                    <div class="reg-about-history__institutional-context" aria-label="{{ 'Institutional responsibilities after the reform'|t }}">
+                      <div><span>{{ 'Energy'|t }}</span><strong>REG · EDCL · EUCL</strong></div>
+                      <div><span>{{ 'Water and sanitation'|t }}</span><strong>WASAC</strong></div>
+                    </div>
+                  {% endif %}
+                </article>
+              </li>
+            {% endfor %}
+          </ol>
+        </section>
+      {% endif %}
+
+      <section class="reg-about-history__transformation reg-about-section" aria-labelledby="reg-about-history-transformation">
+        <div class="reg-about-heading">
+          <span>{{ 'The transformation'|t }}</span>
+          <h2 id="reg-about-history-transformation">{{ 'From a combined utility to focused energy institutions'|t }}</h2>
+          <p>{{ 'The reform objectives recorded in REG’s history focused on these institutional priorities.'|t }}</p>
+        </div>
+        <ul class="reg-about-history__priorities">
+          {% for point in history.transformation_points %}
+            <li><span aria-hidden="true">{{ '%02d'|format(loop.index) }}</span><strong>{{ point }}</strong></li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      {% if group_page or subsidiaries %}
+        <section class="reg-about-history__group reg-about-section" aria-labelledby="reg-about-history-group">
+          <div class="reg-about-heading">
+            <span>{{ 'REG Group structure'|t }}</span>
+            <h2 id="reg-about-history-group">{{ 'Energy institutions created for focused roles'|t }}</h2>
+          </div>
+          <div class="reg-about-history__group-cards">
+            {% if group_page %}
+              <article class="reg-about-history__group-card reg-about-history__group-card--reg">
+                <span>REG</span>
+                <h3>{{ 'Rwanda Energy Group Limited'|t }}</h3>
+                <p>{{ group_page.summary }}</p>
+                <a href="{{ links.group }}">{{ 'Explore REG Group'|t }} <span aria-hidden="true">→</span></a>
+              </article>
+            {% endif %}
+            {% for subsidiary in subsidiaries %}
+              <article class="reg-about-history__group-card">
+                <span>{{ subsidiary.key|upper }}</span>
+                <h3>{{ subsidiary.title }}</h3>
+                <p>{{ subsidiary.summary }}</p>
+                <a href="{{ attribute(links, subsidiary.key) }}">{{ 'View profile'|t }} <span aria-hidden="true">→</span></a>
+              </article>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+
+      <section class="reg-about-history__related reg-about-section" aria-labelledby="reg-about-history-related">
+        <div class="reg-about-heading"><span>{{ 'Related About REG'|t }}</span><h2 id="reg-about-history-related">{{ 'Continue exploring REG'|t }}</h2></div>
+        <div class="reg-about-explore-grid">
+          <a href="{{ links.vision_mission_values }}"><strong>{{ 'Vision, mission and values'|t }}</strong><span>{{ 'The purpose and principles guiding REG'|t }}</span></a>
+          <a href="{{ links.leadership }}"><strong>{{ 'Leadership'|t }}</strong><span>{{ 'Board and executive management'|t }}</span></a>
+          <a href="{{ links.group }}"><strong>{{ 'REG Group'|t }}</strong><span>{{ 'Roles of REG, EDCL and EUCL'|t }}</span></a>
+          <a href="{{ links.branches }}"><strong>{{ 'Branches'|t }}</strong><span>{{ 'Find REG and EUCL service locations'|t }}</span></a>
+        </div>
+      </section>
+
     {% elseif page.key == 'vision_mission_values' %}
       <section class="reg-about-section" aria-labelledby="reg-about-purpose-page">
         <div class="reg-about-heading"><span>{{ 'Our purpose'|t }}</span><h2 id="reg-about-purpose-page">{{ page.title }}</h2></div>

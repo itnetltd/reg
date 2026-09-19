@@ -68,6 +68,7 @@ final class AboutController extends ControllerBase {
       '#section_hero' => $hero,
       '#breadcrumbs' => $this->breadcrumbs($page_key, $page['title']),
       '#links' => $this->links(),
+      '#history' => [],
       '#vision_page' => [],
       '#group_page' => [],
       '#values' => [],
@@ -104,11 +105,17 @@ final class AboutController extends ControllerBase {
       $build['#vision_page'] = $this->aboutRepository->page('vision_mission_values') ?? [];
       $build['#group_page'] = $this->aboutRepository->page('group') ?? [];
     }
-    if (in_array($page_key, ['about', 'group'], TRUE)) {
+    elseif ($page_key === 'history') {
+      $build['#group_page'] = $this->aboutRepository->page('group') ?? [];
+    }
+    if (in_array($page_key, ['about', 'history', 'group'], TRUE)) {
       $build['#subsidiaries'] = array_values(array_filter([
         $this->aboutRepository->page('edcl'),
         $this->aboutRepository->page('eucl'),
       ]));
+    }
+    if ($page_key === 'history') {
+      $build['#history'] = $this->historyPresentation($page);
     }
     if (in_array($page_key, ['about', 'leadership', 'board'], TRUE)) {
       $build['#board'] = $this->aboutRepository->leaders('board');
@@ -167,6 +174,68 @@ final class AboutController extends ControllerBase {
     }
     $items[] = ['label' => $title, 'url' => ''];
     return $items;
+  }
+
+  /**
+   * Arranges existing CMS history paragraphs without changing their facts.
+   */
+  private function historyPresentation(array $page): array {
+    $paragraphs = array_values(array_filter(
+      $page['paragraphs'] ?? [],
+      static fn(mixed $paragraph): bool => is_string($paragraph) && trim($paragraph) !== '',
+    ));
+    $opening = $paragraphs[0] ?? '';
+    $opening_parts = preg_split('/(?<=[.!?])\s+/u', $opening, 2) ?: [];
+    $intro = trim((string) ($opening_parts[0] ?? $opening));
+    $reform_context = trim((string) ($opening_parts[1] ?? ''));
+
+    $milestones = [
+      [
+        'key' => 'sector_reform',
+        'label' => (string) $this->t('Sector reform'),
+        'title' => (string) $this->t('Energy and water operations separated'),
+        'body' => array_values(array_filter([$reform_context])),
+      ],
+      [
+        'key' => 'legal_transition',
+        'label' => (string) $this->t('2014'),
+        'title' => (string) $this->t('Legal transition and incorporation'),
+        'body' => array_values(array_filter([$paragraphs[1] ?? ''])),
+      ],
+      [
+        'key' => 'group_structure',
+        'label' => (string) $this->t('Group structure'),
+        'title' => (string) $this->t('Focused institutions take shape'),
+        'body' => array_values(array_filter([$paragraphs[2] ?? ''])),
+      ],
+      [
+        'key' => 'reg_holding',
+        'label' => (string) $this->t('REG Holding'),
+        'title' => (string) $this->t('Coordination for the energy group'),
+        'body' => array_values(array_filter([$paragraphs[3] ?? ''])),
+      ],
+      [
+        'key' => 'governance',
+        'label' => (string) $this->t('Governance and coordination'),
+        'title' => (string) $this->t('A group designed for focused delivery'),
+        'body' => array_slice($paragraphs, 4, 4),
+      ],
+    ];
+
+    return [
+      'intro' => $intro !== '' ? $intro : (string) ($page['summary'] ?? ''),
+      'milestones' => array_values(array_filter(
+        $milestones,
+        static fn(array $milestone): bool => $milestone['body'] !== [] || $milestone['key'] === 'sector_reform',
+      )),
+      'transformation_points' => [
+        (string) $this->t('Sector focus'),
+        (string) $this->t('Efficient operations'),
+        (string) $this->t('Investment'),
+        (string) $this->t('Planning and accountability'),
+        (string) $this->t('Access to services'),
+      ],
+    ];
   }
 
   /**

@@ -570,6 +570,259 @@ a.reg-about-partner:hover {
   background: var(--about-soft);
 }
 
+/* History page: CMS content arranged as an institutional timeline. */
+.reg-about--history .reg-about-heading h2 {
+  font-size: clamp(2rem, 3.5vw, 2.75rem);
+  line-height: 1.08;
+}
+
+.reg-about--history .reg-about-section + .reg-about-section {
+  margin-top: clamp(4rem, 6vw, 5rem);
+}
+
+.reg-about-history__intro {
+  max-width: 50rem;
+}
+
+.reg-about-history__intro > p {
+  max-width: 48rem;
+  margin: 0;
+  color: #51433f;
+  font-size: clamp(1.08rem, 1.5vw, 1.2rem);
+  line-height: 1.7;
+}
+
+.reg-about-history__timeline-section,
+.reg-about-history__group {
+  position: relative;
+  z-index: 0;
+  padding-block: clamp(3.5rem, 6vw, 5rem);
+  background: #f5f7f9;
+  box-shadow: 0 0 0 100vmax #f5f7f9;
+  clip-path: inset(0 -100vmax);
+}
+
+.reg-about-history__timeline {
+  max-width: 67rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reg-about-history__milestone {
+  display: grid;
+  position: relative;
+  grid-template-columns: 9rem 2rem minmax(0, 1fr);
+  gap: 0 1.5rem;
+}
+
+.reg-about-history__milestone + .reg-about-history__milestone {
+  margin-top: 2rem;
+}
+
+.reg-about-history__milestone-label {
+  padding-top: 1.2rem;
+  color: var(--about-red);
+  font-size: .82rem;
+  font-weight: 800;
+  letter-spacing: .09em;
+  line-height: 1.35;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.reg-about-history__rail {
+  position: relative;
+  min-height: 100%;
+}
+
+.reg-about-history__rail::before {
+  position: absolute;
+  top: 1.5rem;
+  bottom: -3.5rem;
+  left: calc(50% - 1px);
+  width: 2px;
+  background: #dfc8c4;
+  content: "";
+}
+
+.reg-about-history__milestone:last-child .reg-about-history__rail::before {
+  display: none;
+}
+
+.reg-about-history__rail::after {
+  position: absolute;
+  top: 1.05rem;
+  left: 50%;
+  width: .95rem;
+  height: .95rem;
+  border: .22rem solid #f5f7f9;
+  border-radius: 50%;
+  background: var(--about-red);
+  box-shadow: 0 0 0 1px var(--about-red);
+  content: "";
+  transform: translateX(-50%);
+}
+
+.reg-about-history__milestone-card {
+  padding: clamp(1.4rem, 3vw, 2rem);
+  border: 1px solid #e0e4e8;
+  border-radius: .7rem;
+  background: #fff;
+  box-shadow: 0 .8rem 2rem rgba(40, 23, 21, .055);
+}
+
+.reg-about-history__milestone-card h3 {
+  margin: 0 0 .75rem;
+  font-family: "Hanken Grotesk", sans-serif;
+  font-size: clamp(1.4rem, 2.3vw, 1.65rem);
+  line-height: 1.2;
+}
+
+.reg-about-history__milestone-card p {
+  margin: 0;
+  color: #5f514d;
+  font-size: clamp(1rem, 1.3vw, 1.1rem);
+  line-height: 1.65;
+}
+
+.reg-about-history__milestone-card p + p {
+  margin-top: .8rem;
+}
+
+.reg-about-history__institutional-context {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .75rem;
+  margin-top: 1.4rem;
+}
+
+.reg-about-history__institutional-context div {
+  padding: 1rem;
+  border-left: 3px solid var(--about-red);
+  background: #fbf7f6;
+}
+
+.reg-about-history__institutional-context span,
+.reg-about-history__institutional-context strong {
+  display: block;
+}
+
+.reg-about-history__institutional-context span {
+  margin-bottom: .3rem;
+  color: #756763;
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.reg-about-history__institutional-context strong {
+  font-size: 1rem;
+}
+
+.reg-about-history__priorities {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reg-about-history__priorities li {
+  min-height: 8rem;
+  padding: 1.25rem;
+  border: 1px solid var(--about-line);
+  border-radius: .5rem;
+  background: #fff;
+}
+
+.reg-about-history__priorities span,
+.reg-about-history__priorities strong {
+  display: block;
+}
+
+.reg-about-history__priorities span {
+  margin-bottom: 1.4rem;
+  color: var(--about-red);
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.reg-about-history__priorities strong {
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.reg-about-history__group-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.reg-about-history__group-card {
+  display: flex;
+  min-height: 20rem;
+  padding: clamp(1.5rem, 3vw, 2rem);
+  flex-direction: column;
+  border-top: 4px solid #bcaeaa;
+  border-radius: .6rem;
+  background: #fff;
+  box-shadow: 0 .8rem 2rem rgba(40, 23, 21, .055);
+}
+
+.reg-about-history__group-card--reg {
+  border-top-color: var(--about-red);
+}
+
+.reg-about-history__group-card > span {
+  color: var(--about-red);
+  font-size: .8rem;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.reg-about-history__group-card h3 {
+  margin: .8rem 0;
+  font-family: "Hanken Grotesk", sans-serif;
+  font-size: clamp(1.35rem, 2vw, 1.65rem);
+  line-height: 1.2;
+}
+
+.reg-about-history__group-card p {
+  margin: 0 0 1.5rem;
+  color: #5f514d;
+  line-height: 1.65;
+}
+
+.reg-about-history__group-card a {
+  margin-top: auto;
+  color: var(--about-red);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.reg-about-history__group-card a:hover {
+  text-decoration: underline;
+  text-underline-offset: .25em;
+}
+
+@media (max-width: 70rem) {
+  .reg-about-history__priorities {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .reg-about-history__group-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reg-about-history__group-card--reg {
+    grid-column: 1 / -1;
+    min-height: 0;
+  }
+}
+
 @media (max-width: 70rem) {
   .reg-about-values,
   .reg-about-leaders {
@@ -630,6 +883,63 @@ a.reg-about-partner:hover {
 
   .reg-about-review-note {
     grid-template-columns: 1fr;
+  }
+
+  .reg-about--history .reg-about-section + .reg-about-section {
+    margin-top: 3rem;
+  }
+
+  .reg-about-history__timeline-section,
+  .reg-about-history__group {
+    padding-block: 3rem;
+  }
+
+  .reg-about-history__milestone {
+    grid-template-columns: 1.3rem minmax(0, 1fr);
+    gap: 0 1rem;
+  }
+
+  .reg-about-history__milestone-label {
+    grid-column: 2;
+    padding-top: 0;
+    padding-bottom: .6rem;
+    text-align: left;
+  }
+
+  .reg-about-history__rail {
+    grid-row: 1 / span 2;
+    grid-column: 1;
+  }
+
+  .reg-about-history__rail::before {
+    top: .35rem;
+    bottom: -3rem;
+  }
+
+  .reg-about-history__rail::after {
+    top: 0;
+  }
+
+  .reg-about-history__milestone-card {
+    grid-column: 2;
+  }
+
+  .reg-about-history__institutional-context,
+  .reg-about-history__priorities,
+  .reg-about-history__group-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .reg-about-history__priorities li {
+    min-height: auto;
+  }
+
+  .reg-about-history__priorities span {
+    margin-bottom: .65rem;
+  }
+
+  .reg-about-history__group-card {
+    min-height: 0;
   }
 }
 

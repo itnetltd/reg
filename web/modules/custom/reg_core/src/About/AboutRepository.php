@@ -3,6 +3,7 @@
 namespace Drupal\reg_core\About;
 
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
@@ -202,6 +203,7 @@ final class AboutRepository implements AboutRepositoryInterface {
       'title' => (string) $node->label(),
       'summary' => $this->value($node, 'field_reg_summary'),
       'body' => $this->processed($node, 'body'),
+      'paragraphs' => $this->paragraphs($node, 'body'),
       'vision' => $this->value($node, 'field_reg_vision'),
       'mission' => $this->value($node, 'field_reg_mission'),
       'image' => $this->image($node, 'field_reg_featured_image', 'reg_about_feature'),
@@ -224,6 +226,34 @@ final class AboutRepository implements AboutRepositoryInterface {
       '#text' => (string) ($item?->value ?? ''),
       '#format' => (string) ($item?->format ?: 'basic_html'),
     ];
+  }
+
+  /**
+   * Returns plain paragraph text for structured presentation of CMS content.
+   */
+  private function paragraphs(NodeInterface $node, string $field): array {
+    if (!$node->hasField($field) || $node->get($field)->isEmpty()) {
+      return [];
+    }
+    $html = (string) ($node->get($field)->first()?->value ?? '');
+    if ($html === '') {
+      return [];
+    }
+    preg_match_all('/<p\b[^>]*>(.*?)<\/p>/is', $html, $matches);
+    $blocks = $matches[1] ?? [];
+    if ($blocks === []) {
+      $blocks = [$html];
+    }
+    $paragraphs = [];
+    foreach ($blocks as $block) {
+      $block = preg_replace('/<br\s*\/?\s*>/i', ' ', $block) ?? $block;
+      $text = Html::decodeEntities(strip_tags($block));
+      $text = trim(preg_replace('/\s+/u', ' ', $text) ?? '');
+      if ($text !== '') {
+        $paragraphs[] = $text;
+      }
+    }
+    return $paragraphs;
   }
 
   /**

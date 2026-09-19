@@ -47,7 +47,7 @@ homepage_hero:
     - reg_core/homepage_counters
 
 about:
-  version: 1.x
+  version: 2.x
   css:
     component:
       css/about.css: {}

@@ -520,6 +520,7 @@ function reg_core_theme(): array {
         'section_hero' => [],
         'breadcrumbs' => [],
         'links' => [],
+        'history' => [],
         'vision_page' => [],
         'group_page' => [],
         'values' => [],
