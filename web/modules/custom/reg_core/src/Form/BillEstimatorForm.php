@@ -19,9 +19,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 final class BillEstimatorForm extends FormBase {
 
   public function __construct(
-    private readonly AnalyticsEventTrackerInterface $analytics,
-    private readonly PublicNumberFormatter $numberFormatter,
-    private readonly BillEstimatorInterface $estimator,
+    protected AnalyticsEventTrackerInterface $analytics,
+    protected PublicNumberFormatter $numberFormatter,
+    protected BillEstimatorInterface $estimator,
   ) {}
 
   public static function create(ContainerInterface $container): static {
@@ -90,6 +90,10 @@ final class BillEstimatorForm extends FormBase {
   }
 
   public function validateForm(array &$form, FormStateInterface $form_state): void {
+    // A rebuilt form may still carry the prior estimate in private form state.
+    // Clear it before validating so invalid inputs never display a stale total.
+    $form_state->set('result', NULL);
+    unset($form['result']);
     $category = (string) $form_state->getValue('customer_category');
     if ((float) $form_state->getValue('consumption') < 0) {
       $form_state->setErrorByName('consumption', $this->t('Consumption cannot be negative.'));
