@@ -50,10 +50,9 @@
     </div>
   </div>
   <div class="reg-container footer-bottom">
+    <p>{{ '© @year Rwanda Energy Group Limited. All Rights Reserved.'|t({'@year': reg_year}) }}</p>
     {% if page.footer_bottom %}
-      {{ page.footer_bottom }}
-    {% else %}
-      <p>{{ '© @year Rwanda Energy Group (REG). All rights reserved. Powering Rwanda’s Future.'|t({'@year': reg_year}) }}</p>
+      {{ page.footer_bottom|without('reg_theme_powered') }}
     {% endif %}
   </div>
 </footer>

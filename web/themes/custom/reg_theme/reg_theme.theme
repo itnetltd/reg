@@ -5,6 +5,7 @@
  * Theme hooks and preprocessors for REG Theme.
  */
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
@@ -27,9 +28,20 @@ function reg_theme_preprocess_html(array &$variables): void {
  * Implements hook_preprocess_page().
  */
 function reg_theme_preprocess_page(array &$variables): void {
-  $variables['reg_year'] = date('Y');
+  $request_time = \Drupal::time()->getRequestTime();
+  $timezone = new \DateTimeZone(\Drupal::config('system.date')->get('timezone.default') ?: date_default_timezone_get());
+  $now = (new \DateTimeImmutable('@' . $request_time))->setTimezone($timezone);
+  $next_year = $now
+    ->setDate(((int) $now->format('Y')) + 1, 1, 1)
+    ->setTime(0, 0);
+  $variables['reg_year'] = $now->format('Y');
+  $variables['page']['#cache']['max-age'] = Cache::mergeMaxAges(
+    $variables['page']['#cache']['max-age'] ?? Cache::PERMANENT,
+    max(1, $next_year->getTimestamp() - $request_time),
+  );
   $variables['page']['#cache']['contexts'][] = 'url.query_args';
   $variables['page']['#cache']['tags'][] = 'config:system.theme.global';
+  $variables['page']['#cache']['tags'][] = 'config:system.date';
   $variables['page']['#cache']['tags'][] = 'config:reg_theme.settings';
 
   $configured_logo = theme_get_setting('logo.url');

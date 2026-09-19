@@ -663,3 +663,152 @@ function reg_core_post_update_homepage_customer_education_category(?array &$sand
   }
   return 'Prepared Customer Education video categorization; no videos were published or recategorized.';
 }
+
+/**
+ * Repairs destinations on existing Media Center main-navigation links.
+ */
+function reg_core_post_update_repair_media_center_menu_destinations(?array &$sandbox = NULL): string {
+  $result = _reg_core_repair_media_center_menu_destinations();
+  if ($result['root_missing']) {
+    return 'Media Center main-navigation root was not found; no menu links were created or changed.';
+  }
+
+  $message = $result['changed']
+    ? 'Repaired Media Center menu destinations: ' . implode(', ', $result['changed']) . '.'
+    : 'Verified Media Center menu destinations; no changes were required.';
+  if ($result['missing']) {
+    $message .= ' Existing links not found: ' . implode(', ', $result['missing']) . '.';
+  }
+  return $message;
+}
+
+/**
+ * Updates only route URIs for existing links in the Media Center subtree.
+ *
+ * @return array{changed: string[], missing: string[], root_missing: bool}
+ *   Repair results for the post-update message and idempotency checks.
+ */
+function _reg_core_repair_media_center_menu_destinations(): array {
+  $expected = [
+    'main:media-news-corporate' => ['title' => 'Corporate News', 'uri' => 'route:reg_core.news'],
+    'main:media-news-sports' => ['title' => 'Sports News', 'uri' => 'route:reg_core.sports_news'],
+    'main:media-press' => ['title' => 'Press Releases', 'uri' => 'route:reg_core.press_releases'],
+    'main:media-announcements' => ['title' => 'Announcements', 'uri' => 'route:reg_core.announcements'],
+    'main:media-publications' => ['title' => 'Publications', 'uri' => 'route:reg_core.publications'],
+    'main:media-newsletters' => ['title' => 'Newsletters', 'uri' => 'route:reg_core.newsletters'],
+    'main:media-gallery' => ['title' => 'Photo Gallery', 'uri' => 'route:reg_core.media_gallery'],
+    'main:media-videos' => ['title' => 'Videos', 'uri' => 'route:reg_core.videos'],
+    'main:media-social' => ['title' => 'Social Media', 'uri' => 'route:reg_core.media_social'],
+  ];
+
+  $storage = \Drupal::entityTypeManager()->getStorage('menu_link_content');
+  $ids = $storage->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('menu_name', 'main')
+    ->execute();
+  $links = $storage->loadMultiple($ids);
+
+  $media_root = NULL;
+  foreach ($links as $link) {
+    $value = $link->get('link')->first()?->getValue() ?? [];
+    $key = is_array($value['options'] ?? NULL)
+      ? ($value['options']['reg_core_navigation_id'] ?? '')
+      : '';
+    if ($key === 'main:media-center') {
+      $media_root = $link;
+      break;
+    }
+  }
+  if (!$media_root) {
+    foreach ($links as $link) {
+      if ($link->getUntranslated()->label() === 'Media Center' && !$link->get('parent')->value) {
+        $media_root = $link;
+        break;
+      }
+    }
+  }
+  if (!$media_root) {
+    return ['changed' => [], 'missing' => array_column($expected, 'title'), 'root_missing' => TRUE];
+  }
+
+  // Restrict title-based fallback matching to descendants of Media Center so
+  // identically titled links elsewhere in the Main menu remain untouched.
+  $subtree = [];
+  $parent_plugin_ids = [$media_root->getPluginId() => TRUE];
+  $remaining = $links;
+  do {
+    $found = FALSE;
+    foreach ($remaining as $id => $link) {
+      if (!isset($parent_plugin_ids[(string) $link->get('parent')->value])) {
+        continue;
+      }
+      $subtree[$id] = $link;
+      $parent_plugin_ids[$link->getPluginId()] = TRUE;
+      unset($remaining[$id]);
+      $found = TRUE;
+    }
+  } while ($found);
+
+  $matches = [];
+  foreach ($subtree as $link) {
+    $value = $link->get('link')->first()?->getValue() ?? [];
+    $key = is_array($value['options'] ?? NULL)
+      ? ($value['options']['reg_core_navigation_id'] ?? '')
+      : '';
+    if (isset($expected[$key])) {
+      $matches[$key][$link->id()] = $link;
+    }
+  }
+  foreach ($expected as $key => $definition) {
+    if (!empty($matches[$key])) {
+      continue;
+    }
+    foreach ($subtree as $link) {
+      $titles = [$link->getUntranslated()->label()];
+      foreach ($link->getTranslationLanguages(FALSE) as $langcode => $language) {
+        $titles[] = $link->getTranslation($langcode)->label();
+      }
+      if (in_array($definition['title'], $titles, TRUE)) {
+        $matches[$key][$link->id()] = $link;
+      }
+    }
+  }
+
+  $changed = [];
+  $missing = [];
+  foreach ($expected as $key => $definition) {
+    if (empty($matches[$key])) {
+      $missing[] = $definition['title'];
+      continue;
+    }
+    foreach ($matches[$key] as $link) {
+      $translations = [$link];
+      if ($link->getFieldDefinition('link')->isTranslatable()) {
+        foreach ($link->getTranslationLanguages(FALSE) as $langcode => $language) {
+          $translations[] = $link->getTranslation($langcode);
+        }
+      }
+
+      $link_changed = FALSE;
+      foreach ($translations as $translation) {
+        $value = $translation->get('link')->first()?->getValue() ?? [];
+        if (($value['uri'] ?? '') === $definition['uri']) {
+          continue;
+        }
+        $value['uri'] = $definition['uri'];
+        $translation->set('link', $value);
+        $link_changed = TRUE;
+      }
+      if ($link_changed) {
+        $link->save();
+        $changed[] = $definition['title'];
+      }
+    }
+  }
+
+  return [
+    'changed' => array_values(array_unique($changed)),
+    'missing' => $missing,
+    'root_missing' => FALSE,
+  ];
+}
