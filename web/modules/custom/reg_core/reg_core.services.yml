@@ -1,4 +1,19 @@
 services:
+  logger.channel.reg_bill_estimator:
+    parent: logger.channel_base
+    arguments: ['reg_bill_estimator']
+
+  Drupal\reg_core\Energy\BillEstimatorInterface:
+    alias: reg_core.bill_estimator
+
+  reg_core.bill_estimator:
+    class: Drupal\reg_core\Energy\BillEstimator
+    arguments:
+      - '@entity_type.manager'
+      - '@config.factory'
+      - '@datetime.time'
+      - '@logger.channel.reg_bill_estimator'
+
   Drupal\reg_core\About\AboutRepositoryInterface:
     alias: reg_core.about_repository
 
@@ -268,6 +283,7 @@ services:
     arguments:
       - '@config.factory'
       - '@router.route_provider'
+      - '@reg_core.bill_estimator'
 
   Drupal\reg_core\Energy\EnergyToolRepositoryInterface:
     alias: reg_core.energy_tool_repository

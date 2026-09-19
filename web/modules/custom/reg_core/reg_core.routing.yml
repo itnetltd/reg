@@ -1189,6 +1189,62 @@ reg_core.bill_estimator:
   requirements:
     _permission: 'access content'
 
+reg_core.bill_estimator_settings:
+  path: '/admin/config/reg/bill-estimator'
+  defaults:
+    _form: '\Drupal\reg_core\Form\BillEstimatorSettingsForm'
+    _title: 'REG Bill Estimator'
+  requirements:
+    _permission: 'administer REG bill estimator'
+  options:
+    _admin_route: true
+
+entity.reg_bill_tariff_schedule.collection:
+  path: '/admin/config/reg/bill-estimator/schedules'
+  defaults:
+    _entity_list: 'reg_bill_tariff_schedule'
+    _title: 'Tariff schedules'
+  requirements:
+    _permission: 'administer REG bill estimator'
+  options:
+    _admin_route: true
+
+entity.reg_bill_tariff_schedule.add_form:
+  path: '/admin/config/reg/bill-estimator/schedules/add'
+  defaults:
+    _entity_form: 'reg_bill_tariff_schedule.add'
+    _title: 'Add tariff schedule'
+  requirements:
+    _permission: 'administer REG bill estimator'
+  options:
+    _admin_route: true
+
+entity.reg_bill_tariff_schedule.edit_form:
+  path: '/admin/config/reg/bill-estimator/schedules/{reg_bill_tariff_schedule}'
+  defaults:
+    _entity_form: 'reg_bill_tariff_schedule.edit'
+    _title: 'Edit tariff schedule'
+  requirements:
+    _permission: 'administer REG bill estimator'
+  options:
+    _admin_route: true
+    parameters:
+      reg_bill_tariff_schedule:
+        type: entity:reg_bill_tariff_schedule
+
+entity.reg_bill_tariff_schedule.delete_form:
+  path: '/admin/config/reg/bill-estimator/schedules/{reg_bill_tariff_schedule}/delete'
+  defaults:
+    _entity_form: 'reg_bill_tariff_schedule.delete'
+    _title: 'Delete tariff schedule'
+  requirements:
+    _permission: 'administer REG bill estimator'
+  options:
+    _admin_route: true
+    parameters:
+      reg_bill_tariff_schedule:
+        type: entity:reg_bill_tariff_schedule
+
 reg_core.carbon_calculator:
   path: '/tools/carbon-footprint'
   defaults:

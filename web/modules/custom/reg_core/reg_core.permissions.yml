@@ -3,6 +3,11 @@ administer reg website settings:
   description: 'Manage REG service links, calculator assumptions and public support contacts.'
   restrict access: true
 
+administer REG bill estimator:
+  title: 'Administer REG Bill Estimator'
+  description: 'Manage effective tariff schedules, approved taxes and fees, sources, and public estimator notes.'
+  restrict access: true
+
 view reg faq unanswered report:
   title: 'View unanswered REG FAQ searches'
   description: 'Review aggregated, privacy-filtered FAQ searches that returned no approved answer.'

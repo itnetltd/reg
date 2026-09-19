@@ -812,3 +812,16 @@ function _reg_core_repair_media_center_menu_destinations(): array {
     'root_missing' => FALSE,
   ];
 }
+
+/**
+ * Migrates the deployed estimator rates into configurable dated schedules.
+ */
+function reg_core_post_update_configurable_bill_estimator(?array &$sandbox = NULL): string {
+  require_once __DIR__ . '/reg_core.bill_estimator.inc';
+  $settings_created = reg_core_bill_estimator_seed_settings();
+  $created = reg_core_bill_estimator_seed_schedules();
+  if (!$created && !$settings_created) {
+    return 'Verified the configurable REG Bill Estimator; no changes were required.';
+  }
+  return 'Migrated the existing October 2025 bill-estimator values into ' . count($created) . ' dated tariff schedules and initialized global fee and disclaimer settings.';
+}

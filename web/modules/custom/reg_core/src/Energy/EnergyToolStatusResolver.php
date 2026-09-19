@@ -22,6 +22,7 @@ final class EnergyToolStatusResolver implements EnergyToolStatusResolverInterfac
   public function __construct(
     private readonly ConfigFactoryInterface $configFactory,
     private readonly RouteProviderInterface $routeProvider,
+    private readonly BillEstimatorInterface $billEstimator,
   ) {}
 
   /**
@@ -32,7 +33,7 @@ final class EnergyToolStatusResolver implements EnergyToolStatusResolverInterfac
     return self::determine(
       $toolKey,
       $editorStatus,
-      trim((string) $config->get('tariffs.approved_schedule_effective')) !== ''
+      $this->billEstimator->hasActiveSchedule()
         && $this->routeExists('reg_core.bill_estimator'),
       (float) $config->get('carbon.emission_factor') > 0
         && $this->routeExists('reg_core.carbon_calculator'),

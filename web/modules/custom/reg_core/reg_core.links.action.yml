@@ -1,0 +1,5 @@
+entity.reg_bill_tariff_schedule.add_form:
+  route_name: entity.reg_bill_tariff_schedule.add_form
+  title: 'Add tariff schedule'
+  appears_on:
+    - entity.reg_bill_tariff_schedule.collection

@@ -298,6 +298,9 @@ function reg_core_schema(): array {
  */
 function reg_core_install(): void {
   reg_core_apply_foundation();
+  require_once __DIR__ . '/reg_core.bill_estimator.inc';
+  reg_core_bill_estimator_seed_settings();
+  reg_core_bill_estimator_seed_schedules();
   require_once __DIR__ . '/reg_core.media_center.inc';
   reg_core_apply_media_center_migration();
   reg_core_apply_tender_upgrade();
@@ -915,7 +918,13 @@ function reg_core_requirements(string $phase): array {
 
   $config = \Drupal::config('reg_core.settings');
   $missing = [];
-  if (!trim((string) $config->get('tariffs.approved_schedule_effective'))) {
+  try {
+    $bill_estimator_configured = \Drupal::service(\Drupal\reg_core\Energy\BillEstimatorInterface::class)->hasActiveSchedule();
+  }
+  catch (\Throwable) {
+    $bill_estimator_configured = FALSE;
+  }
+  if (!$bill_estimator_configured) {
     $missing[] = 'approved tariff assumptions';
   }
   if (!(float) $config->get('carbon.emission_factor')) {

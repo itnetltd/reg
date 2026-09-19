@@ -192,6 +192,77 @@ reg_core.settings:
         emission_factor: { type: float, label: 'Emission factor' }
         updated: { type: string, label: 'Emission factor validation date' }
 
+reg_core.bill_estimator:
+  type: config_object
+  label: 'REG Bill Estimator settings'
+  mapping:
+    currency:
+      type: string
+      label: 'Currency code'
+    public_note:
+      type: text
+      label: 'Public introductory note'
+    disclaimer:
+      type: text
+      label: 'Public result disclaimer'
+    fees:
+      type: mapping
+      label: 'Taxes and fees'
+      mapping:
+        vat: { type: reg_core.bill_estimator_fee, label: 'VAT' }
+        regulatory: { type: reg_core.bill_estimator_fee, label: 'Regulatory fee' }
+        other: { type: reg_core.bill_estimator_fee, label: 'Other approved fee' }
+
+reg_core.bill_estimator_fee:
+  type: mapping
+  label: 'Estimator fee'
+  mapping:
+    enabled: { type: boolean, label: 'Approved and available' }
+    included: { type: boolean, label: 'Included in estimate' }
+    type: { type: string, label: 'Value type' }
+    value: { type: float, label: 'Value' }
+    label: { type: label, label: 'Public label' }
+    explanation: { type: text, label: 'Public explanation' }
+
+reg_core.bill_tariff_schedule.*:
+  type: config_entity
+  label: 'REG bill tariff schedule'
+  mapping:
+    id: { type: string, label: 'ID' }
+    label: { type: label, label: 'Public category label' }
+    status: { type: boolean, label: 'Enabled' }
+    category: { type: string, label: 'Public category ID' }
+    customer_group: { type: string, label: 'Customer group' }
+    tariff_type: { type: string, label: 'Calculation type' }
+    unit: { type: string, label: 'Rate unit' }
+    effective_from: { type: string, label: 'Effective from' }
+    effective_to: { type: string, label: 'Effective to' }
+    bands:
+      type: sequence
+      label: 'Progressive bands'
+      sequence:
+        type: mapping
+        label: 'Tariff band'
+        mapping:
+          enabled: { type: boolean, label: 'Enabled' }
+          label: { type: label, label: 'Public label' }
+          min: { type: float, label: 'Minimum kWh' }
+          max: { type: ignore, label: 'Maximum kWh' }
+          rate: { type: float, label: 'Rate' }
+          weight: { type: integer, label: 'Weight' }
+    flat_rate: { type: float, label: 'Flat energy rate' }
+    energy_rate: { type: float, label: 'Industrial energy rate' }
+    peak_demand_rate: { type: float, label: 'Peak demand rate' }
+    off_peak_demand_rate: { type: float, label: 'Off-peak demand rate' }
+    shoulder_demand_rate: { type: float, label: 'Shoulder demand rate' }
+    source_title: { type: label, label: 'Source title' }
+    source_reference: { type: string, label: 'Source reference' }
+    source_url: { type: uri, label: 'Source URL' }
+    approval_date: { type: string, label: 'Approval date' }
+    internal_notes: { type: text, label: 'Internal notes' }
+    updated: { type: string, label: 'Last updated' }
+    updated_by: { type: integer, label: 'Last updated by user ID' }
+
 reg_core.social_media:
   type: config_object
   label: 'REG social media settings'

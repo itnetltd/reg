@@ -1,0 +1,25 @@
+currency: RWF
+public_note: 'All estimates are VAT and regulatory-fee exclusive unless an approved fee is shown in the calculation breakdown.'
+disclaimer: 'VAT and regulatory fees are not included because approved percentages were not supplied with this schedule. This estimate is for guidance only and is not an official REG/EUCL invoice.'
+fees:
+  vat:
+    enabled: false
+    included: false
+    type: percentage
+    value: 0.0
+    label: VAT
+    explanation: ''
+  regulatory:
+    enabled: false
+    included: false
+    type: percentage
+    value: 0.0
+    label: 'Regulatory fee'
+    explanation: ''
+  other:
+    enabled: false
+    included: false
+    type: percentage
+    value: 0.0
+    label: 'Other approved fee'
+    explanation: ''

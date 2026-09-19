@@ -411,28 +411,15 @@ final class RegSettingsForm extends ConfigFormBase {
 
     $form['tariffs'] = [
       '#type' => 'details',
-      '#title' => $this->t('Approved bill-estimator assumptions'),
+      '#title' => $this->t('REG Bill Estimator'),
       '#open' => TRUE,
-      '#description' => $this->t('Enter only REG/RURA-approved indicative rates. Leave rates at zero until validated.'),
-    ];
-    foreach ([
-      'residential' => $this->t('Residential rate per kWh (RWF)'),
-      'commercial' => $this->t('Commercial rate per kWh (RWF)'),
-      'industrial' => $this->t('Industrial rate per kWh (RWF)'),
-      'fixed_charge' => $this->t('Indicative fixed charge (RWF)'),
-    ] as $key => $label) {
-      $form['tariffs'][$key] = [
-        '#type' => 'number',
-        '#title' => $label,
-        '#default_value' => $config->get('tariffs.' . $key) ?? 0,
-        '#min' => 0,
-        '#step' => '0.01',
-      ];
-    }
-    $form['tariffs']['tariffs_updated'] = [
-      '#type' => 'date',
-      '#title' => $this->t('Tariff assumptions last validated'),
-      '#default_value' => $config->get('tariffs.updated'),
+      '#description' => $this->t('Approved rates, effective dates, taxes, fees, sources and public notes are managed in the dedicated Bill Estimator configuration.'),
+      'manage' => [
+        '#type' => 'link',
+        '#title' => $this->t('Manage REG Bill Estimator'),
+        '#url' => \Drupal\Core\Url::fromRoute('reg_core.bill_estimator_settings'),
+        '#attributes' => ['class' => ['button']],
+      ],
     ];
 
     $form['carbon'] = [
@@ -519,11 +506,6 @@ final class RegSettingsForm extends ConfigFormBase {
       ->set('governance.branch_review_days', (int) $form_state->getValue('branch_review_days'))
       ->set('governance.faq_review_days', (int) $form_state->getValue('faq_review_days'))
       ->set('governance.service_review_days', (int) $form_state->getValue('service_review_days'))
-      ->set('tariffs.residential', (float) $form_state->getValue('residential'))
-      ->set('tariffs.commercial', (float) $form_state->getValue('commercial'))
-      ->set('tariffs.industrial', (float) $form_state->getValue('industrial'))
-      ->set('tariffs.fixed_charge', (float) $form_state->getValue('fixed_charge'))
-      ->set('tariffs.updated', $form_state->getValue('tariffs_updated'))
       ->set('carbon.emission_factor', (float) $form_state->getValue('emission_factor'))
       ->set('carbon.updated', $form_state->getValue('carbon_updated'));
 
