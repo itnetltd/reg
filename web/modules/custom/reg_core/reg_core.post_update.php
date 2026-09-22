@@ -825,3 +825,20 @@ function reg_core_post_update_configurable_bill_estimator(?array &$sandbox = NUL
   }
   return 'Migrated the existing October 2025 bill-estimator values into ' . count($created) . ' dated tariff schedules and initialized global fee and disclaimer settings.';
 }
+
+/**
+ * Adds responsive homepage What We Do media without altering page content.
+ */
+function reg_core_post_update_homepage_work_responsive_media(?array &$sandbox = NULL): string {
+  $storage = \Drupal::entityTypeManager()->getStorage('responsive_image_style');
+  if (!$storage->load('reg_homepage_work')) {
+    $data = \Drupal\Component\Serialization\Yaml::decode(file_get_contents(__DIR__ . '/config/install/responsive_image.styles.reg_homepage_work.yml'));
+    $storage->create($data)->save();
+  }
+  // Cards now use node featured images; old theme overrides are retired.
+  $settings = \Drupal::configFactory()->getEditable('reg_theme.settings');
+  if ($settings->get('homepage_work_images') !== NULL) {
+    $settings->clear('homepage_work_images')->save();
+  }
+  return 'Configured responsive What We Do cards using node featured images and the existing section fallback media. Page content was not changed.';
+}

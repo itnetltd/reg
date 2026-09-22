@@ -173,3 +173,42 @@
   .reg-tender-related a { align-items: flex-start; flex-direction: column; }
   .reg-tender-documents a { width: 100%; }
 }
+
+/* Compact homepage cards only; tender detail and procurement flows are unchanged. */
+.site-shell--front .section--tenders { padding-block: 64px; }
+.site-shell--front .section--tenders .section-heading { margin-bottom: 32px; }
+.site-shell--front .reg-tender-feature-grid--count-1 { grid-template-columns: minmax(0, 520px); }
+.site-shell--front .reg-tender-feature-grid--count-2 { max-width: 1062px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.site-shell--front .reg-tender-feature-card {
+  min-height: 0;
+  padding: 18px;
+  border-top-width: 3px;
+  box-shadow: 0 5px 18px rgba(40, 23, 21, .04);
+}
+.site-shell--front .reg-tender-feature-card__top { flex-wrap: wrap; gap: 6px 10px; }
+.site-shell--front .reg-tender-feature-card__entity { font-size: 11px; letter-spacing: .06em; }
+.site-shell--front .reg-tender-feature-card__top :is(.reg-tender-status, .reg-pi-channel) {
+  min-height: 22px;
+  padding: 3px 8px;
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: .025em;
+}
+.site-shell--front .reg-tender-feature-card h3 {
+  margin: 10px 0 12px;
+  font-size: 22px;
+  line-height: 1.2;
+  -webkit-line-clamp: 4;
+}
+.site-shell--front .reg-tender-feature-card__meta { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 8px 14px; }
+.site-shell--front .reg-tender-feature-card__meta > div { min-width: 0; }
+.site-shell--front .reg-tender-feature-card__meta > div:last-child { grid-column: 1 / -1; }
+.site-shell--front .reg-tender-feature-card__meta dt { font-size: 10px; line-height: 1.3; }
+.site-shell--front .reg-tender-feature-card__meta dd { font-size: 13px; line-height: 1.35; }
+.site-shell--front .reg-tender-feature-card__actions { gap: 6px 16px; padding-top: 10px; }
+.site-shell--front .reg-tender-feature-card__actions a { display: inline-flex; align-items: center; min-height: 24px; font-size: 11px; }
+.site-shell--front .reg-tender-view-all { margin-top: 24px; }
+@media (max-width: 760px) {
+  .site-shell--front .reg-tender-feature-grid { max-width: none; grid-template-columns: minmax(0, 1fr); }
+  .site-shell--front .reg-tender-feature-card h3 { font-size: 21px; }
+}

@@ -38,6 +38,8 @@
       </div>
     </section>
 
+    {% include '@reg_theme/partials/homepage-work.html.twig' with {items: reg_homepage_work, overview_url: reg_homepage_work_url} only %}
+
     <section class="section section--status">
       <div class="reg-container">
         <div class="section-heading section-heading--split"><div><span class="section-kicker">{{ 'Outage Center'|t }}</span><h2>{{ 'Service Status'|t }}</h2><p>{{ 'Latest published electricity interruption notices from Rwanda Energy Group.'|t }}</p></div><div class="tabs" role="tablist"><button type="button" class="is-active" data-reg-tab="current">{{ 'Current outages'|t }}</button><button type="button" data-reg-tab="planned">{{ 'Planned outages'|t }}</button></div></div>
@@ -51,8 +53,6 @@
       </div>
     </section>
 
-    {{ page.energy_awareness }}
-
     <section class="section section--news">
       <div class="reg-container">
         <div class="section-heading section-heading--split section-heading--homepage-compact"><div><span class="section-kicker">{{ 'Public communication'|t }}</span><h2>{{ 'News & Insights'|t }}</h2><p>{{ 'Latest approved updates, developments and corporate announcements.'|t }}</p></div><a class="text-link" href="{{ path('reg_core.news') }}">{{ 'View all news'|t }} <span aria-hidden="true">→</span></a></div>
@@ -61,6 +61,8 @@
         {% endif %}
       </div>
     </section>
+
+    {{ page.energy_awareness }}
 
     <section class="section section--tenders">
       <div class="reg-container">

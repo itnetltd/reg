@@ -121,3 +121,34 @@
   .contact-cta .button { width: 100%; }
   .floating-actions { bottom: 76px; }
 }
+
+/* Homepage presentation only; protected sections retain their existing styles. */
+.site-shell--front .section:is(.section--services, .energy-awareness-section, .section--news, .video-section, .partners-section, .contact-cta) {
+  min-height: 0;
+  padding-block: 64px;
+}
+.site-shell--front :is(.section--services, .section--news, .partners-section) { background: #FFFFFF; }
+.site-shell--front .energy-awareness-section { background: #F7F4F2; }
+.site-shell--front .video-section { color: var(--reg-ink); background: #F3F6F8; }
+.site-shell--front .contact-cta { color: var(--reg-ink); background: #F6F7F8; }
+.site-shell--front :is(.section--services, .section--news, .partners-section) .section-heading,
+.site-shell--front .video-section__heading { margin-bottom: 32px; }
+.site-shell--front .video-stage { min-height: 0; }
+.site-shell--front :is(.video-section, .contact-cta) .section-kicker { color: var(--reg-red); }
+.site-shell--front .contact-cta p,
+.site-shell--front .video-pagination button { color: var(--reg-muted); }
+.site-shell--front .video-carousel__arrow { color: var(--reg-ink); border-color: var(--reg-border); }
+.site-shell--front .video-carousel__arrow:is(:hover, :focus-visible) { color: #FFFFFF; border-color: var(--reg-red); }
+.site-shell--front .video-pagination button:is(:hover, :focus-visible, [aria-current="true"]),
+.site-shell--front .video-section__all { color: var(--reg-red); }
+.site-shell--front .video-section :is(.video-card, .video-carousel__arrow, .video-pagination button, .video-section__all):focus-visible { outline-color: #146fd1; }
+.site-shell--front .contact-cta .button--light { color: #FFFFFF; background: var(--reg-red); }
+.site-shell--front .contact-cta .button--light:hover { background: var(--reg-red-dark); }
+.site-shell--front .contact-cta .button--ghost { color: var(--reg-red); border-color: var(--reg-red); }
+.site-shell--front .contact-cta .button--ghost:hover { background: var(--reg-red-soft); }
+
+@media (max-width: 760px) {
+  .site-shell--front .section:is(.section--services, .energy-awareness-section, .section--news, .video-section, .partners-section, .contact-cta) { padding-block: 40px; }
+  .site-shell--front :is(.section--services, .section--news, .partners-section) .section-heading,
+  .site-shell--front .video-section__heading { margin-bottom: 24px; }
+}

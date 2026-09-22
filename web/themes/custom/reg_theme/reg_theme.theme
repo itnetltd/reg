@@ -28,6 +28,11 @@ function reg_theme_preprocess_html(array &$variables): void {
  * Implements hook_preprocess_page().
  */
 function reg_theme_preprocess_page(array &$variables): void {
+  if (\Drupal::service('path.matcher')->isFrontPage()) {
+    $variables['reg_homepage_work'] = reg_theme_homepage_work($variables['page']);
+    $variables['reg_homepage_work_url'] = Url::fromUserInput('/what-we-do');
+  }
+
   $request_time = \Drupal::time()->getRequestTime();
   $timezone = new \DateTimeZone(\Drupal::config('system.date')->get('timezone.default') ?: date_default_timezone_get());
   $now = (new \DateTimeImmutable('@' . $request_time))->setTimezone($timezone);
@@ -519,4 +524,151 @@ function reg_theme_route(string $route_name, string $fallback): string {
   catch (\Exception) {
     return $fallback;
   }
+}
+
+/**
+ * Builds homepage cards from published primary pages in the content language.
+ */
+function reg_theme_homepage_work(array &$page): array {
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  $langcode = \Drupal::languageManager()->getCurrentLanguage(\Drupal\Core\Language\LanguageInterface::TYPE_CONTENT)->getId();
+  $keys = ['generation', 'transmission', 'distribution', 'access'];
+  $cache = \Drupal\Core\Cache\CacheableMetadata::createFromRenderArray($page)
+    ->addCacheTags(['node_list:reg_what_we_do_page', 'node_list:reg_section_hero', 'media_list', 'config:responsive_image.styles.reg_homepage_work'])
+    ->addCacheContexts(['languages:language_content', 'languages:language_url', 'user.permissions', 'user.node_grants:view']);
+  $ids = $storage->getQuery()->accessCheck(TRUE)
+    ->condition('type', 'reg_what_we_do_page')
+    ->condition('langcode', $langcode)
+    ->condition('status', NodeInterface::PUBLISHED, '=', $langcode)
+    ->condition('field_reg_wwd_key', $keys, 'IN')
+    ->sort('changed', 'DESC')->sort('uuid', 'ASC')->execute();
+  $items = [];
+  foreach ($storage->loadMultiple($ids) as $node) {
+    $key = $node->get('field_reg_wwd_key')->value;
+    if (!isset($items[$key])) {
+      $item = reg_theme_homepage_work_card($node, $langcode, $cache);
+      if ($item !== NULL) {
+        $items[$key] = $item;
+      }
+    }
+  }
+  $cache->applyTo($page);
+  // Stable structured keys define display order; IDs and titles never do.
+  return array_values(array_filter(array_replace(array_fill_keys($keys, NULL), $items)));
+}
+
+/**
+ * Normalizes a current-language card without falling back to another language.
+ */
+function reg_theme_homepage_work_card(NodeInterface $node, string $langcode, \Drupal\Core\Cache\CacheableMetadata $cache): ?array {
+  $cache->addCacheableDependency($node);
+  if (!$node->hasTranslation($langcode)) {
+    return NULL;
+  }
+  $node = $node->getTranslation($langcode);
+  $access = $node->access('view', NULL, TRUE);
+  $cache->addCacheableDependency($access);
+  if (!$node->isPublished() || !$access->isAllowed()) {
+    return NULL;
+  }
+  $summary_access = $node->get('field_reg_summary')->access('view', NULL, TRUE);
+  $cache->addCacheableDependency($summary_access);
+  $summary = $summary_access->isAllowed() ? trim(strip_tags((string) $node->get('field_reg_summary')->value)) : '';
+  $review = reg_theme_homepage_work_summary_issue($summary);
+  if ($review !== '') {
+    // Safe title-based navigation copy, without republishing dated statistics.
+    $summary = (string) t('Explore REG activities related to @area.', ['@area' => $node->label()], ['langcode' => $langcode]);
+  }
+  else {
+    $summary = preg_split('/(?<=[.!?])\s+(?=\p{Lu})/u', $summary, 2)[0];
+  }
+  $url = $node->toUrl('canonical', ['language' => $node->language()])->toString(TRUE);
+  $cache->addCacheableDependency($url);
+  $image_access = $node->get('field_reg_featured_image')->access('view', NULL, TRUE);
+  $cache->addCacheableDependency($image_access);
+  $media = $image_access->isAllowed() ? $node->get('field_reg_featured_image')->entity : NULL;
+  $image = reg_theme_homepage_work_image($media, $cache);
+  $uses_fallback = $image === [];
+  if ($uses_fallback) {
+    $image = reg_theme_homepage_work_fallback_image($cache);
+  }
+  return [
+    'key' => $node->get('field_reg_wwd_key')->value,
+    'title' => $node->label(), 'url' => $url->getGeneratedUrl(), 'image' => $image,
+    'summary' => \Drupal\Component\Utility\Unicode::truncate($summary, 150, TRUE, TRUE),
+    'summary_review' => $review, 'image_fallback' => $uses_fallback,
+  ];
+}
+
+/**
+ * Flags missing or time-sensitive legacy summaries for editorial review.
+ */
+function reg_theme_homepage_work_summary_issue(string $summary): string {
+  if ($summary === '') {
+    return 'Missing summary: an evergreen public summary is required.';
+  }
+  if (preg_match('/\b(?:currently|as\s+of|today|last\s+year|this\s+year|FY\s*\d|(?:19|20)\d{2})\b/iu', $summary)) {
+    return 'Dated summary: replace legacy statistics with an evergreen public summary.';
+  }
+  return '';
+}
+
+/**
+ * Builds bounded responsive derivatives from the node-selected Image Media.
+ */
+function reg_theme_homepage_work_image(?\Drupal\Core\Entity\EntityInterface $media, \Drupal\Core\Cache\CacheableMetadata $cache): array {
+  if (!$media instanceof \Drupal\media\MediaInterface) {
+    return [];
+  }
+  $media = \Drupal::service('entity.repository')->getTranslationFromContext($media);
+  $access = $media->access('view', NULL, TRUE);
+  $cache->addCacheableDependency($media)->addCacheableDependency($access);
+  $source = $media->getSource()->getConfiguration()['source_field'] ?? '';
+  if (!$media->isPublished() || !$access->isAllowed() || !$source || !$media->hasField($source)) {
+    return [];
+  }
+  $field = $media->get($source);
+  $field_access = $field->access('view', NULL, TRUE);
+  $cache->addCacheableDependency($field_access);
+  $item = $field->first();
+  $file = $item?->entity;
+  if (!$field_access->isAllowed() || !$file instanceof \Drupal\file\FileInterface) {
+    return [];
+  }
+  $cache->addCacheableDependency($file);
+  if (!is_file($file->getFileUri())) {
+    return [];
+  }
+  return [
+    '#theme' => 'responsive_image', '#responsive_image_style_id' => 'reg_homepage_work',
+    '#uri' => $file->getFileUri(), '#width' => (int) $item->width, '#height' => (int) $item->height,
+    '#attributes' => ['alt' => (string) $item->alt, 'loading' => 'lazy', 'decoding' => 'async'],
+  ];
+}
+
+/**
+ * Reuses the configured, published What We Do section hero's fallback Media.
+ */
+function reg_theme_homepage_work_fallback_image(\Drupal\Core\Cache\CacheableMetadata $cache): array {
+  $cache->addCacheTags(['node_list:reg_section_hero']);
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  $ids = $storage->getQuery()->accessCheck(TRUE)
+    ->condition('type', 'reg_section_hero')->condition('status', NodeInterface::PUBLISHED)
+    ->condition('field_reg_section_key', 'what_we_do')->condition('field_reg_active', 1)
+    ->sort('field_reg_order', 'ASC')->sort('uuid', 'ASC')->execute();
+  foreach ($storage->loadMultiple($ids) as $hero) {
+    $access = $hero->access('view', NULL, TRUE);
+    $cache->addCacheableDependency($hero)->addCacheableDependency($access);
+    if (!$access->isAllowed() || trim((string) $hero->get('field_reg_page_paths')->value) !== '') {
+      continue;
+    }
+    $field = $hero->get('field_reg_background_image');
+    $field_access = $field->access('view', NULL, TRUE);
+    $cache->addCacheableDependency($field_access);
+    $image = $field_access->isAllowed() ? reg_theme_homepage_work_image($field->entity, $cache) : [];
+    if ($image !== []) {
+      return $image;
+    }
+  }
+  return [];
 }

@@ -20,3 +20,9 @@ pager:
   css:
     component:
       css/pager.css: {}
+
+homepage_work:
+  css:
+    component:
+      css/homepage-work.css: {}
+

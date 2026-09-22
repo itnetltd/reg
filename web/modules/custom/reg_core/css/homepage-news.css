@@ -1,0 +1,80 @@
+/* Homepage-only news and social composition; Drupal content remains unchanged. */
+.reg-news-homepage.reg-news-homepage--visual {
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, .85fr);
+  align-items: start;
+  gap: 20px;
+}
+.reg-news-homepage--visual > .reg-news-lead {
+  display: flex;
+  flex-direction: column;
+  grid-template-rows: none;
+  box-shadow: 0 6px 20px rgba(40, 23, 21, .04);
+}
+.reg-news-homepage--visual .reg-news-lead__media { height: 260px; aspect-ratio: auto; }
+.reg-news-homepage--visual .reg-news-lead__body { padding: 22px; }
+.reg-news-homepage--visual .reg-news-lead h3 {
+  margin: 10px 0 12px;
+  font-size: clamp(24px, 2vw, 28px);
+  line-height: 1.18;
+  -webkit-line-clamp: 3;
+}
+.reg-news-homepage--visual .reg-news-homepage__secondary {
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: auto;
+  gap: 20px;
+}
+.reg-news-homepage--visual .reg-news-homepage__secondary > .reg-news-card--homepage {
+  display: grid;
+  height: auto;
+  grid-template-columns: minmax(0, .55fr) minmax(0, 1fr);
+  box-shadow: 0 6px 20px rgba(40, 23, 21, .04);
+}
+.reg-news-homepage--visual .reg-news-card--homepage .reg-news-card__media { min-height: 0; aspect-ratio: auto; }
+.reg-news-homepage--visual .reg-news-card__media picture,
+.reg-news-homepage--visual .reg-news-card__media img { position: absolute; inset: 0; }
+.reg-news-homepage--visual .reg-news-card__body { min-width: 0; padding: 16px; }
+.reg-news-homepage--visual .reg-news-card h3 {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 8px 0;
+  font-size: 18px;
+  line-height: 1.25;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+.reg-news-homepage--visual .reg-news-card__meta { gap: 4px 8px; font-size: 10px; letter-spacing: .025em; line-height: 1.5; }
+.reg-news-homepage--visual :is(.reg-news-lead, .reg-news-card) p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0 0 12px;
+  color: #5d5e61;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.reg-news-homepage--visual .reg-news-card__action { display: inline-flex; min-height: 32px; align-items: center; font-size: 11px; }
+.reg-news-homepage--visual .reg-news-homepage__social { min-width: 0; max-height: 520px; overflow: auto; border-radius: 16px; }
+.reg-news-homepage--visual .reg-news-homepage__social:focus-visible { outline: 3px solid #146fd1; outline-offset: 3px; }
+.reg-news-homepage--visual .reg-x-feed { height: auto; box-shadow: none; background: #F3F6F8; }
+.reg-news-homepage--visual .reg-x-feed__header { grid-template-columns: 24px minmax(0, 1fr); padding: 16px; }
+.reg-news-homepage--visual .reg-x-feed__follow { grid-column: 2; justify-self: start; }
+.reg-news-homepage--visual .reg-x-feed__post { min-height: 0; padding: 16px; }
+.reg-news-homepage--visual .reg-x-feed__post--media { grid-template-columns: minmax(0, 1fr) 64px; gap: 10px; }
+.reg-news-homepage--visual .reg-x-feed__media { width: 64px; height: 72px; }
+.reg-news-homepage--visual .reg-x-feed__post p { -webkit-line-clamp: 3; }
+.reg-news-homepage--visual .reg-x-feed__fallback { min-height: 0; padding: 24px 20px; background: transparent; }
+@media (max-width: 1100px) {
+  .reg-news-homepage.reg-news-homepage--visual { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .reg-news-homepage--visual .reg-news-homepage__social { grid-column: 1 / -1; max-height: none; overflow: visible; }
+  .reg-news-homepage--visual .reg-x-feed__posts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .reg-news-homepage--visual .reg-x-feed__header { grid-template-columns: 24px minmax(0, 1fr) auto; }
+  .reg-news-homepage--visual .reg-x-feed__follow { grid-column: auto; }
+}
+@media (max-width: 760px) {
+  .reg-news-homepage.reg-news-homepage--visual { grid-template-columns: minmax(0, 1fr); }
+  .reg-news-homepage--visual .reg-news-lead__media { height: 220px; }
+  .reg-news-homepage--visual .reg-news-lead__body { padding: 20px; }
+  .reg-news-homepage--visual .reg-x-feed__posts { grid-template-columns: minmax(0, 1fr); }
+}

@@ -1,0 +1,27 @@
+{% if items %}
+  {{ attach_library('reg_theme/homepage_work') }}
+  <section class="homepage-work" aria-labelledby="homepage-work-title">
+    <div class="reg-container">
+      <div class="homepage-work__heading">
+        <div>
+          <span class="section-kicker">{{ 'What We Do'|t }}</span>
+          <h2 id="homepage-work-title">{{ 'Powering Rwanda at every stage'|t }}</h2>
+          <p>{{ 'Explore how REG supports generation, transmission, distribution and electricity access.'|t }}</p>
+        </div>
+        <a class="homepage-work__all" href="{{ overview_url }}">{{ 'Explore all'|t }} <span aria-hidden="true">→</span><span class="visually-hidden"> {{ 'What We Do'|t }}</span></a>
+      </div>
+      <div class="homepage-work__grid">
+        {% for item in items %}
+          <a class="homepage-work__card" href="{{ item.url }}" aria-label="{{ 'Explore @title'|t({'@title': item.title}) }}">
+            {% if item.image %}<div class="homepage-work__image">{{ item.image }}</div>{% endif %}
+            <div class="homepage-work__body">
+              <h3>{{ item.title }}</h3>
+              {% if item.summary %}<p>{{ item.summary }}</p>{% endif %}
+              <span class="homepage-work__explore">{{ 'Explore'|t }} <span class="homepage-work__arrow" aria-hidden="true">→</span></span>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endif %}

@@ -234,3 +234,11 @@ supplier_portal:
     component:
       css/supplier-portal.css: {}
       css/supplier-dashboard.css: {}
+
+news_homepage:
+  css:
+    component:
+      css/homepage-news.css: {}
+  dependencies:
+    - reg_core/newsroom
+

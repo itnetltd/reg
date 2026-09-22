@@ -1,0 +1,20 @@
+<article class="reg-news-card reg-news-card--homepage">
+  <a class="reg-news-card__media" href="{{ item.url }}" aria-label="{{ 'Read @title'|t({'@title': item.title}) }}">
+    {% if item.image.render %}
+      {{ item.image.render }}
+    {% elseif item.image.absolute_url %}
+      <img src="{{ item.image.absolute_url }}" alt="{{ item.image.alt }}" loading="lazy" decoding="async">
+    {% else %}
+      <span class="reg-news-image-fallback" aria-hidden="true"><span>REG</span><strong>{{ 'News'|t }}</strong></span>
+    {% endif %}
+  </a>
+  <div class="reg-news-card__body">
+    <div class="reg-news-card__meta">
+      {% if item.category.label %}<span>{{ item.category.label }}</span>{% endif %}
+      {% if item.date %}<time datetime="{{ item.date_iso }}">{{ item.date }}</time>{% endif %}
+    </div>
+    <h3><a href="{{ item.url }}">{{ item.title }}</a></h3>
+    {% if item.summary %}<p>{{ item.summary }}</p>{% endif %}
+    <a class="reg-news-card__action" href="{{ item.url }}">{{ 'Read story'|t }} <span aria-hidden="true">→</span></a>
+  </div>
+</article>

@@ -1,0 +1,23 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - image.style.max_325x325
+    - image.style.max_650x650
+    - image.style.max_1300x1300
+  module:
+    - responsive_image
+id: reg_homepage_work
+label: 'REG homepage What We Do cards'
+image_style_mappings:
+  - image_mapping_type: sizes
+    image_mapping:
+      sizes: '(min-width: 1280px) 586px, (min-width: 1025px) calc((100vw - 108px) / 2), (min-width: 761px) calc((100vw - 104px) / 2), (min-width: 601px) calc((100vw - 64px) / 2), calc(100vw - 40px)'
+      sizes_image_styles:
+        - max_325x325
+        - max_650x650
+        - max_1300x1300
+    breakpoint_id: responsive_image.viewport_sizing
+    multiplier: 1x
+breakpoint_group: responsive_image
+fallback_image_style: max_650x650
