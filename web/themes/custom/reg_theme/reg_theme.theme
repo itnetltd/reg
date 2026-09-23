@@ -538,7 +538,7 @@ function reg_theme_homepage_work(array &$page): array {
     ->addCacheContexts(['languages:language_content', 'languages:language_url', 'user.permissions', 'user.node_grants:view']);
   $ids = $storage->getQuery()->accessCheck(TRUE)
     ->condition('type', 'reg_what_we_do_page')
-    ->condition('langcode', $langcode)
+    ->condition('langcode', $langcode, '=', $langcode)
     ->condition('status', NodeInterface::PUBLISHED, '=', $langcode)
     ->condition('field_reg_wwd_key', $keys, 'IN')
     ->sort('changed', 'DESC')->sort('uuid', 'ASC')->execute();
@@ -574,13 +574,14 @@ function reg_theme_homepage_work_card(NodeInterface $node, string $langcode, \Dr
   $summary_access = $node->get('field_reg_summary')->access('view', NULL, TRUE);
   $cache->addCacheableDependency($summary_access);
   $summary = $summary_access->isAllowed() ? trim(strip_tags((string) $node->get('field_reg_summary')->value)) : '';
-  $review = reg_theme_homepage_work_summary_issue($summary);
-  if ($review !== '') {
-    // Safe title-based navigation copy, without republishing dated statistics.
-    $summary = (string) t('Explore REG activities related to @area.', ['@area' => $node->label()], ['langcode' => $langcode]);
-  }
-  else {
-    $summary = preg_split('/(?<=[.!?])\s+(?=\p{Lu})/u', $summary, 2)[0];
+  $image_mode = 'cover';
+  if ($node->hasField('field_reg_image_display_mode')) {
+    $mode_field = $node->get('field_reg_image_display_mode');
+    $mode_access = $mode_field->access('view', NULL, TRUE);
+    $cache->addCacheableDependency($mode_access);
+    if ($mode_access->isAllowed() && $mode_field->value === 'contain') {
+      $image_mode = 'contain';
+    }
   }
   $url = $node->toUrl('canonical', ['language' => $node->language()])->toString(TRUE);
   $cache->addCacheableDependency($url);
@@ -596,21 +597,8 @@ function reg_theme_homepage_work_card(NodeInterface $node, string $langcode, \Dr
     'key' => $node->get('field_reg_wwd_key')->value,
     'title' => $node->label(), 'url' => $url->getGeneratedUrl(), 'image' => $image,
     'summary' => \Drupal\Component\Utility\Unicode::truncate($summary, 150, TRUE, TRUE),
-    'summary_review' => $review, 'image_fallback' => $uses_fallback,
+    'image_mode' => $image_mode, 'image_fallback' => $uses_fallback,
   ];
-}
-
-/**
- * Flags missing or time-sensitive legacy summaries for editorial review.
- */
-function reg_theme_homepage_work_summary_issue(string $summary): string {
-  if ($summary === '') {
-    return 'Missing summary: an evergreen public summary is required.';
-  }
-  if (preg_match('/\b(?:currently|as\s+of|today|last\s+year|this\s+year|FY\s*\d|(?:19|20)\d{2})\b/iu', $summary)) {
-    return 'Dated summary: replace legacy statistics with an evergreen public summary.';
-  }
-  return '';
 }
 
 /**

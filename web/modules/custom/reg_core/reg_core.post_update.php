@@ -842,3 +842,27 @@ function reg_core_post_update_homepage_work_responsive_media(?array &$sandbox = 
   }
   return 'Configured responsive What We Do cards using node featured images and the existing section fallback media. Page content was not changed.';
 }
+
+/**
+ * Makes homepage What We Do image fit editable on the existing content type.
+ */
+function reg_core_post_update_homepage_work_editor_image_mode(?array &$sandbox = NULL): string {
+  require_once __DIR__ . '/reg_core.what_we_do.inc';
+  if (!reg_core_ensure_homepage_work_image_mode()) {
+    return 'Image display mode already exists; editor choices were preserved.';
+  }
+  \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+  $storage = \Drupal::entityTypeManager()->getStorage('node');
+  $ids = $storage->getQuery()->accessCheck(FALSE)->condition('type', 'reg_what_we_do_page')
+    ->condition('field_reg_wwd_key', ['generation', 'transmission', 'distribution', 'access'], 'IN')->execute();
+  foreach ($storage->loadMultiple($ids) as $node) {
+    // One-time migration of the existing presentation; no IDs or file paths.
+    $mode = in_array($node->get('field_reg_wwd_key')->value, ['generation', 'distribution'], TRUE) ? 'contain' : 'cover';
+    $node->set('field_reg_image_display_mode', $mode);
+    $node->setNewRevision(TRUE);
+    $node->setRevisionLogMessage('Initialize editor-controlled homepage image display mode.');
+    $node->setSyncing(TRUE);
+    $node->save();
+  }
+  return 'Added Image display mode (Cover/Contain) to What We Do pages and preserved the existing primary-card image modes.';
+}

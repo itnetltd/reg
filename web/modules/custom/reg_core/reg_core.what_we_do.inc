@@ -161,6 +161,7 @@ function reg_core_apply_what_we_do_content_model(): void {
     $display->save();
   }
 
+  reg_core_ensure_homepage_work_image_mode();
   reg_core_ensure_official_media_source_fields();
 }
 
@@ -241,4 +242,39 @@ function reg_core_ensure_official_media_source_fields(): void {
       ])->save();
     }
   }
+}
+
+/**
+ * Adds an editor-controlled homepage image mode without changing page displays.
+ */
+function reg_core_ensure_homepage_work_image_mode(): bool {
+  $bundle = 'reg_what_we_do_page';
+  $name = 'field_reg_image_display_mode';
+  if (FieldConfig::loadByName('node', $bundle, $name)) {
+    return FALSE;
+  }
+  if (!FieldStorageConfig::loadByName('node', $name)) {
+    FieldStorageConfig::create([
+      'field_name' => $name, 'entity_type' => 'node', 'type' => 'list_string',
+      'cardinality' => 1, 'translatable' => FALSE,
+      'settings' => ['allowed_values' => ['cover' => 'Cover', 'contain' => 'Contain']],
+    ])->save();
+  }
+  FieldConfig::create([
+    'field_name' => $name, 'entity_type' => 'node', 'bundle' => $bundle,
+    'label' => 'Image display mode',
+    'description' => 'Homepage card: Cover crops photos; Contain shows the full chart, diagram or map with padding.',
+    'required' => TRUE, 'translatable' => FALSE,
+    'default_value' => [['value' => 'cover']],
+  ])->save();
+  $display = \Drupal::service('entity_display.repository')->getFormDisplay('node', $bundle);
+  $image = $display->getComponent('field_reg_featured_image');
+  $display->setComponent($name, ['type' => 'options_select', 'weight' => ($image['weight'] ?? 15) + 1])->save();
+  // Presentation control is not rendered as content on the detail page.
+  foreach (\Drupal::entityTypeManager()->getStorage('entity_view_display')->loadByProperties([
+    'targetEntityType' => 'node', 'bundle' => $bundle,
+  ]) as $view) {
+    $view->removeComponent($name)->save();
+  }
+  return TRUE;
 }
