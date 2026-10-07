@@ -15,7 +15,7 @@ interface NewsRepositoryInterface {
   public function homepage(): array;
 
   /**
-   * Returns the featured and latest Sports News for the Sports homepage.
+   * Returns the latest Sports-category News in publication-date order.
    */
   public function sportsHomepage(int $limit = 6): array;
 

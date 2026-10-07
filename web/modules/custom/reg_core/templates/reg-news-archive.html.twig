@@ -51,6 +51,12 @@
         </nav>
 
         {% if section == 'sports' %}
+          <nav class="reg-filter-chips" aria-label="{{ 'Filter by team'|t }}">
+            <span class="reg-news-filter-label">{{ 'Team'|t }}</span>
+            <a class="reg-filter-chip {{ not filters.team ? 'is-active' }}" href="{{ path('reg_core.sports_news') }}">{{ 'All'|t }}</a>
+            {% for team in teams %}<a class="reg-filter-chip {{ filters.team == team.id ? 'is-active' }}" href="{{ path('reg_core.sports_news', {}, {query: {team: team.id, language: filters.language}}) }}">{{ team.title }}</a>{% endfor %}
+          </nav>
+
           <nav class="reg-news-sport-tabs reg-filter-chips" aria-label="{{ 'Filter sports news by sport'|t }}">
             <span class="reg-news-filter-label">{{ 'Sport'|t }}</span>
             <a class="reg-filter-chip {{ not filters.sport ? 'is-active' }}" href="{{ path('reg_core.sports_news') }}">{{ 'All'|t }}</a>

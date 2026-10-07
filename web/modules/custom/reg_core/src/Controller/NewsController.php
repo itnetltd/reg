@@ -6,7 +6,6 @@ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
-use Drupal\Core\Url;
 use Drupal\reg_core\News\NewsRepositoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -56,14 +55,18 @@ final class NewsController implements ContainerInjectionInterface {
       'section' => $section === 'sports' ? 'sports' : 'corporate',
       'language' => in_array($route_language, ['en', 'rw'], TRUE) ? $route_language : (in_array($request->query->get('language'), ['en', 'rw'], TRUE) ? (string) $request->query->get('language') : ''),
       'sport' => max(0, (int) $request->query->get('sport', 0)),
+      'team' => max(0, (int) $request->query->get('team', 0)),
     ];
+    if ($section === 'sports' && $route_language === '' && !$request->query->has('language')) {
+      $filters['language'] = \Drupal::languageManager()->getCurrentLanguage()->getId();
+    }
     $page = max(0, $this->pagerParameters->findPage(0));
     $result = $this->newsRepository->archive($filters, $page, self::PAGE_SIZE);
     $this->pagerManager->createPager($result['total'], self::PAGE_SIZE, 0);
     $options = $this->newsRepository->filterOptions();
     return [
       '#theme' => 'reg_news_archive',
-      '#archive_heading' => $section === 'sports' ? 'Sports News' : 'Corporate News',
+      '#archive_heading' => $section === 'sports' ? 'Sports News' : 'News & Insights',
       '#archive_description' => $section === 'sports'
         ? 'Latest news, results, achievements and updates from REG sports teams.'
         : 'Approved updates, developments and corporate announcements from Rwanda Energy Group.',
@@ -75,6 +78,7 @@ final class NewsController implements ContainerInjectionInterface {
       '#years' => $options['years'],
       '#departments' => $options['departments'],
       '#sports' => $options['sports'],
+      '#teams' => \Drupal::service('reg_core.sports_repository')->listing('reg_sports_team', ['active' => 1]),
       '#section' => $section,
       '#pager' => ['#type' => 'pager'],
       '#attached' => ['library' => ['reg_core/newsroom']],
@@ -88,6 +92,7 @@ final class NewsController implements ContainerInjectionInterface {
           'url.query_args:department',
           'url.query_args:language',
           'url.query_args:sport',
+          'url.query_args:team',
           'url.query_args:page',
           'user.node_grants:view',
         ],
@@ -97,16 +102,22 @@ final class NewsController implements ContainerInjectionInterface {
     ];
   }
 
-  /** Renders a section-validated reg_news article. */
-  public function detail(int $node, Request $request): array {
+  /** Redirects historical numeric article routes to the single News canonical URL. */
+  public function detail(int $node, Request $request): RedirectResponse {
     $entity = $this->entityTypeManager->getStorage('node')->load($node);
-    $expected = (string) $request->attributes->get('_news_section', 'corporate');
-    $actual = $entity instanceof NodeInterface && $entity->hasField('field_reg_news_section')
-      ? (string) $entity->get('field_reg_news_section')->value : 'corporate';
-    if (!$entity instanceof NodeInterface || $entity->bundle() !== 'reg_news' || !$entity->isPublished() || !$entity->access('view') || $actual !== $expected) {
+    if ($entity instanceof NodeInterface && $entity->bundle() === 'reg_sports_update') {
+      $target = \Drupal::state()->get('reg_core.sports_news_migration', [])[$node] ?? NULL;
+      $entity = $target ? $this->entityTypeManager->getStorage('node')->load($target) : NULL;
+    }
+    $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+    if ($entity instanceof NodeInterface && $entity->hasTranslation($langcode)) $entity = $entity->getTranslation($langcode);
+    if (!$entity instanceof NodeInterface || $entity->bundle() !== 'reg_news' || !$entity->isPublished() || !$entity->access('view')) {
       throw new NotFoundHttpException();
     }
-    return $this->entityTypeManager->getViewBuilder('node')->view($entity, 'full');
+    $response = new \Drupal\Core\Cache\CacheableRedirectResponse($entity->toUrl()->toString(), 301);
+    $response->addCacheableDependency($entity);
+    $response->getCacheableMetadata()->addCacheContexts(['languages:language_interface', 'user.node_grants:view']);
+    return $response;
   }
 
   public function detailTitle(int $node): string {
@@ -121,8 +132,7 @@ final class NewsController implements ContainerInjectionInterface {
       ->condition('status', NodeInterface::PUBLISHED)->range(0, 1)->execute();
     if (!$ids) throw new NotFoundHttpException();
     $entity = $this->entityTypeManager->getStorage('node')->load(reset($ids));
-    $section = $entity->hasField('field_reg_news_section') ? (string) $entity->get('field_reg_news_section')->value : 'corporate';
-    $url = Url::fromRoute($section === 'sports' ? 'reg_core.sports_news_detail' : 'reg_core.news_detail', ['node' => $entity->id()])->toString();
+    $url = $entity->toUrl()->toString();
     return new RedirectResponse($url, 301);
   }
 

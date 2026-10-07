@@ -136,3 +136,8 @@ change reg procurement lifecycle:
 change reg recruitment lifecycle:
   title: 'Change REG recruitment lifecycle status'
   restrict access: true
+
+manage reg migration metadata:
+  title: 'Manage REG migration metadata'
+  description: 'Edit technical source and import metadata on News content.'
+  restrict access: true

@@ -16,6 +16,8 @@ use Drupal\media\MediaInterface;
 use Drupal\node\NodeInterface;
 
 require_once __DIR__ . '/reg_core.supplier.inc';
+require_once __DIR__ . '/reg_core.sports_news.inc';
+require_once __DIR__ . '/reg_core.news_form.inc';
 
 /**
  * Implements hook_entity_field_access().
@@ -24,6 +26,9 @@ require_once __DIR__ . '/reg_core.supplier.inc';
  * approver may change it after the record has been created.
  */
 function reg_core_entity_field_access(string $operation, FieldDefinitionInterface $field_definition, AccountInterface $account, ?FieldItemListInterface $items = NULL): AccessResult {
+  if ($operation === 'edit' && $items && $items->getEntity() instanceof NodeInterface && $items->getEntity()->bundle() === 'reg_news' && in_array($field_definition->getName(), reg_core_news_migration_fields(), TRUE)) {
+    return AccessResult::forbiddenIf(!$account->hasPermission('manage reg migration metadata'))->cachePerPermissions();
+  }
   if ($operation !== 'edit' || !$items || $items->getEntity()->isNew()) {
     return AccessResult::neutral();
   }
@@ -284,6 +289,7 @@ function reg_core_field_widget_complete_form_alter(array &$field_widget_complete
  * Implements hook_node_presave().
  */
 function reg_core_node_presave(NodeInterface $node): void {
+  if ($node->bundle() === 'reg_news') reg_core_sports_news_presave($node);
   if (in_array($node->bundle(), ['reg_tender', 'reg_job'], TRUE)) {
     reg_core_apply_plan_defaults($node);
     if (!$node->isNew() && ($original = $node->getOriginal()) instanceof NodeInterface) {
@@ -323,6 +329,7 @@ function reg_core_node_presave(NodeInterface $node): void {
 /** Implements hook_form_BASE_FORM_ID_alter() for plan and channel rules. */
 function reg_core_form_node_form_alter(array &$form, FormStateInterface $form_state): void {
   $node = $form_state->getFormObject()->getEntity();
+  if ($node instanceof NodeInterface && $node->bundle() === 'reg_news') reg_core_news_editor_form($form);
   if ($node instanceof NodeInterface && in_array($node->bundle(), ['reg_tender', 'reg_job'], TRUE)) {
     $form['#validate'][] = 'reg_core_plan_link_form_validate';
     if ($node->isNew()) {
@@ -568,6 +575,7 @@ function reg_core_theme(): array {
         'years' => [],
         'departments' => [],
         'sports' => [],
+        'teams' => [],
         'section' => 'corporate',
         'pager' => NULL,
       ],

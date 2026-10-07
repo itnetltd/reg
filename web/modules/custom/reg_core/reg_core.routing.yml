@@ -1507,3 +1507,12 @@ reg_core.dashboard_export:
   options:
     _admin_route: true
     no_cache: true
+
+reg_core.news_archive:
+  path: '/news'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\NewsController::archive'
+    _title: 'News & Insights'
+    _news_section: 'corporate'
+  requirements:
+    _permission: 'access content'

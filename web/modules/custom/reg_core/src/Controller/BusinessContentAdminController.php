@@ -40,6 +40,7 @@ final class BusinessContentAdminController extends ControllerBase {
       ->execute();
     $rows = [];
     foreach ($node_storage->loadMultiple($ids) as $node) {
+      if ($area === 'sports' && $node->bundle() === 'reg_news' && !reg_core_is_sports_news($node)) continue;
       if (!$node->access('update', $this->currentUser())) {
         continue;
       }
@@ -83,7 +84,7 @@ final class BusinessContentAdminController extends ControllerBase {
   /** Returns labels and governed bundles by route argument. */
   private static function areas(): array {
     return [
-      'sports' => ['Sports', ['reg_sports_update', 'reg_sports_team', 'reg_sports_player', 'reg_sports_membership', 'reg_sports_staff', 'reg_sports_fixture', 'reg_sports_standing', 'reg_sports_gallery', 'reg_sports_video']],
+      'sports' => ['Sports', ['reg_news', 'reg_sports_team', 'reg_sports_player', 'reg_sports_membership', 'reg_sports_staff', 'reg_sports_fixture', 'reg_sports_standing', 'reg_sports_gallery', 'reg_sports_video']],
       'communications' => ['Communications', ['reg_news', 'reg_social_post', 'reg_publication', 'reg_public_alert', 'reg_homepage_hero', 'reg_section_hero', 'reg_video', 'reg_about_page', 'reg_value', 'reg_leader', 'reg_partner', 'reg_employee_recognition']],
       'procurement' => ['Procurement', ['reg_tender', 'reg_procurement_plan', 'reg_procurement_plan_item']],
       'hr' => ['Human resources', ['reg_job', 'reg_recruitment_plan', 'reg_recruitment_plan_item']],

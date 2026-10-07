@@ -866,3 +866,10 @@ function reg_core_post_update_homepage_work_editor_image_mode(?array &$sandbox =
   }
   return 'Added Image display mode (Cover/Contain) to What We Do pages and preserved the existing primary-card image modes.';
 }
+
+/** Consolidates sports stories into the existing News editorial workflow. */
+function reg_core_post_update_unified_sports_news(?array &$sandbox = NULL): string {
+  require_once __DIR__ . '/reg_core.sports_news.inc';
+  reg_core_configure_sports_news();
+  return 'Unified Sports News: ' . json_encode(reg_core_migrate_sports_news());
+}

@@ -41,7 +41,6 @@ final class NewsRepository implements NewsRepositoryInterface {
     }
 
     $ids = $this->publishedQuery()
-      ->condition('field_reg_news_section', 'corporate')
       ->sort('field_reg_publication_date', 'DESC')
       ->sort('nid', 'DESC')
       ->range(0, 3)
@@ -82,8 +81,7 @@ final class NewsRepository implements NewsRepositoryInterface {
     }
 
     $ids = $this->publishedQuery()
-      ->condition('field_reg_news_section', 'sports')
-      ->sort('field_reg_featured', 'DESC')
+      ->condition('field_reg_news_category_term.target_id', reg_core_sports_news_category_ids(), 'IN')
       ->sort('field_reg_publication_date', 'DESC')
       ->sort('nid', 'DESC')
       ->range(0, $limit)
@@ -111,8 +109,13 @@ final class NewsRepository implements NewsRepositoryInterface {
     $requested_language = $filters['language'] ?? NULL;
     $language = in_array($requested_language, ['en', 'rw'], TRUE) ? $requested_language : ($requested_language === '' ? '' : NULL);
     $query = $this->publishedQuery($language);
-    $section = in_array(($filters['section'] ?? 'corporate'), ['corporate', 'sports'], TRUE) ? $filters['section'] : 'corporate';
-    $query->condition('field_reg_news_section', $section);
+    $section = in_array(($filters['section'] ?? 'corporate'), ['corporate', 'sports'], TRUE) ? ($filters['section'] ?? 'corporate') : 'corporate';
+    if ($section === 'sports') {
+      $query->condition('field_reg_news_category_term.target_id', reg_core_sports_news_category_ids(), 'IN');
+      foreach (['team' => 'field_reg_team', 'player' => 'field_reg_related_players'] as $key => $field) {
+        if (!empty($filters[$key])) $query->condition($field . '.target_id', (int) $filters[$key]);
+      }
+    }
     $sport = max(0, (int) ($filters['sport'] ?? 0));
     if ($section === 'sports' && $sport) {
       $query->condition('field_reg_sports_sport.target_id', $sport);
@@ -149,7 +152,7 @@ final class NewsRepository implements NewsRepositoryInterface {
 
     $items = [];
     $tags = $this->listCacheTags();
-    foreach ($this->loadTranslated($ids) as $node) {
+    foreach ($this->loadTranslated($ids, $language) as $node) {
       $item = $this->item($node, 'reg_news_card');
       $items[] = $item;
       $tags = Cache::mergeTags($tags, $item['cache_tags']);
@@ -222,7 +225,6 @@ final class NewsRepository implements NewsRepositoryInterface {
    * {@inheritdoc}
    */
   public function item(NodeInterface $node, string $responsiveStyle = 'reg_news_card', string $loading = 'lazy'): array {
-    $node = $this->translated($node);
     $category = $this->category($node);
     $date = $this->publicationDate($node);
     $summary = $this->value($node, 'field_reg_summary');
@@ -241,14 +243,11 @@ final class NewsRepository implements NewsRepositoryInterface {
       'date_iso' => $date['iso'],
       'department' => $this->value($node, 'field_reg_content_department'),
       'featured' => (bool) $this->value($node, 'field_reg_featured'),
-      'section' => $this->value($node, 'field_reg_news_section') ?: 'corporate',
+      'section' => reg_core_is_sports_news($node) ? 'sports' : 'corporate',
+      'team' => $this->termLabel($node, 'field_reg_team'),
       'language' => $node->language()->getId(),
       'sport' => $this->termLabel($node, 'field_reg_sports_sport'),
-      'url' => Url::fromRoute(
-        $this->value($node, 'field_reg_news_section') === 'sports' ? 'reg_core.sports_news_detail' : 'reg_core.news_detail',
-        ['node' => $node->id()],
-        ['language' => $node->language()],
-      )->toString(),
+      'url' => $node->toUrl('canonical', ['language' => $node->language()])->toString(),
       'image' => $image,
       'cache_tags' => Cache::mergeTags($node->getCacheTags(), $image['cache_tags'] ?? []),
     ];
@@ -349,10 +348,11 @@ final class NewsRepository implements NewsRepositoryInterface {
    * Returns the entity query shared by all public news collections.
    */
   private function publishedQuery(?string $langcode = NULL) {
+    $language = $langcode ?? $this->languageManager->getCurrentLanguage()->getId();
     $query = $this->entityTypeManager->getStorage('node')->getQuery()
       ->accessCheck(TRUE)
       ->condition('type', 'reg_news')
-      ->condition('status', NodeInterface::PUBLISHED);
+      ->condition('status', NodeInterface::PUBLISHED, '=', $language ?: NULL);
     if ($langcode !== NULL && $langcode !== '') {
       $query->condition('langcode', $langcode);
     }
@@ -368,7 +368,7 @@ final class NewsRepository implements NewsRepositoryInterface {
    * @return \Drupal\node\NodeInterface[]
    *   Translated nodes, retaining query order.
    */
-  private function loadTranslated(array $ids): array {
+  private function loadTranslated(array $ids, ?string $langcode = NULL): array {
     if ($ids === []) {
       return [];
     }
@@ -377,7 +377,10 @@ final class NewsRepository implements NewsRepositoryInterface {
     $nodes = [];
     foreach ($ids as $id) {
       if (isset($loaded[$id]) && $loaded[$id] instanceof NodeInterface) {
-        $nodes[] = $this->translated($loaded[$id]);
+        $node = $loaded[$id];
+        $language = $langcode ?? $this->languageManager->getCurrentLanguage()->getId();
+        if ($language !== '' && $node->hasTranslation($language)) $node = $node->getTranslation($language);
+        if ($node->isPublished() && $node->access('view')) $nodes[] = $node;
       }
     }
     return $nodes;
@@ -485,6 +488,7 @@ final class NewsRepository implements NewsRepositoryInterface {
         ],
       ],
       'alt' => $alt,
+      'url' => $this->fileUrlGenerator->generateString($uri),
       'absolute_url' => $this->fileUrlGenerator->generateAbsoluteString($uri),
       'cache_tags' => Cache::mergeTags($media->getCacheTags(), $file->getCacheTags()),
     ];
@@ -495,7 +499,6 @@ final class NewsRepository implements NewsRepositoryInterface {
    */
   private function related(NodeInterface $node): array {
     $candidates = [];
-    $section = $this->value($node, 'field_reg_news_section') ?: 'corporate';
     if ($node->hasField('field_reg_related_news')) {
       foreach ($node->get('field_reg_related_news')->referencedEntities() as $related) {
         if ($related instanceof NodeInterface && $related->id() !== $node->id()) {
@@ -511,7 +514,6 @@ final class NewsRepository implements NewsRepositoryInterface {
     if (count($candidates) < 3 && $category_id) {
       $query = $this->publishedQuery()
         ->condition('nid', $node->id(), '<>')
-        ->condition('field_reg_news_section', $section)
         ->condition('field_reg_news_category_term.target_id', $category_id)
         ->sort('field_reg_publication_date', 'DESC')
         ->range(0, 3);
@@ -522,7 +524,6 @@ final class NewsRepository implements NewsRepositoryInterface {
     if (count($candidates) < 3) {
       $query = $this->publishedQuery()
         ->condition('nid', $node->id(), '<>')
-        ->condition('field_reg_news_section', $section)
         ->sort('field_reg_publication_date', 'DESC')
         ->range(0, 6);
       foreach ($this->loadTranslated($query->execute()) as $candidate) {
@@ -547,10 +548,7 @@ final class NewsRepository implements NewsRepositoryInterface {
     return [
       'language' => $related->language()->getId(),
       'label' => $related->language()->getId() === 'rw' ? 'Read this story in Kinyarwanda' : 'Read this story in English',
-      'url' => Url::fromRoute(
-        $section = $this->value($related, 'field_reg_news_section') === 'sports' ? 'reg_core.sports_news_detail' : 'reg_core.news_detail',
-        ['node' => $related->id()], ['language' => $related->language()],
-      )->toString(),
+      'url' => $related->toUrl('canonical', ['language' => $related->language()])->toString(),
     ];
   }
 
@@ -589,6 +587,8 @@ final class NewsRepository implements NewsRepositoryInterface {
       'media_list',
       'file_list',
       'taxonomy_term_list:reg_news_category',
+      'taxonomy_term_list:reg_sports_sport',
+      'node_list:reg_sports_team',
     ];
   }
 

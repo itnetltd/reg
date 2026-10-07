@@ -23,7 +23,7 @@ final class SportsRepository implements SportsRepositoryInterface {
     'reg_sports_staff',
     'reg_sports_fixture',
     'reg_sports_standing',
-    'reg_sports_update',
+    'reg_news',
     'reg_sports_gallery',
     'reg_sports_video',
   ];
@@ -35,6 +35,7 @@ final class SportsRepository implements SportsRepositoryInterface {
     private readonly FileUrlGeneratorInterface $regFileUrlGenerator,
     private readonly CacheBackendInterface $cache,
     private readonly TimeInterface $time,
+    private readonly \Drupal\reg_core\News\NewsRepositoryInterface $newsRepository,
   ) {}
 
   /**
@@ -47,7 +48,7 @@ final class SportsRepository implements SportsRepositoryInterface {
       'mode' => 'results',
       'featured' => 1,
     ])[0] ?? NULL;
-    $latest_story = $this->listing('reg_sports_update')[0] ?? NULL;
+    $latest_story = $this->listing('reg_news', ['limit' => 1])[0] ?? NULL;
 
     return [
       'teams' => $this->listing('reg_sports_team', ['active' => 1]),
@@ -55,7 +56,7 @@ final class SportsRepository implements SportsRepositoryInterface {
       'next_match' => $next_match,
       'latest_result' => $latest_result,
       'standings' => array_slice($this->listing('reg_sports_standing'), 0, 8),
-      'news' => array_slice($this->listing('reg_sports_update'), 0, 4),
+      'news' => $this->listing('reg_news', ['limit' => 4]),
       'players' => array_slice($this->listing('reg_sports_player', ['featured' => 1]), 0, 4),
       'galleries' => array_slice($this->listing('reg_sports_gallery'), 0, 3),
       'videos' => array_slice($this->listing('reg_sports_video'), 0, 3),
@@ -81,7 +82,7 @@ final class SportsRepository implements SportsRepositoryInterface {
       'fixtures' => array_slice($this->listing('reg_sports_fixture', ['team' => $team_id, 'mode' => 'fixtures']), 0, 5),
       'results' => array_slice($this->listing('reg_sports_fixture', ['team' => $team_id, 'mode' => 'results']), 0, 5),
       'standings' => $this->listing('reg_sports_standing', ['team_context' => $team_id]),
-      'news' => array_slice($this->listing('reg_sports_update', ['team' => $team_id]), 0, 4),
+      'news' => $this->listing('reg_news', ['team' => $team_id, 'limit' => 4]),
       'galleries' => array_slice($this->listing('reg_sports_gallery', ['team' => $team_id]), 0, 3),
       'videos' => array_slice($this->listing('reg_sports_video', ['team' => $team_id]), 0, 3),
     ];
@@ -154,6 +155,16 @@ final class SportsRepository implements SportsRepositoryInterface {
    * {@inheritdoc}
    */
   public function listing(string $bundle, array $filters = []): array {
+    if ($bundle === 'reg_news') {
+      $result = $this->newsRepository->archive([
+        'section' => 'sports', 'team' => $filters['team'] ?? 0,
+        'sport' => $filters['sport'] ?? 0, 'search' => $filters['query'] ?? '',
+      ], 0, max(1, min(100, (int) ($filters['limit'] ?? 100))));
+      return array_map(static fn(array $item): array => array_replace($item, [
+        'bundle' => 'reg_news', 'kind' => 'Sports news', 'category' => $item['category']['label'],
+        'timestamp' => strtotime($item['date_iso']) ?: 0,
+      ]), $result['items']);
+    }
     if (!in_array($bundle, self::BUNDLES, TRUE)) {
       return [];
     }
@@ -203,7 +214,7 @@ final class SportsRepository implements SportsRepositoryInterface {
     $featureable_bundles = [
       'reg_sports_fixture',
       'reg_sports_player',
-      'reg_sports_update',
+      'reg_news',
       'reg_sports_gallery',
       'reg_sports_video',
     ];
@@ -301,7 +312,7 @@ final class SportsRepository implements SportsRepositoryInterface {
       return [];
     }
     $items = [];
-    foreach (['reg_sports_team', 'reg_sports_player', 'reg_sports_update', 'reg_sports_fixture'] as $bundle) {
+    foreach (['reg_sports_team', 'reg_sports_player', 'reg_news', 'reg_sports_fixture'] as $bundle) {
       $items = array_merge($items, $this->listing($bundle, ['query' => $keywords]));
     }
     usort($items, static fn(array $a, array $b): int => ($b['timestamp'] ?? 0) <=> ($a['timestamp'] ?? 0));
@@ -344,18 +355,6 @@ final class SportsRepository implements SportsRepositoryInterface {
    */
   public function homepageHighlights(): array {
     $items = [];
-    $next = $this->listing('reg_sports_fixture', ['mode' => 'fixtures'])[0] ?? NULL;
-    if ($next) {
-      $items[] = [
-        'kind' => 'fixture',
-        'team' => 'Next fixture',
-        'title' => $next['matchup'],
-        'meta' => $next['date'],
-        'url' => $next['url'],
-        'image' => $next['image'],
-        'result_label' => '',
-      ];
-    }
     $result = $this->listing('reg_sports_fixture', ['mode' => 'results'])[0] ?? NULL;
     if ($result) {
       $items[] = [
@@ -368,11 +367,12 @@ final class SportsRepository implements SportsRepositoryInterface {
         'result_label' => $result['result_label'] ?: $result['status'],
       ];
     }
-    $news = $this->listing('reg_sports_update')[0] ?? NULL;
+    $news = $this->newsRepository->sportsHomepage(1)[0] ?? NULL;
     if ($news) {
       $items[] = [
         'kind' => 'story',
-        'team' => 'Latest story',
+        'team' => 'Latest sports story',
+        'classification' => 'Sports' . (($news['team'] ?: $news['sport']) ? ' / ' . ($news['team'] ?: $news['sport']) : ''),
         'title' => $news['title'],
         'meta' => $news['date'],
         'url' => $news['url'],
@@ -482,7 +482,7 @@ final class SportsRepository implements SportsRepositoryInterface {
       'reg_sports_team' => Url::fromRoute('reg_core.sports_team_' . $this->value($node, 'field_reg_team_key'))->toString(),
       'reg_sports_player' => Url::fromRoute('reg_core.sports_player', ['player' => $node->id()])->toString(),
       'reg_sports_fixture' => Url::fromRoute('reg_core.sports_fixture', ['fixture' => $node->id()])->toString(),
-      'reg_sports_update' => Url::fromRoute('reg_core.sports_news_detail', ['node' => $node->id()])->toString(),
+      'reg_news' => $node->toUrl()->toString(),
       'reg_sports_gallery' => Url::fromRoute('reg_core.sports_gallery_detail', ['gallery' => $node->id()])->toString(),
       default => Url::fromRoute('reg_core.sports')->toString(),
     };
@@ -498,7 +498,7 @@ final class SportsRepository implements SportsRepositoryInterface {
       'reg_sports_staff' => 'Technical staff',
       'reg_sports_fixture' => 'Fixture or result',
       'reg_sports_standing' => 'Standing',
-      'reg_sports_update' => 'Sports news',
+      'reg_news' => 'Sports news',
       'reg_sports_gallery' => 'Gallery',
       'reg_sports_video' => 'Video',
       default => 'Sports',
@@ -553,16 +553,7 @@ final class SportsRepository implements SportsRepositoryInterface {
    * Finds published news that references one player.
    */
   private function relatedNewsForPlayer(int $player_id): array {
-    $storage = $this->regEntityTypeManager->getStorage('node');
-    $ids = $storage->getQuery()
-      ->accessCheck(TRUE)
-      ->condition('type', 'reg_sports_update')
-      ->condition('status', NodeInterface::PUBLISHED)
-      ->condition('field_reg_related_players.target_id', $player_id)
-      ->sort('field_reg_publication_date', 'DESC')
-      ->range(0, 6)
-      ->execute();
-    return array_map(fn(NodeInterface $node): array => $this->normalize($node), array_values($storage->loadMultiple($ids)));
+    return $this->newsRepository->archive(['section' => 'sports', 'player' => $player_id], 0, 6)['items'];
   }
 
   /**
@@ -788,7 +779,7 @@ final class SportsRepository implements SportsRepositoryInterface {
     return match ($bundle) {
       'reg_sports_fixture' => ['field_reg_match_date', $mode === 'fixtures' ? 'ASC' : 'DESC'],
       'reg_sports_standing' => ['field_reg_table_position', 'ASC'],
-      'reg_sports_update', 'reg_sports_video' => ['field_reg_publication_date', 'DESC'],
+      'reg_news', 'reg_sports_video' => ['field_reg_publication_date', 'DESC'],
       'reg_sports_gallery' => ['field_reg_gallery_date', 'DESC'],
       default => ['created', 'DESC'],
     };

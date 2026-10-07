@@ -133,6 +133,8 @@ function reg_theme_preprocess_page(array &$variables): void {
     'sports' => reg_theme_sports_items(),
   ];
   $variables['page']['#cache']['tags'][] = 'node_list:reg_service';
+  $variables['page']['#cache']['tags'][] = 'node_list:reg_news';
+  $variables['page']['#cache']['tags'][] = 'node_list:reg_sports_fixture';
   $variables['page']['#cache']['tags'][] = 'config:reg_core.settings';
   $variables['page']['#cache']['contexts'][] = 'user.permissions';
   $variables['reg_fallback']['news']['x_feed'] = $social_media->homepageXFeed();

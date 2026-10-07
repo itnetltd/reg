@@ -125,7 +125,7 @@ final class DashboardController extends ControllerBase {
         'reg_publication' => 'Publication',
         'reg_news' => 'News',
         'reg_energy_tool' => 'Energy Tool',
-        'reg_sports_update' => 'Sports news',
+        'reg_sports_update' => 'Legacy sports archive',
       ],
       '#attached' => ['library' => ['reg_core/admin_dashboard']],
       '#cache' => [

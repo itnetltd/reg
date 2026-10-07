@@ -76,27 +76,30 @@
     <section class="section sports-section">
       <div class="reg-container">
         <div class="section-heading section-heading--split"><div><span class="section-kicker section-kicker--light">{{ 'REG Sports'|t }}</span><h2>{{ 'Powering the game'|t }}</h2><p>{{ 'Dedicated coverage for REG Basketball Men, Basketball Women and Volleyball.'|t }}</p></div><a class="button button--ghost" href="/sports">{{ 'Open Sports Portal'|t }}</a></div>
-        <div class="sports-grid">
-          {% if reg_fallback.sports %}
-            {% for item in reg_fallback.sports %}
-              <a class="sports-card{{ item.image.url ? ' sports-card--image' }}{{ item.kind == 'result' ? ' sports-card--result sports-result-card' }}" href="{{ item.url|default('/sports') }}">
+        {% set sports_cards = reg_fallback.sports|filter(item => item.url) %}
+        {% if sports_cards %}
+          <div class="sports-grid{{ sports_cards|length == 1 ? ' sports-grid--single' }}">
+            {% for item in sports_cards %}
+              {% set is_story = item.kind == 'story' %}
+              <a class="sports-card sports-card--{{ is_story ? 'story' : 'result' }}{{ item.image.url ? ' sports-card--image' }}" href="{{ item.url }}">
                 {% if item.image.url %}
-                  <img class="sports-card__image sports-result-card__image" src="{{ item.image.url }}"{% if item.image.srcset %} srcset="{{ item.image.srcset }}" sizes="{{ item.image.sizes }}"{% endif %} alt="{{ item.image.alt }}" loading="lazy">
-                  <span class="sports-card__overlay sports-result-card__overlay" aria-hidden="true"></span>
+                  <img class="sports-card__image" src="{{ item.image.url }}"{% if item.image.srcset %} srcset="{{ item.image.srcset }}" sizes="{{ item.image.sizes }}"{% endif %} alt="{{ item.image.alt }}" loading="lazy" decoding="async">
+                  <span class="sports-card__overlay" aria-hidden="true"></span>
                 {% endif %}
-                <span class="sports-card__content sports-result-card__content">
-                  <span class="sports-card__kicker">{{ item.team }}</span>
-                  <h3>{{ item.title }}</h3>
-                  {% if item.result_label %}<strong class="sports-card__status">{{ item.result_label }}</strong>{% endif %}
-                  {% if item.meta %}<small>{{ item.meta }}</small>{% endif %}
-                  {% if item.kind == 'result' %}<span class="sports-card__link">{{ 'View result'|t }} <span aria-hidden="true">→</span></span>{% endif %}
+                <span class="sports-card__content">
+                  <span class="sports-card__kicker">{{ is_story ? 'Latest sports story'|t : 'Latest result'|t }}</span>
+                  {% if is_story and item.classification and item.classification != 'Sports' %}
+                    <span class="sports-card__classification">{{ item.classification|replace({'Sports / ': ''}) }}</span>
+                  {% endif %}
+                  <h3 class="sports-card__title">{{ item.title }}</h3>
+                  {% if not is_story and item.result_label %}<span class="sports-card__status">{{ item.result_label }}</span>{% endif %}
+                  {% if item.meta %}<span class="{{ is_story ? 'sports-card__date' : 'sports-card__score' }}">{{ item.meta }}</span>{% endif %}
+                  <span class="sports-card__link">{{ is_story ? 'Read story'|t : 'View result'|t }} <span class="sports-card__arrow" aria-hidden="true">&rarr;</span></span>
                 </span>
               </a>
             {% endfor %}
-          {% else %}
-            <div class="empty-state">{{ 'Sports highlights will appear when approved fixtures, results or stories are published.'|t }}</div>
-          {% endif %}
-        </div>
+          </div>
+        {% endif %}
       </div>
     </section>
 

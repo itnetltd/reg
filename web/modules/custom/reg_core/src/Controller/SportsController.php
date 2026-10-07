@@ -39,9 +39,13 @@ final class SportsController extends ControllerBase {
   /**
    * Builds the dynamic sports landing page.
    */
-  public function landing(): array {
+  public function landing(Request $request): array {
     $content = $this->repository->landing();
-    $content['news'] = $this->newsRepository->sportsHomepage(6);
+    $team = max(0, (int) $request->query->get('team', 0));
+    $sport = max(0, (int) $request->query->get('sport', 0));
+    $content['news'] = $team || $sport
+      ? $this->newsRepository->archive(['section' => 'sports', 'team' => $team, 'sport' => $sport], 0, 6)['items']
+      : $this->newsRepository->sportsHomepage(6);
     if (!$content['teams']) {
       $content['teams'] = $this->teamNavigation();
     }
@@ -60,7 +64,7 @@ final class SportsController extends ControllerBase {
         Url::fromRoute('reg_core.sports', [], ['absolute' => TRUE])->toString(),
         (string) $this->t('Official REG Basketball Men, Basketball Women, and Volleyball Men fixtures, results, teams, players, standings, news, galleries, and videos.'),
       ),
-      '#cache' => $this->cacheability(),
+      '#cache' => $this->cacheability(TRUE),
     ];
   }
 
@@ -141,7 +145,7 @@ final class SportsController extends ControllerBase {
    * Lists sports news.
    */
   public function news(Request $request): array {
-    return $this->listingPage('reg_sports_update', 'news', $request, $this->t('Sports News'), $this->t('No sports stories are currently published.'));
+    return $this->listingPage('reg_news', 'news', $request, $this->t('Sports News'), $this->t('No sports stories are currently published.'));
   }
 
   /**
@@ -263,7 +267,7 @@ final class SportsController extends ControllerBase {
    * Builds one sports news article.
    */
   public function newsDetail(int $node): array {
-    return $this->detailPage('reg_sports_update', $node, 'sports_article', 'reg_core.sports_news_detail', 'node');
+    return $this->detailPage('reg_news', $node, 'sports_article', 'reg_core.sports_news_detail', 'node');
   }
 
   /**
@@ -313,7 +317,7 @@ final class SportsController extends ControllerBase {
    * Returns a sports article title.
    */
   public function newsTitle(int $node): string {
-    return $this->title('reg_sports_update', $node);
+    return $this->title('reg_news', $node);
   }
 
   /**
@@ -455,7 +459,7 @@ final class SportsController extends ControllerBase {
         'reg_sports_staff',
         'reg_sports_fixture',
         'reg_sports_standing',
-        'reg_sports_update',
+        'reg_news',
         'reg_sports_gallery',
         'reg_sports_video',
       ]),

@@ -328,6 +328,7 @@ function reg_core_install(): void {
   require_once __DIR__ . '/reg_core.supplier.inc';
   reg_core_apply_supplier_portal();
   \Drupal::messenger()->addStatus(new TranslatableMarkup('REG Core content model and service tools have been configured.'));
+  reg_core_configure_sports_news();
 }
 
 /**

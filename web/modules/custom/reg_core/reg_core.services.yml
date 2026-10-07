@@ -219,6 +219,7 @@ services:
       - '@file_url_generator'
       - '@cache.data'
       - '@datetime.time'
+      - '@reg_core.news_repository'
 
   Drupal\reg_core\Branch\BranchRepositoryInterface:
     alias: reg_core.branch_repository
