@@ -61,22 +61,22 @@
 
 .education-video__copy .section-kicker {
   margin: 0;
-  font-size: 10px;
+  font-size: var(--reg-text-meta, .75rem);
   line-height: 1.2;
 }
 
 .education-video__copy h3 {
   margin: 6px 0;
-  font-size: 26px;
-  line-height: 1.15;
+  font-size: var(--reg-text-card, clamp(1.25rem, 1.125rem + .5vw, 1.4375rem));
+  line-height: var(--reg-leading-heading, 1.25);
   overflow-wrap: anywhere;
 }
 
 .education-video__copy p {
   margin: 0 0 6px;
   color: #655a57;
-  font-size: 15px;
-  line-height: 1.4;
+  font-size: var(--reg-text-description, .9375rem);
+  line-height: var(--reg-leading-body, 1.6);
 }
 
 .education-video__copy h3,
@@ -98,8 +98,8 @@
   background: transparent;
   color: #b51e14;
   font: inherit;
-  font-size: 12px;
-  font-weight: 800;
+  font-size: var(--reg-text-button, .8125rem);
+  font-weight: var(--reg-weight-button, 700);
   text-transform: uppercase;
   cursor: pointer;
 }

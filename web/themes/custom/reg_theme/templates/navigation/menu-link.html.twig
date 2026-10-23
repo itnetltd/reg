@@ -1,0 +1,8 @@
+{# Drupal's link() retains routing, language, active-link and URL attributes. #}
+{% set new_tab = url.getOption('attributes').target|default('') == '_blank' %}
+{% set extra_attributes = extra_attributes|default({}) %}
+{% if new_tab and url.getOption('attributes')['aria-label']|default('') %}
+  {% set extra_attributes = extra_attributes|merge({'aria-label': url.getOption('attributes')['aria-label'] ~ ' (opens in a new tab)'|t}) %}
+{% endif %}
+{% set label %}{{ title }}{% if new_tab %}<span class="menu-new-tab" aria-hidden="true"> ↗</span><span class="visually-hidden">{{ ' (opens in a new tab)'|t }}</span>{% endif %}{% endset %}
+{{ link(label, url, extra_attributes|default({})) }}

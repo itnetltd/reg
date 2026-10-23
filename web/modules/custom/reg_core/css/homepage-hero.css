@@ -25,7 +25,7 @@
 .reg-hero-stat__value { margin: 0 0 5px; color: #fff; font-family: "Hanken Grotesk", Inter, Arial, sans-serif; font-size: clamp(1.6rem, 2.3vw, 2.4rem); font-weight: 700; line-height: 1; letter-spacing: -.025em; white-space: nowrap; }
 .reg-hero-stat__unit { margin-left: .28em; color: #f04a3e; font-size: .52em; font-weight: 800; letter-spacing: 0; }
 .reg-hero-stat__unit--tight { margin-left: .08em; }
-.reg-hero-stat__label { margin: 0; color: rgba(255,255,255,.82); font-size: clamp(.75rem, .9vw, .875rem); font-weight: 600; line-height: 1.3; }
+.reg-hero-stat__label { margin: 0; color: rgba(255,255,255,.82); font-size: var(--reg-text-meta, .75rem); font-weight: 600; line-height: 1.3; }
 .reg-hero-carousel__controls { position: absolute; z-index: 6; right: max(24px, calc((100vw - 1280px) / 2 + 40px)); bottom: 164px; display: flex; align-items: center; gap: 10px; }
 .reg-hero-carousel__arrow,
 .reg-hero-carousel__pause { display: grid; width: 42px; height: 42px; place-items: center; padding: 0; color: #fff; border: 1px solid rgba(255,255,255,.48); border-radius: 50%; background: rgba(8,13,20,.38); backdrop-filter: blur(5px); }
@@ -44,7 +44,7 @@
   .reg-hero-stat:nth-child(odd) { border-right: 1px solid rgba(255,255,255,.15); }
   .reg-hero-stat:nth-child(-n+2) { border-bottom: 1px solid rgba(255,255,255,.15); }
   .reg-hero-stat__value { margin-bottom: 4px; font-size: clamp(1.35rem, 5.4vw, 1.7rem); }
-  .reg-hero-stat__label { font-size: clamp(.65rem, 2.5vw, .75rem); }
+  .reg-hero-stat__label { font-size: var(--reg-text-meta, .75rem); }
   .reg-hero-carousel__controls { right: 20px; bottom: 190px; left: 20px; justify-content: center; }
 }
 

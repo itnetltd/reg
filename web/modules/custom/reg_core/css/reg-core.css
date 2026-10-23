@@ -3,16 +3,16 @@
 .reg-portal__intro { max-width: 760px; margin-bottom: 40px; color: #5d5e61; }
 .reg-portal__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
 .reg-portal-card { padding: 24px; border: 1px solid #e0e0e0; border-radius: 12px; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,.04); }
-.reg-portal-card h2, .reg-portal-card h3 { margin-bottom: 8px; }
-.reg-portal-card p { color: #5d5e61; }
+.reg-portal-card h2, .reg-portal-card h3 { margin-bottom: var(--reg-heading-gap, .75rem); font-size: var(--reg-text-card, clamp(1.25rem, 1.125rem + .5vw, 1.4375rem)); }
+.reg-portal-card p { font-size: var(--reg-text-description, .9375rem); color: #5d5e61; }
 .reg-portal-card a { color: #da291c; font-weight: 800; }
 .reg-filter-form { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 28px; padding: 18px; border-radius: 12px; background: #f8f9fa; }
 .reg-filter-form input, .reg-filter-form select { min-height: 44px; padding: 8px 12px; border: 1px solid #d8d8d8; border-radius: 8px; background: #fff; }
-.reg-filter-form button { min-height: 44px; padding: 8px 18px; color: #fff; border: 0; border-radius: 8px; background: #da291c; font-weight: 800; }
+.reg-filter-form button { min-height: 44px; padding: 8px 18px; color: #fff; border: 0; border-radius: 8px; background: #da291c; font-weight: var(--reg-weight-button, 700);  font-size: var(--reg-text-button, .8125rem);}
 .reg-list { border-top: 1px solid #e0e0e0; }
 .reg-list article { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; padding: 22px 0; border-bottom: 1px solid #e0e0e0; }
 .reg-list article p { margin: 4px 0 0; color: #5d5e61; }
-.reg-status-badge { align-self: start; padding: 5px 9px; border-radius: 999px; background: #fff0ee; color: #b91f15; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+.reg-status-badge { align-self: start; padding: 5px 9px; border-radius: 999px; background: #fff0ee; color: #b91f15; font-size: var(--reg-text-meta, .75rem); font-weight: 800; text-transform: uppercase; }
 .reg-calculator { max-width: 680px; padding: 28px; border: 1px solid #e0e0e0; border-radius: 16px; background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,.06); }
 .reg-calculator .form-item { margin-bottom: 18px; }
 .reg-calculator input, .reg-calculator select { width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; }

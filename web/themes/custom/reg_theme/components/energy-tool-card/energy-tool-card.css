@@ -16,14 +16,14 @@
 
 .energy-awareness-section__heading h2 {
   margin: 6px 0;
-  font-size: clamp(28px, 2.5vw, 36px);
-  line-height: 1.15;
+  font-size: var(--reg-text-section, clamp(1.75rem, 1.5rem + 1vw, 2rem));
+  line-height: var(--reg-leading-heading, 1.25);
 }
 
 .energy-awareness-section__heading p {
   margin: 0;
-  font-size: 16px;
-  line-height: 1.45;
+  font-size: var(--reg-text-description, .9375rem);
+  line-height: var(--reg-leading-body, 1.6);
 }
 
 .energy-tools-grid {
@@ -108,7 +108,7 @@
   border: 1px solid #d9d1cd;
   border-radius: 999px;
   background: #f7f5f4;
-  font-size: 9px;
+  font-size: var(--reg-text-meta, .75rem);
   font-weight: 800;
   letter-spacing: .03em;
   line-height: 1.25;
@@ -139,15 +139,15 @@
 .energy-tool-card h3 {
   margin: 0 0 8px;
   color: #281715;
-  font-size: 26px;
-  line-height: 1.15;
+  font-size: var(--reg-text-card, clamp(1.25rem, 1.125rem + .5vw, 1.4375rem));
+  line-height: var(--reg-leading-heading, 1.25);
 }
 
 .energy-tool-card p {
   margin: 0 0 12px;
   color: #655a57;
-  font-size: 15px;
-  line-height: 1.4;
+  font-size: var(--reg-text-description, .9375rem);
+  line-height: var(--reg-leading-body, 1.6);
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
@@ -162,8 +162,8 @@
   margin-top: auto;
   min-height: 32px;
   color: var(--energy-tool-accent);
-  font-size: 12px;
-  font-weight: 800;
+  font-size: var(--reg-text-button, .8125rem);
+  font-weight: var(--reg-weight-button, 700);
   letter-spacing: .06em;
   text-transform: uppercase;
 }

@@ -14,14 +14,14 @@
 .energy-glance__header h2 {
   margin: 8px 0 12px;
   color: #fff;
-  font-size: clamp(2.35rem, 4vw, 3.8rem);
+  font-size: var(--reg-text-section, clamp(1.75rem, 1.5rem + 1vw, 2rem));
   letter-spacing: -.04em;
 }
 
 .energy-glance__header p {
   margin: 0;
   color: rgba(255, 255, 255, .72);
-  font-size: clamp(1rem, 1.7vw, 1.18rem);
+  font-size: var(--reg-text-description, .9375rem);
 }
 
 .energy-glance__grid {
@@ -44,7 +44,7 @@
 
 .energy-glance-card__category {
   color: #ff9c94;
-  font-size: .76rem;
+  font-size: var(--reg-text-meta, .75rem);
   font-weight: 850;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -57,7 +57,7 @@
   gap: .22em;
   margin: 24px 0 12px;
   color: #fff;
-  font-family: "Hanken Grotesk", sans-serif;
+  font-family: var(--reg-font-heading, "Hanken Grotesk", Inter, Arial, sans-serif);
   font-size: clamp(2.8rem, 4vw, 4.8rem);
   font-variant-numeric: tabular-nums;
   font-weight: 760;
@@ -76,13 +76,13 @@
 .energy-glance-card h3 {
   margin: 0;
   color: #fff;
-  font-size: 1.12rem;
+  font-size: var(--reg-text-card, clamp(1.25rem, 1.125rem + .5vw, 1.4375rem));
 }
 
 .energy-glance-card__period {
   margin: 7px 0 0;
   color: rgba(255, 255, 255, .62);
-  font-size: .86rem;
+  font-size: var(--reg-text-meta, .75rem);
 }
 
 .energy-glance-card__signal {
@@ -133,7 +133,7 @@
   gap: 16px;
   margin: 0 0 7px;
   color: rgba(255, 255, 255, .72);
-  font-size: .78rem;
+  font-size: var(--reg-text-description, .9375rem);
 }
 
 .energy-glance-card__bar {
@@ -159,14 +159,14 @@
 }
 
 .energy-glance-card__split div { padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, .14); }
-.energy-glance-card__split dt { color: rgba(255, 255, 255, .58); font-size: .7rem; text-transform: uppercase; }
+.energy-glance-card__split dt { color: rgba(255, 255, 255, .58); font-size: var(--reg-text-meta, .75rem); text-transform: uppercase; }
 .energy-glance-card__split dd { margin: 3px 0 0; font-weight: 800; }
 
 .energy-glance-card > a {
   margin-top: auto;
   color: #fff;
-  font-size: .78rem;
-  font-weight: 850;
+  font-size: var(--reg-text-button, .8125rem);
+  font-weight: var(--reg-weight-button, 700);
   letter-spacing: .06em;
   text-transform: uppercase;
 }

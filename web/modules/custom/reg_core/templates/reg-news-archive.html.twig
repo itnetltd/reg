@@ -69,14 +69,14 @@
 
     {% if lead %}
       <section class="reg-newsroom__featured" aria-labelledby="reg-newsroom-featured-title">
-        <span class="reg-newsroom__eyebrow">{{ 'Latest story'|t }}</span>
+        <h2 id="reg-newsroom-featured-title" class="visually-hidden">{{ 'Latest story'|t }}</h2>
         <article class="reg-news-lead reg-news-lead--archive">
           <a class="reg-news-lead__media" href="{{ lead.url }}" aria-label="{{ 'Read @title'|t({'@title': lead.title}) }}">
             {% if lead.image.render %}{{ lead.image.render }}{% else %}<span class="reg-news-image-fallback reg-news-image-fallback--lead" aria-hidden="true"><span>REG</span><strong>{{ 'News & Insights'|t }}</strong></span>{% endif %}
           </a>
           <div class="reg-news-lead__body">
             <div class="reg-news-card__meta">{% if lead.category.label %}<span>{{ lead.category.label }}</span>{% endif %}{% if lead.date %}<time datetime="{{ lead.date_iso }}">{{ lead.date }}</time>{% endif %}</div>
-            <h2 id="reg-newsroom-featured-title"><a href="{{ lead.url }}">{{ lead.title }}</a></h2>
+            <h3><a href="{{ lead.url }}">{{ lead.title }}</a></h3>
             {% if lead.summary %}<p>{{ lead.summary }}</p>{% endif %}
             <a class="reg-news-card__action" href="{{ lead.url }}">{{ 'Read story'|t }} <span aria-hidden="true">→</span></a>
           </div>
@@ -85,9 +85,10 @@
     {% endif %}
 
     {% if items %}
-      <div class="reg-news-grid">
+      <h2 class="visually-hidden" id="reg-news-grid-title">{{ archive_heading|t }}</h2>
+      <section class="reg-news-grid" aria-labelledby="reg-news-grid-title">
         {% for item in items %}{% include '@reg_core/reg-news-card.html.twig' with {item: item, variant: 'archive'} only %}{% endfor %}
-      </div>
+      </section>
       {{ pager }}
     {% elseif not lead %}
       <div class="reg-news-empty"><h2>{{ 'No news found'|t }}</h2><p>{{ 'Try changing the filters or return later for published REG updates.'|t }}</p></div>

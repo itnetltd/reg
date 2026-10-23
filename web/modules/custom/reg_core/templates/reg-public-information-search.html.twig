@@ -11,16 +11,17 @@
       <button class="reg-filter-submit" type="submit">{{ 'Search'|t }}</button>
     </form>
     {% if items %}
-      <div class="reg-pi-list">
+      <h2 class="visually-hidden" id="reg-pi-results-title">{{ search_hero.title }}</h2>
+      <section class="reg-pi-list" aria-labelledby="reg-pi-results-title">
         {% for item in items %}
           <article class="reg-pi-card">
             <div class="reg-pi-card__top"><span class="reg-pi-type">{{ item.kind }}</span>{% if item.status %}<span class="reg-pi-badge reg-pi-badge--{{ item.status_key|clean_class }}">{{ item.status }}</span>{% endif %}</div>
-            <h2><a href="{{ item.url }}">{{ item.title }}</a></h2><p>{{ item.summary }}</p>
+            <h3><a href="{{ item.url }}">{{ item.title }}</a></h3><p>{{ item.summary }}</p>
             <span class="reg-pi-muted">{{ item.entity }}{% if item.date %} · {{ item.date }}{% endif %}</span>
             <a class="reg-pi-card__link" href="{{ item.url }}">{{ 'View details'|t }} <span aria-hidden="true">→</span></a>
           </article>
         {% endfor %}
-      </div>
+      </section>
       {{ pager }}
     {% else %}
       <div class="reg-pi-empty" role="status"><h2>{{ 'No published results'|t }}</h2><p>{{ 'Try a broader keyword or clear one of the filters.'|t }}</p></div>

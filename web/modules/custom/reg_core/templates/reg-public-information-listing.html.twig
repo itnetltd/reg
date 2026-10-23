@@ -94,15 +94,16 @@
     </div>
 
     {% if items %}
-      <div class="reg-pi-list">
+      <h2 class="visually-hidden" id="reg-pi-results-title">{{ heading }}</h2>
+      <section class="reg-pi-list" aria-labelledby="reg-pi-results-title">
         {% for item in items %}
           <article class="reg-pi-card">
             <div class="reg-pi-card__top">
-              <span class="reg-pi-type">{{ item.category ?: item.kind }}</span>
+              {% if item.category %}<span class="reg-pi-type">{{ item.category }}</span>{% endif %}
               {% if item.status %}<span class="reg-pi-badge reg-pi-badge--{{ item.status_key|clean_class }}">{{ item.status }}</span>{% endif %}
               {% if bundle == 'reg_tender' and item.publication_channel %}<span class="reg-pi-channel">{{ item.publication_channel }}</span>{% elseif bundle == 'reg_job' and item.application_method %}<span class="reg-pi-channel">{{ item.application_method }}</span>{% endif %}
             </div>
-            <h2><a href="{{ item.url }}">{{ item.title }}</a></h2>
+            <h3><a href="{{ item.url }}">{{ item.title }}</a></h3>
             <p>{{ item.summary }}</p>
             <dl class="reg-pi-meta">
               {% if item.reference %}<div><dt>{{ 'Reference'|t }}</dt><dd>{{ item.reference }}</dd></div>{% endif %}
@@ -120,7 +121,7 @@
             {% if bundle == 'reg_tender' and item.primary_document.url %}<a class="reg-pi-card__download" href="{{ item.primary_document.url }}">{{ item.primary_document.type_key == 'terms_of_reference' ? 'Download Terms of Reference'|t : 'Download tender document'|t }}</a>{% endif %}
           </article>
         {% endfor %}
-      </div>
+      </section>
       {{ pager }}
     {% else %}
       <div class="reg-pi-empty" role="status">

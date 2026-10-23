@@ -10,7 +10,7 @@
   ] %}
   <li{{ item.attributes.addClass(item_classes) }}>
     <div class="menu-item__row">
-      {{ link(label_override ?: item.title, item.url) }}
+      {% include '@reg_theme/navigation/menu-link.html.twig' with {title: label_override ?: item.title, url: item.url} only %}
       {% if item.below %}
         <button class="submenu-toggle" type="button" aria-expanded="false" aria-haspopup="true" aria-controls="{{ item_id }}" data-reg-submenu-toggle>
           <span class="visually-hidden">{{ 'Toggle @item submenu'|t({'@item': label_override ?: item.title}) }}</span>
@@ -31,7 +31,7 @@
     <div class="what-we-do-mega__overview">
       {% for item in items %}
         {% if item.attributes.hasClass('menu-item--nav-work-overview') %}
-          <a href="{{ item.url }}"{% if item.in_active_trail %} aria-current="page"{% endif %}>{{ 'What We Do Overview'|t }} <span aria-hidden="true">→</span></a>
+          {% include '@reg_theme/navigation/menu-link.html.twig' with {title: 'What We Do Overview'|t, url: item.url, extra_attributes: item.in_active_trail ? {'aria-current': 'page'} : {}} only %}
         {% endif %}
       {% endfor %}
     </div>
@@ -87,7 +87,7 @@
           {% set item_classes = ['menu-item', 'menu-item--level-0', 'menu-item--has-children', 'menu-item--what-we-do', 'menu-item--mega', item.in_active_trail ? 'menu-item--active-trail'] %}
           <li{{ item.attributes.addClass(item_classes) }}>
             <div class="menu-item__row">
-              {{ link(item.title, item.url) }}
+              {% include '@reg_theme/navigation/menu-link.html.twig' with {title: item.title, url: item.url} only %}
               <button class="submenu-toggle" type="button" aria-expanded="false" aria-haspopup="true" aria-controls="{{ item_id }}" data-reg-submenu-toggle>
                 <span class="visually-hidden">{{ 'Toggle @item submenu'|t({'@item': item.title}) }}</span>
                 <span class="submenu-toggle__icon" aria-hidden="true"></span>

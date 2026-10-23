@@ -18,6 +18,7 @@ use Drupal\node\NodeInterface;
 require_once __DIR__ . '/reg_core.supplier.inc';
 require_once __DIR__ . '/reg_core.sports_news.inc';
 require_once __DIR__ . '/reg_core.news_form.inc';
+require_once __DIR__ . '/reg_core.menu.inc';
 
 /**
  * Implements hook_entity_field_access().

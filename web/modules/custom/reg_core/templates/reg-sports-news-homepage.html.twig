@@ -10,7 +10,7 @@
       </div>
       <div class="reg-sports-news-card__content">
         <div class="reg-sports-news-card__meta">
-          <span>{{ item.team ?: item.sport ?: item.category.label ?: 'Sports news'|t }}</span>
+          {% if item.team or item.sport or item.category.label %}<span>{{ item.team ?: item.sport ?: item.category.label }}</span>{% endif %}
           {% if item.date %}<time datetime="{{ item.date_iso }}">{{ item.date }}</time>{% endif %}
         </div>
         <h3>{{ item.title }}</h3>
@@ -26,7 +26,6 @@
 
 <div class="reg-sports-heading reg-sports-heading--split">
   <div>
-    <span class="reg-sports-kicker">{{ 'Latest news'|t }}</span>
     <h2 id="reg-sports-news-home">{{ 'Sports news'|t }}</h2>
   </div>
   <a href="{{ path('reg_core.sports_news') }}">{{ 'All sports news'|t }} <span aria-hidden="true">&rarr;</span></a>

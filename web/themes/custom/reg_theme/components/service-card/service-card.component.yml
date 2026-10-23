@@ -5,4 +5,4 @@ props:
   properties:
     item:
       type: object
-      required: [eyebrow, title, description, url]
+      required: [title, description, url]

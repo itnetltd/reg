@@ -2,7 +2,7 @@
   <ul{{ attributes.addClass('utility-menu') }}>
     {% for item in items %}
       <li{{ item.attributes.addClass(item.in_active_trail ? 'menu-item--active-trail') }}>
-        {{ link(item.title, item.url) }}
+        {% include '@reg_theme/navigation/menu-link.html.twig' with {title: item.title, url: item.url} only %}
       </li>
     {% endfor %}
   </ul>

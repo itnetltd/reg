@@ -1,5 +1,5 @@
 <a class="tender-item" href="{{ item.url|default('#') }}">
-  <span><strong>{{ item.title }}</strong><small>{{ item.description }}</small></span>
+  <div><h3>{{ item.title }}</h3><p>{{ item.description }}</p></div>
   <span class="tender-item__status">{{ item.status }}</span>
   <span class="tender-item__action">{{ 'View tender'|t }} →</span>
 </a>

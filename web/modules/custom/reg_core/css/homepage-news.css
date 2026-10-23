@@ -11,11 +11,11 @@
   box-shadow: 0 6px 20px rgba(40, 23, 21, .04);
 }
 .reg-news-homepage--visual .reg-news-lead__media { height: 260px; aspect-ratio: auto; }
-.reg-news-homepage--visual .reg-news-lead__body { padding: 22px; }
+.reg-news-homepage--visual .reg-news-lead__body { padding: 20px; }
 .reg-news-homepage--visual .reg-news-lead h3 {
   margin: 10px 0 12px;
-  font-size: clamp(24px, 2vw, 28px);
-  line-height: 1.18;
+  font-size: var(--reg-text-card, clamp(1.25rem, 1.125rem + .5vw, 1.4375rem));
+  line-height: var(--reg-leading-heading, 1.25);
   -webkit-line-clamp: 3;
 }
 .reg-news-homepage--visual .reg-news-homepage__secondary {
@@ -38,23 +38,23 @@
   display: -webkit-box;
   overflow: hidden;
   margin: 8px 0;
-  font-size: 18px;
-  line-height: 1.25;
+  font-size: var(--reg-text-card, clamp(1.25rem, 1.125rem + .5vw, 1.4375rem));
+  line-height: var(--reg-leading-heading, 1.25);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
 }
-.reg-news-homepage--visual .reg-news-card__meta { gap: 4px 8px; font-size: 10px; letter-spacing: .025em; line-height: 1.5; }
+.reg-news-homepage--visual .reg-news-card__meta { gap: 4px 8px; font-size: var(--reg-text-meta, .75rem); letter-spacing: .025em; line-height: 1.5; }
 .reg-news-homepage--visual :is(.reg-news-lead, .reg-news-card) p {
   display: -webkit-box;
   overflow: hidden;
   margin: 0 0 12px;
   color: #5d5e61;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: var(--reg-text-description, .9375rem);
+  line-height: var(--reg-leading-body, 1.6);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
-.reg-news-homepage--visual .reg-news-card__action { display: inline-flex; min-height: 32px; align-items: center; font-size: 11px; }
+.reg-news-homepage--visual .reg-news-card__action { display: inline-flex; min-height: 32px; align-items: center; font-size: var(--reg-text-button, .8125rem); }
 .reg-news-homepage--visual .reg-news-homepage__social { min-width: 0; max-height: 520px; overflow: auto; border-radius: 16px; }
 .reg-news-homepage--visual .reg-news-homepage__social:focus-visible { outline: 3px solid #146fd1; outline-offset: 3px; }
 .reg-news-homepage--visual .reg-x-feed { height: auto; box-shadow: none; background: #F3F6F8; }

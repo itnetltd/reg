@@ -2,19 +2,16 @@
  * and long titles may grow naturally instead of being clipped. */
 .reg-page-hero {
   --reg-hero-height: 190px;
-  --reg-hero-title-size: clamp(1.875rem, 8vw, 2.25rem);
-  --reg-hero-intro-size: 1rem;
+  --reg-hero-title-size: var(--reg-text-page, clamp(2.125rem, 1.75rem + 1vw, 2.5rem));
+  --reg-hero-intro-size: var(--reg-text-description, .9375rem);
   --reg-hero-padding: 28px;
   min-height: var(--reg-hero-height);
 }
 .reg-page-hero--landing {
   --reg-hero-height: 210px;
-  --reg-hero-title-size: clamp(2.125rem, 9vw, 2.5rem);
-  --reg-hero-intro-size: 1rem;
 }
 .reg-page-hero--detail {
   --reg-hero-height: 180px;
-  --reg-hero-title-size: clamp(1.75rem, 7.5vw, 2.125rem);
 }
 .reg-page-hero .reg-page-hero__inner {
   box-sizing: border-box;
@@ -34,17 +31,17 @@
   max-width: 780px;
   margin: 0;
   color: inherit;
-  font-family: "Hanken Grotesk", sans-serif;
+  font-family: var(--reg-font-heading, "Hanken Grotesk", Inter, Arial, sans-serif);
   font-size: var(--reg-hero-title-size);
   font-weight: 500;
   letter-spacing: -.035em;
-  line-height: 1.1;
+  line-height: var(--reg-leading-heading, 1.25);
   overflow-wrap: anywhere;
 }
 .reg-page-hero .reg-page-hero__eyebrow {
   display: block;
   margin: 0 0 8px;
-  font-size: .8125rem;
+  font-size: var(--reg-text-meta, .75rem);
   font-weight: 850;
   letter-spacing: .12em;
   line-height: 1.4;
@@ -54,44 +51,34 @@
   max-width: 740px;
   margin-block: 12px 0;
   font-size: var(--reg-hero-intro-size);
-  line-height: 1.5;
+  line-height: var(--reg-leading-body, 1.6);
   overflow-wrap: anywhere;
 }
 @media (min-width: 48rem) {
   .reg-page-hero {
     --reg-hero-height: 220px;
-    --reg-hero-title-size: clamp(2.375rem, 5vw, 2.75rem);
-    --reg-hero-padding: 40px;
-    --reg-hero-intro-size: 1.0625rem;
-  }
+      --reg-hero-padding: 40px;
+    }
   .reg-page-hero--landing {
     --reg-hero-height: 260px;
-    --reg-hero-title-size: clamp(2.625rem, 5.5vw, 3rem);
-    --reg-hero-intro-size: 1.125rem;
-  }
+      }
   .reg-page-hero--detail {
     --reg-hero-height: 190px;
     --reg-hero-padding: 32px;
-    --reg-hero-title-size: clamp(2rem, 4.5vw, 2.5rem);
-  }
+    }
 }
 @media (min-width: 68.75rem) {
   .reg-page-hero {
     --reg-hero-height: 240px;
-    --reg-hero-title-size: clamp(2.75rem, 3.5vw, 3.125rem);
-    --reg-hero-intro-size: 1.125rem;
-    --reg-hero-padding: 48px;
+        --reg-hero-padding: 48px;
   }
   .reg-page-hero--landing {
     --reg-hero-height: 300px;
-    --reg-hero-title-size: clamp(3.25rem, 4vw, 3.5rem);
-    --reg-hero-intro-size: 1.1875rem;
-  }
+      }
   .reg-page-hero--detail {
     --reg-hero-height: 200px;
     --reg-hero-padding: 32px;
-    --reg-hero-title-size: clamp(2.25rem, 3vw, 2.5rem);
-  }
+    }
 }
 
 .reg-section-hero {
@@ -187,7 +174,7 @@
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 16px;
-}
+ font-size: var(--reg-text-button, .8125rem);}
 
 .reg-section-hero--align-center .reg-section-hero__actions { justify-content: center; }
 .reg-section-hero--align-right .reg-section-hero__actions { justify-content: flex-end; }
@@ -202,9 +189,9 @@
   border-radius: 5px;
   color: #fff;
   background: #da291c;
-  font-weight: 800;
+  font-weight: var(--reg-weight-button, 700);
   text-decoration: none;
-}
+ font-size: var(--reg-text-button, .8125rem);}
 
 .reg-section-hero__button--secondary {
   color: #281715;
@@ -276,7 +263,7 @@
     grid-template-columns: minmax(0, 780px) auto;
     column-gap: 32px;
     width: 100%;
-  }
+   font-size: var(--reg-text-button, .8125rem);}
   .reg-section-hero__content:has(> .reg-section-hero__actions) > * { grid-column: 1; }
   .reg-section-hero__content > .reg-section-hero__actions {
     grid-column: 2;
@@ -299,8 +286,8 @@
 .reg-page-hero-summary p {
   max-width: 780px;
   margin: 0;
-  font-size: clamp(1rem, 1.5vw, 1.125rem);
-  line-height: 1.5;
+  font-size: var(--reg-text-description, .9375rem);
+  line-height: var(--reg-leading-body, 1.6);
   overflow-wrap: anywhere;
 }
 .reg-page-hero-summary small { display: block; margin-top: 12px; }

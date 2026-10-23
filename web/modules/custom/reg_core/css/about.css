@@ -82,7 +82,7 @@
 .reg-about-entity-badge {
   display: block;
   color: var(--about-red);
-  font-size: .75rem;
+  font-size: var(--reg-text-meta, .75rem);
   font-weight: 800;
   letter-spacing: .12em;
   text-transform: uppercase;
@@ -90,9 +90,9 @@
 
 .reg-about-heading h2 {
   margin: .45rem 0 0;
-  font-family: "Hanken Grotesk", sans-serif;
-  font-size: clamp(2rem, 4vw, 3.7rem);
-  line-height: .98;
+  font-family: var(--reg-font-heading, "Hanken Grotesk", Inter, Arial, sans-serif);
+  font-size: var(--reg-text-section, clamp(1.75rem, 1.5rem + 1vw, 2rem));
+  line-height: var(--reg-leading-heading, 1.25);
   letter-spacing: -.035em;
 }
 
@@ -100,8 +100,8 @@
   max-width: 47rem;
   margin: 1rem 0 0;
   color: #6f615d;
-  font-size: 1.05rem;
-  line-height: 1.7;
+  font-size: var(--reg-text-description, .9375rem);
+  line-height: var(--reg-leading-body, 1.6);
 }
 
 .reg-about-heading a,
@@ -120,23 +120,23 @@
 
 .reg-about-prose {
   max-width: 59rem;
-  font-size: clamp(1rem, 1.4vw, 1.12rem);
+  font-size: var(--reg-text-body, 1rem);
   line-height: 1.82;
 }
 
 .reg-about-prose h2,
 .reg-about-prose h3 {
   margin: 2.4rem 0 .8rem;
-  font-family: "Hanken Grotesk", sans-serif;
-  line-height: 1.15;
+  font-family: var(--reg-font-heading, "Hanken Grotesk", Inter, Arial, sans-serif);
+  line-height: var(--reg-leading-heading, 1.25);
 }
 
 .reg-about-prose h2 {
-  font-size: clamp(1.65rem, 3vw, 2.5rem);
+  font-size: var(--reg-text-section, clamp(1.75rem, 1.5rem + 1vw, 2rem));
 }
 
 .reg-about-prose h3 {
-  font-size: 1.3rem;
+  font-size: var(--reg-text-card, clamp(1.25rem, 1.125rem + .5vw, 1.4375rem));
 }
 
 .reg-about-prose p,
@@ -166,7 +166,7 @@
 .reg-about-review-note p {
   margin: 0;
   color: #624d30;
-  line-height: 1.55;
+  line-height: var(--reg-leading-body, 1.6);
 }
 
 .reg-about-purpose-grid {
@@ -210,10 +210,10 @@
   z-index: 1;
   max-width: 33rem;
   margin: 2rem 0 0;
-  font-family: "Hanken Grotesk", sans-serif;
-  font-size: clamp(1.5rem, 3vw, 2.55rem);
+  font-family: var(--reg-font-heading, "Hanken Grotesk", Inter, Arial, sans-serif);
+  font-size: var(--reg-text-description, .9375rem);
   font-weight: 650;
-  line-height: 1.17;
+  line-height: var(--reg-leading-body, 1.6);
   letter-spacing: -.025em;
 }
 
@@ -254,14 +254,14 @@
 
 .reg-about-value h3 {
   margin: 2rem 0 .7rem;
-  font-family: "Hanken Grotesk", sans-serif;
-  font-size: 1.35rem;
+  font-family: var(--reg-font-heading, "Hanken Grotesk", Inter, Arial, sans-serif);
+  font-size: var(--reg-text-card, clamp(1.25rem, 1.125rem + .5vw, 1.4375rem));
 }
 
 .reg-about-value p {
   margin: 0;
   color: #6f615d;
-  line-height: 1.65;
+  line-height: var(--reg-leading-body, 1.6);
 }
 
 .reg-about-group-diagram {
@@ -283,14 +283,14 @@
 .reg-about-group-diagram strong {
   display: block;
   margin-top: .45rem;
-  font-family: "Hanken Grotesk", sans-serif;
-  font-size: 2.1rem;
+  font-family: var(--reg-font-heading, "Hanken Grotesk", Inter, Arial, sans-serif);
+  font-size: var(--reg-text-card, clamp(1.25rem, 1.125rem + .5vw, 1.4375rem));
 }
 
 .reg-about-group-diagram p {
   margin: .75rem 0 0;
   color: #6f615d;
-  line-height: 1.55;
+  line-height: var(--reg-leading-body, 1.6);
 }
 
 .reg-about-group-diagram__line {
@@ -351,7 +351,7 @@
   place-items: center;
   overflow: hidden;
   color: #fff;
-  font-family: "Hanken Grotesk", sans-serif;
+  font-family: var(--reg-font-heading, "Hanken Grotesk", Inter, Arial, sans-serif);
   font-size: clamp(2rem, 4vw, 4rem);
   font-weight: 800;
   background: linear-gradient(145deg, #44322f, var(--about-ink));
@@ -371,9 +371,9 @@
 
 .reg-about-leader h3 {
   margin: .4rem 0 .35rem;
-  font-family: "Hanken Grotesk", sans-serif;
-  font-size: 1.35rem;
-  line-height: 1.15;
+  font-family: var(--reg-font-heading, "Hanken Grotesk", Inter, Arial, sans-serif);
+  font-size: var(--reg-text-card, clamp(1.25rem, 1.125rem + .5vw, 1.4375rem));
+  line-height: var(--reg-leading-heading, 1.25);
 }
 
 .reg-about-leader__content > strong {
@@ -413,14 +413,14 @@
   float: left;
   margin-right: 1.2rem;
   color: #fff;
-  font-family: "Hanken Grotesk", sans-serif;
+  font-family: var(--reg-font-heading, "Hanken Grotesk", Inter, Arial, sans-serif);
   font-size: clamp(3.3rem, 7vw, 6rem);
   line-height: .9;
 }
 
 .reg-about-presence h2 {
   margin: 1rem 0 .4rem;
-  font-size: clamp(1.4rem, 2.5vw, 2.2rem);
+  font-size: var(--reg-text-section, clamp(1.75rem, 1.5rem + 1vw, 2rem));
 }
 
 .reg-about-presence p {
@@ -433,10 +433,10 @@
   padding: 1rem 1.4rem;
   border-radius: .2rem;
   color: #fff !important;
-  font-weight: 800;
+  font-weight: var(--reg-weight-button, 700);
   text-decoration: none;
   background: var(--about-red);
-}
+ font-size: var(--reg-text-button, .8125rem);}
 
 .reg-about-partners {
   display: grid;
@@ -512,14 +512,14 @@ a.reg-about-partner:hover {
 
 .reg-about-employee h3 {
   margin: .45rem 0;
-  font-family: "Hanken Grotesk", sans-serif;
-  font-size: 1.35rem;
+  font-family: var(--reg-font-heading, "Hanken Grotesk", Inter, Arial, sans-serif);
+  font-size: var(--reg-text-card, clamp(1.25rem, 1.125rem + .5vw, 1.4375rem));
 }
 
 .reg-about-employee p {
   margin: 0;
   color: #6f615d;
-  line-height: 1.5;
+  line-height: var(--reg-leading-body, 1.6);
 }
 
 .reg-about-explore-grid {
@@ -546,7 +546,7 @@ a.reg-about-partner:hover {
 }
 
 .reg-about-explore-grid strong {
-  font-size: 1.2rem;
+  font-size: var(--reg-text-card, clamp(1.25rem, 1.125rem + .5vw, 1.4375rem));
 }
 
 .reg-about-explore-grid span {
@@ -572,8 +572,8 @@ a.reg-about-partner:hover {
 
 /* History page: CMS content arranged as an institutional timeline. */
 .reg-about--history .reg-about-heading h2 {
-  font-size: clamp(2rem, 3.5vw, 2.75rem);
-  line-height: 1.08;
+  font-size: var(--reg-text-section, clamp(1.75rem, 1.5rem + 1vw, 2rem));
+  line-height: var(--reg-leading-heading, 1.25);
 }
 
 .reg-about--history .reg-about-section + .reg-about-section {
@@ -588,8 +588,8 @@ a.reg-about-partner:hover {
   max-width: 48rem;
   margin: 0;
   color: #51433f;
-  font-size: clamp(1.08rem, 1.5vw, 1.2rem);
-  line-height: 1.7;
+  font-size: var(--reg-text-description, .9375rem);
+  line-height: var(--reg-leading-body, 1.6);
 }
 
 .reg-about-history__timeline-section,
@@ -623,7 +623,7 @@ a.reg-about-partner:hover {
 .reg-about-history__milestone-label {
   padding-top: 1.2rem;
   color: var(--about-red);
-  font-size: .82rem;
+  font-size: var(--reg-text-meta, .75rem);
   font-weight: 800;
   letter-spacing: .09em;
   line-height: 1.35;
@@ -674,16 +674,16 @@ a.reg-about-partner:hover {
 
 .reg-about-history__milestone-card h3 {
   margin: 0 0 .75rem;
-  font-family: "Hanken Grotesk", sans-serif;
-  font-size: clamp(1.4rem, 2.3vw, 1.65rem);
-  line-height: 1.2;
+  font-family: var(--reg-font-heading, "Hanken Grotesk", Inter, Arial, sans-serif);
+  font-size: var(--reg-text-card, clamp(1.25rem, 1.125rem + .5vw, 1.4375rem));
+  line-height: var(--reg-leading-heading, 1.25);
 }
 
 .reg-about-history__milestone-card p {
   margin: 0;
   color: #5f514d;
-  font-size: clamp(1rem, 1.3vw, 1.1rem);
-  line-height: 1.65;
+  font-size: var(--reg-text-description, .9375rem);
+  line-height: var(--reg-leading-body, 1.6);
 }
 
 .reg-about-history__milestone-card p + p {
@@ -785,15 +785,15 @@ a.reg-about-partner:hover {
 
 .reg-about-history__group-card h3 {
   margin: .8rem 0;
-  font-family: "Hanken Grotesk", sans-serif;
-  font-size: clamp(1.35rem, 2vw, 1.65rem);
-  line-height: 1.2;
+  font-family: var(--reg-font-heading, "Hanken Grotesk", Inter, Arial, sans-serif);
+  font-size: var(--reg-text-card, clamp(1.25rem, 1.125rem + .5vw, 1.4375rem));
+  line-height: var(--reg-leading-heading, 1.25);
 }
 
 .reg-about-history__group-card p {
   margin: 0 0 1.5rem;
   color: #5f514d;
-  line-height: 1.65;
+  line-height: var(--reg-leading-body, 1.6);
 }
 
 .reg-about-history__group-card a {

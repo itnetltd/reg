@@ -95,7 +95,7 @@
 
 .reg-social-follow__eyebrow {
   color: #ffb3ac;
-  font-size: 11px;
+  font-size: var(--reg-text-meta, .75rem);
   font-weight: 800;
   letter-spacing: .12em;
   text-transform: uppercase;
@@ -104,7 +104,7 @@
 .reg-social-follow__content h2 {
   margin: 5px 0 8px;
   color: #fff;
-  font-size: clamp(2rem, 4vw, 3.25rem);
+  font-size: var(--reg-text-section, clamp(1.75rem, 1.5rem + 1vw, 2rem));
 }
 
 .reg-social-follow__content p {

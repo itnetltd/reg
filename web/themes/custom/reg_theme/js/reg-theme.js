@@ -8,7 +8,7 @@
         const menu = header.querySelector('[data-reg-menu]');
         const primaryNavigation = header.querySelector('[data-reg-primary-navigation]');
         const scrim = header.querySelector('[data-reg-nav-scrim]');
-        const mobileQuery = window.matchMedia('(max-width: 1099px)');
+        const mobileQuery = window.matchMedia('(max-width: 1279px)');
         if (!button || !menu || !primaryNavigation) return;
 
         const directChild = (item, selector) => {
