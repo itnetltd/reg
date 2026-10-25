@@ -2,7 +2,7 @@
   {% set search_hero = section_hero|merge({eyebrow: 'Public Information'|t, title: 'Search public information'|t, description: 'Search only approved, published tenders, job notices, recruitment results, and official publications.'|t}) %}
   {% include '@reg_core/reg-section-hero.html.twig' with {hero: search_hero} only %}
   <div class="reg-container reg-pi__body">
-    <form class="reg-pi-filter reg-pi-filter--search reg-filter-bar reg-filter-bar--wide" method="get" role="search">
+    <form data-reg-compact-filters="q" class="reg-pi-filter reg-pi-filter--search reg-filter-bar reg-filter-bar--wide" method="get" role="search">
       <div class="reg-pi-filter__search reg-filter-field reg-filter-field--search"><label for="reg-pi-search-q">{{ 'Keywords'|t }}</label><input id="reg-pi-search-q" name="q" type="search" maxlength="120" value="{{ filters.query }}"></div>
       <div class="reg-filter-field"><label for="reg-pi-type">{{ 'Information type'|t }}</label><select id="reg-pi-type" name="type"><option value="">{{ 'Everything'|t }}</option>{% for value, label in type_options %}<option value="{{ value }}"{% if filters.type == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
       <div class="reg-filter-field"><label for="reg-pi-entity">{{ 'Company'|t }}</label><select id="reg-pi-entity" name="entity"><option value="">{{ 'All companies'|t }}</option>{% for value, label in entity_options %}<option value="{{ value }}"{% if filters.entity == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
@@ -10,6 +10,7 @@
       <div class="reg-filter-field"><label for="reg-pi-language">{{ 'File language'|t }}</label><select id="reg-pi-language" name="language"><option value="">{{ 'All languages'|t }}</option>{% for value, label in language_options %}<option value="{{ value }}"{% if filters.language == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
       <button class="reg-filter-submit" type="submit">{{ 'Search'|t }}</button>
     </form>
+    <p class="reg-filter-results" role="status">{{ '@count results on this page'|t({'@count': items|length}) }}</p>
     {% if items %}
       <h2 class="visually-hidden" id="reg-pi-results-title">{{ search_hero.title }}</h2>
       <section class="reg-pi-list" aria-labelledby="reg-pi-results-title">

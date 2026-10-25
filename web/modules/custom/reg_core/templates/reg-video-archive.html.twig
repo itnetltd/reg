@@ -4,7 +4,7 @@
   {{ social_follow }}
   <div class="reg-container reg-video-archive__body">
 
-  <form class="reg-video-filters reg-filter-bar reg-filter-bar--with-clear" method="get" action="{{ path('reg_core.videos') }}">
+  <form data-reg-compact-filters="search" class="reg-video-filters reg-filter-bar reg-filter-bar--with-clear" method="get" action="{{ path('reg_core.videos') }}">
     <label class="reg-filter-field reg-filter-field--search"><span>{{ 'Search videos'|t }}</span><input type="search" name="search" value="{{ filters.search }}" placeholder="{{ 'Search by title or description'|t }}"></label>
     <label><span>{{ 'Category'|t }}</span><select name="category"><option value="0">{{ 'All categories'|t }}</option>{% for category in categories %}<option value="{{ category.id }}"{{ filters.category == category.id ? ' selected' }}>{{ category.label }}</option>{% endfor %}</select></label>
     <label><span>{{ 'Year'|t }}</span><select name="year"><option value="">{{ 'All years'|t }}</option>{% for year in years %}<option value="{{ year }}"{{ filters.year == year ? ' selected' }}>{{ year }}</option>{% endfor %}</select></label>

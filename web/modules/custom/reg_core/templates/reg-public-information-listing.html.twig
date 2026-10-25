@@ -1,5 +1,5 @@
 {% if bundle == 'reg_tender' %}{{ attach_library('reg_core/tenders') }}{% endif %}
-<div class="reg-pi">
+<div class="reg-pi{{ bundle == 'reg_tender' ? ' reg-pi--tenders' }}">
   {% set listing_hero = section_hero|merge({eyebrow: 'Public Information'|t, title: heading, description: intro}) %}
   {% if subscribe_url %}{% set listing_hero = listing_hero|merge({primary_cta: {label: 'Get tender alerts'|t, url: subscribe_url}}) %}{% endif %}
   {% include '@reg_core/reg-section-hero.html.twig' with {hero: listing_hero} only %}
@@ -13,7 +13,7 @@
       </nav>
     {% endif %}
 
-    <form class="reg-pi-filter reg-filter-bar reg-filter-bar--dense{% if bundle != 'reg_tender' %} reg-filter-bar--documents{% endif %}" method="get" role="search">
+    <form class="reg-pi-filter reg-filter-bar reg-filter-bar--dense{% if bundle != 'reg_tender' %} reg-filter-bar--documents{% endif %}" method="get" role="search" data-reg-compact-filters="q">
       <div class="reg-pi-filter__search reg-filter-field reg-filter-field--search">
         <label for="reg-pi-q">{{ bundle == 'reg_tender' ? 'Keyword'|t : 'Search'|t }}</label>
         <input id="reg-pi-q" name="q" type="search" maxlength="120" value="{{ filters.query }}" placeholder="{{ 'Title, reference or keyword'|t }}">
@@ -38,7 +38,7 @@
         <div class="reg-filter-field">
           <label for="reg-pi-status">{{ 'Status'|t }}</label>
           <select id="reg-pi-status" name="status">
-            <option value="">{{ 'Route default'|t }}</option>
+            <option value="">{{ filters.mode == 'current' ? (bundle == 'reg_tender' ? 'Current / Open'|t : 'Current vacancies'|t) : (filters.mode == 'archive' ? 'Archived statuses'|t : (filters.mode == 'awarded' ? 'Awarded'|t : (filters.mode == 'results' ? 'Results published'|t : 'All statuses'|t))) }}</option>
             {% for value, label in status_options %}<option value="{{ value }}"{% if filters.status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
           </select>
         </div>
@@ -104,7 +104,7 @@
               {% if bundle == 'reg_tender' and item.publication_channel %}<span class="reg-pi-channel">{{ item.publication_channel }}</span>{% elseif bundle == 'reg_job' and item.application_method %}<span class="reg-pi-channel">{{ item.application_method }}</span>{% endif %}
             </div>
             <h3><a href="{{ item.url }}">{{ item.title }}</a></h3>
-            <p>{{ item.summary }}</p>
+            <p class="reg-pi-card__summary">{{ item.summary }}</p>
             <dl class="reg-pi-meta">
               {% if item.reference %}<div><dt>{{ 'Reference'|t }}</dt><dd>{{ item.reference }}</dd></div>{% endif %}
               {% if item.entity %}<div><dt>{{ 'Company'|t }}</dt><dd>{{ item.entity }}</dd></div>{% endif %}
@@ -115,10 +115,12 @@
             {% if item.closes_in_days is not null %}
               <p class="reg-pi-deadline">{% if item.closes_in_days == 0 %}{{ 'Closes today'|t }}{% else %}{{ 'Closes in @days days'|t({'@days': item.closes_in_days}) }}{% endif %}</p>
             {% endif %}
+            {% if bundle == 'reg_tender' %}<div class="reg-pi-card__actions">{% endif %}
             <a class="reg-pi-card__link" href="{{ item.url }}">{{ bundle == 'reg_tender' ? 'View tender'|t : 'View details'|t }} <span aria-hidden="true">→</span></a>
             {% if item.action.enabled and item.action.url %}<a class="reg-pi-card__action" href="{{ item.action.url }}"{% if item.action.external %} rel="noopener noreferrer"{% endif %}>{{ item.action.label }}{% if item.action.external %} ↗{% endif %}</a>{% endif %}
             {% if item.supplier_ctas %}<div class="reg-pi-card__supplier"><a href="{{ item.supplier_ctas.register_url }}">{{ 'Register as supplier'|t }}</a> · <a href="{{ item.supplier_ctas.login_url }}">{{ 'Supplier login'|t }}</a></div>{% endif %}
             {% if bundle == 'reg_tender' and item.primary_document.url %}<a class="reg-pi-card__download" href="{{ item.primary_document.url }}">{{ item.primary_document.type_key == 'terms_of_reference' ? 'Download Terms of Reference'|t : 'Download tender document'|t }}</a>{% endif %}
+            {% if bundle == 'reg_tender' %}</div>{% endif %}
           </article>
         {% endfor %}
       </section>

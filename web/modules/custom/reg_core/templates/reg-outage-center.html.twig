@@ -7,7 +7,7 @@
       {% for key, tab in tabs %}<a href="{{ tab.url }}" class="outage-tabs__link{{ mode == key ? ' is-active' }}"{% if mode == key %} aria-current="page"{% endif %}>{{ tab.label }}</a>{% endfor %}
     </nav>
 
-    <form class="outage-filters reg-filter-bar reg-filter-bar--wide" action="{{ tabs[mode].url }}" method="get" data-reg-analytics-submit="outage_search">
+    <form data-reg-compact-filters="search" class="outage-filters reg-filter-bar reg-filter-bar--wide" action="{{ tabs[mode].url }}" method="get" data-reg-analytics-submit="outage_search">
       <div class="outage-filters__field outage-filters__field--search reg-filter-field reg-filter-field--search">
         <label for="outage-search">{{ 'Search'|t }}</label>
         <input id="outage-search" name="search" type="search" value="{{ filters.search }}" placeholder="{{ 'Search district, sector, feeder or area'|t }}">

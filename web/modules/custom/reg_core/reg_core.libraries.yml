@@ -6,6 +6,11 @@ portal:
 
 public_filters:
   version: 1.x
+  js:
+    js/public-filters.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
   css:
     component:
       css/public-filters.css: {}

@@ -7,7 +7,7 @@
   {% include '@reg_core/reg-section-hero.html.twig' with {hero: newsroom_hero} only %}
 
   <div class="reg-container reg-newsroom__body">
-    <form class="reg-news-filters reg-filter-bar{% if departments %} reg-filter-bar--news-department{% endif %}" action="{{ path(section == 'sports' ? 'reg_core.sports_news' : 'reg_core.news') }}" method="get" data-reg-news-filter-form>
+    <form data-reg-compact-filters="search" class="reg-news-filters reg-filter-bar{% if departments %} reg-filter-bar--news-department{% endif %}" action="{{ path(section == 'sports' ? 'reg_core.sports_news' : 'reg_core.news') }}" method="get" data-reg-news-filter-form>
       <label class="reg-filter-field reg-filter-field--search">
         <span>{{ 'Search news'|t }}</span>
         <input type="search" name="search" value="{{ filters.search }}" placeholder="{{ 'Search by title or topic'|t }}">
