@@ -14,7 +14,7 @@ final class PublicNumberFormatter {
   ) {}
 
   public function decimal(float|int $number, int $digits = 2): string {
-    $digits = max(0, min(4, $digits));
+    $digits = max(0, min(5, $digits));
     if (class_exists(\NumberFormatter::class)) {
       $langcode = $this->languageManager->getCurrentLanguage()->getId();
       $locale = $langcode === 'rw' ? 'rw_RW' : 'en_RW';

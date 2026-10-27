@@ -35,7 +35,7 @@ final class EnergyToolStatusResolver implements EnergyToolStatusResolverInterfac
       $editorStatus,
       $this->billEstimator->hasActiveSchedule()
         && $this->routeExists('reg_core.bill_estimator'),
-      (float) $config->get('carbon.emission_factor') > 0
+      self::isCarbonFactorUsable((array) $config->get('carbon'))
         && $this->routeExists('reg_core.carbon_calculator'),
     );
   }
@@ -55,6 +55,26 @@ final class EnergyToolStatusResolver implements EnergyToolStatusResolverInterfac
       'safety_efficiency' => 'guidance',
       default => in_array($editorStatus, self::ALLOWED_STATUSES, TRUE) ? $editorStatus : 'disabled',
     };
+  }
+
+  /**
+   * Shares publication and factor checks between the card and calculator.
+   *
+   * Publication permits indicative estimates; only "approved" records approval.
+   */
+  public static function isCarbonFactorUsable(array $carbon): bool {
+    $factor = $carbon['emission_factor'] ?? NULL;
+    $source = (string) ($carbon['source_url'] ?? '');
+    return is_numeric($factor)
+      && is_finite((float) $factor)
+      && (float) $factor > 0
+      && in_array($carbon['status'] ?? '', ['published', 'approved'], TRUE)
+      && ($carbon['unit'] ?? '') === 'kg CO2e/kWh'
+      && (int) ($carbon['data_year'] ?? 0) > 0
+      && trim((string) ($carbon['source_title'] ?? '')) !== ''
+      && trim((string) ($carbon['methodology_note'] ?? '')) !== ''
+      && \Drupal\Component\Utility\UrlHelper::isValid($source, TRUE)
+      && in_array(strtolower((string) parse_url($source, PHP_URL_SCHEME)), ['http', 'https'], TRUE);
   }
 
   /**

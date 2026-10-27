@@ -424,23 +424,49 @@ final class RegSettingsForm extends ConfigFormBase {
 
     $form['carbon'] = [
       '#type' => 'details',
-      '#title' => $this->t('Approved carbon-calculator assumptions'),
+      '#title' => $this->t('Carbon-calculator assumptions'),
       '#open' => TRUE,
     ];
     $form['carbon']['emission_factor'] = [
       '#type' => 'number',
       '#title' => $this->t('Electricity emission factor (kg CO₂e per kWh)'),
-      '#default_value' => $config->get('carbon.emission_factor') ?? 0,
+      '#default_value' => number_format((float) $config->get('carbon.emission_factor'), 5, '.', ''),
       '#min' => 0,
-      '#step' => '0.0001',
-      '#description' => $this->t('Leave at zero until REG validates the factor and sustainability message.'),
+      '#step' => '0.00001',
+      '#description' => $this->t('Publish a sourced factor to enable indicative estimates. Formal REG approval is recorded separately.'),
     ];
     $form['carbon']['carbon_updated'] = [
       '#type' => 'date',
-      '#title' => $this->t('Emission factor last validated'),
+      '#title' => $this->t('Emission factor last reviewed'),
       '#default_value' => $config->get('carbon.updated'),
     ];
 
+    foreach ([
+      'unit' => ['textfield', $this->t('Factor unit')],
+      'source_title' => ['textfield', $this->t('Source title')],
+      'source_url' => ['url', $this->t('Source URL')],
+      'data_year' => ['number', $this->t('Data year')],
+      'methodology_note' => ['textarea', $this->t('Methodology note')],
+    ] as $key => [$type, $label]) {
+      $form['carbon']['carbon_' . $key] = [
+        '#type' => $type,
+        '#title' => $label,
+        '#default_value' => $config->get('carbon.' . $key),
+        '#required' => TRUE,
+      ];
+    }
+    $form['carbon']['carbon_status'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Publication / approval status'),
+      '#options' => [
+        'pending' => $this->t('Unpublished (calculator disabled)'),
+        'published' => $this->t('Published for indicative estimates (no formal REG approval)'),
+        'approved' => $this->t('Approved for publication by REG'),
+        'withdrawn' => $this->t('Withdrawn (calculator disabled)'),
+      ],
+      '#default_value' => $config->get('carbon.status') ?: 'pending',
+      '#description' => $this->t('Published enables indicative estimates without claiming formal approval. Select approved only after REG approval has actually been obtained.'),
+    ];
     return parent::buildForm($form, $form_state);
   }
 
@@ -506,8 +532,14 @@ final class RegSettingsForm extends ConfigFormBase {
       ->set('governance.branch_review_days', (int) $form_state->getValue('branch_review_days'))
       ->set('governance.faq_review_days', (int) $form_state->getValue('faq_review_days'))
       ->set('governance.service_review_days', (int) $form_state->getValue('service_review_days'))
-      ->set('carbon.emission_factor', (float) $form_state->getValue('emission_factor'))
-      ->set('carbon.updated', $form_state->getValue('carbon_updated'));
+      ->set('carbon.emission_factor', number_format((float) $form_state->getValue('emission_factor'), 5, '.', ''))
+      ->set('carbon.updated', $form_state->getValue('carbon_updated'))
+      ->set('carbon.unit', $form_state->getValue('carbon_unit'))
+      ->set('carbon.source_title', $form_state->getValue('carbon_source_title'))
+      ->set('carbon.source_url', $form_state->getValue('carbon_source_url'))
+      ->set('carbon.data_year', (int) $form_state->getValue('carbon_data_year'))
+      ->set('carbon.methodology_note', $form_state->getValue('carbon_methodology_note'))
+      ->set('carbon.status', $form_state->getValue('carbon_status'));
 
     $config->save();
 

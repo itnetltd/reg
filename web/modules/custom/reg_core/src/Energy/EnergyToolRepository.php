@@ -144,8 +144,10 @@ final class EnergyToolRepository implements EnergyToolRepositoryInterface {
    * Provides accessible, translated public status text.
    */
   private function statusLabel(string $key, string $status): string {
-    if ($key === 'carbon_footprint' && $status === 'awaiting_validation') {
-      return (string) $this->translation->translate('Awaiting approved factor');
+    if ($key === 'carbon_footprint') {
+      return $status === 'available'
+        ? (string) $this->translation->translate('Estimate available')
+        : (string) $this->translation->translate('Awaiting factor');
     }
     return (string) match ($status) {
       'available' => $this->translation->translate('Available'),

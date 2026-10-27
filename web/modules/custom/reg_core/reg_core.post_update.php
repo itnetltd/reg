@@ -873,3 +873,14 @@ function reg_core_post_update_unified_sports_news(?array &$sandbox = NULL): stri
   reg_core_configure_sports_news();
   return 'Unified Sports News: ' . json_encode(reg_core_migrate_sports_news());
 }
+
+/** Initializes sourced Rwanda carbon assumptions without claiming approval. */
+function reg_core_post_update_carbon_factor_metadata(?array &$sandbox = NULL): string {
+  $config = \Drupal::configFactory()->getEditable('reg_core.settings');
+  if ($config->get('carbon.status') !== NULL) {
+    return 'Carbon metadata already initialized; editorial settings preserved.';
+  }
+  $defaults = \Drupal\Component\Serialization\Yaml::decode(file_get_contents(__DIR__ . '/config/install/reg_core.settings.yml'))['carbon'];
+  $config->set('carbon', $defaults)->save();
+  return 'Configured Rwanda 2024 factor 0.35398 kg CO2e/kWh, pending REG approval.';
+}

@@ -79,5 +79,11 @@ tariffs:
   fixed_charge: 0.0
   updated: ''
 carbon:
-  emission_factor: 0.0
+  emission_factor: '0.35398'
   updated: ''
+  unit: 'kg CO2e/kWh'
+  source_title: 'Ember Yearly Electricity Data, via Our World in Data'
+  source_url: 'https://ourworldindata.org/grapher/carbon-intensity-electricity'
+  data_year: 2024
+  methodology_note: 'Rwanda. Lifecycle carbon intensity of electricity generation.'
+  status: pending
