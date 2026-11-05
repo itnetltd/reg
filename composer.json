@@ -16,6 +16,7 @@
     "drupal/core-composer-scaffold": "^11.4",
     "drupal/core-project-message": "^11.4",
     "drupal/core-recommended": "^11.4",
+    "drupal/media_directories": "^3.0",
     "drush/drush": "^13.3"
   },
   "require-dev": {
