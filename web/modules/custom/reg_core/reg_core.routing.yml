@@ -1516,3 +1516,52 @@ reg_core.news_archive:
     _news_section: 'corporate'
   requirements:
     _permission: 'access content'
+
+reg_core.footer_management:
+  path: '/admin/content/reg/footer'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\FooterManagementController::overview'
+    _title: 'Footer Management'
+  requirements:
+    _permission: 'administer reg footer'
+
+reg_core.footer_settings:
+  path: '/admin/config/reg/footer'
+  defaults:
+    _form: '\Drupal\reg_core\Form\FooterSettingsForm'
+    _title: 'Footer Settings'
+  requirements:
+    _permission: 'administer reg footer'
+
+reg_core.procurement_plan_approve:
+  path: '/admin/content/procurement-plans/{node}/approve'
+  defaults:
+    _form: '\Drupal\reg_core\Form\ProcurementPlanApproveForm'
+    _title: 'Approve Annual Procurement Plan'
+  requirements:
+    _custom_access: '\Drupal\reg_core\Form\ProcurementPlanApproveForm::access'
+  options:
+    _admin_route: true
+    parameters:
+      node:
+        type: entity:node
+
+reg_core.procurement_import:
+  path: '/admin/content/procurement-plans/import'
+  defaults:
+    _form: '\Drupal\reg_core\Form\ProcurementImportForm'
+    _title: 'Import annual procurement plan'
+  requirements:
+    _permission: 'import reg procurement plans,administer reg procurement plans'
+  options:
+    _admin_route: TRUE
+
+reg_core.procurement_import_report:
+  path: '/admin/content/procurement-plans/import/report/{token}'
+  defaults:
+    _controller: '\Drupal\reg_core\Controller\ProcurementImportReportController::download'
+  requirements:
+    _permission: 'import reg procurement plans,administer reg procurement plans'
+    token: '[a-f0-9]{40}'
+  options:
+    _admin_route: TRUE

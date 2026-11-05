@@ -1,0 +1,14 @@
+{% import _self as menus %}
+{{ menus.links(items, attributes) }}
+{% macro links(items, attributes) %}
+  {% if items %}
+    <ul{{ attributes.addClass('utility-menu') }}>
+      {% for item in items %}
+        <li{{ item.attributes.addClass(item.in_active_trail ? 'menu-item--active-trail') }}>
+          {% include '@reg_theme/navigation/menu-link.html.twig' with {title: item.title, url: item.url} only %}
+          {% if item.below %}{{ _self.links(item.below, create_attribute()) }}{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endmacro %}

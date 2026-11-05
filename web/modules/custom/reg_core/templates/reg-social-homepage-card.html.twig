@@ -1,0 +1,39 @@
+{% if card.id == 'x' %}
+  {% include '@reg_core/reg-x-feed.html.twig' with {feed: card.feed|merge({social_card: true})} only %}
+{% elseif card.id == 'youtube' %}
+          <aside class="reg-youtube-card" data-reg-social-card="youtube" aria-label="{{ 'REG on YouTube'|t }}">
+            <span class="reg-x-feed__eyebrow">{% include '@reg_core/reg-social-card-icon.html.twig' with {platform: 'youtube'} only %}{{ 'Official YouTube channel'|t }}</span>
+            <h3><a href="{{ card.feed.url }}" target="_blank" rel="noopener noreferrer">{{ card.feed.title }}</a></h3>
+            {% set video = card.feed.video %}
+            {% if video %}
+              <a class="reg-youtube-card__media" href="{{ video.public_url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ 'Watch @title on YouTube'|t({'@title': video.title}) }}">
+                <img src="{{ video.thumbnail.url }}" alt="{{ video.thumbnail.alt }}" loading="lazy" decoding="async"{% if video.thumbnail.srcset %} srcset="{{ video.thumbnail.srcset }}" sizes="(max-width: 760px) 100vw, 400px"{% endif %}>
+              </a>
+              <h4><a href="{{ video.public_url }}" target="_blank" rel="noopener noreferrer">{{ video.title }}</a></h4>
+              {% if video.date %}<time class="reg-youtube-card__date" datetime="{{ video.date_iso }}">{{ video.date }}</time>{% endif %}
+              <a class="reg-news-card__action" href="{{ video.public_url }}" target="_blank" rel="noopener noreferrer">{{ 'Watch on YouTube'|t }} &nearr;</a>
+            {% else %}
+              <p>{{ 'No videos are currently available. Visit our official channel for updates.'|t }}</p>
+              <a href="{{ card.feed.url }}" target="_blank" rel="noopener noreferrer">{{ 'View channel on YouTube'|t }} &nearr;</a>
+            {% endif %}
+          </aside>
+{% else %}
+  <aside class="reg-youtube-card reg-social-profile-card" data-reg-social-card="{{ card.id }}" aria-label="{{ 'REG on @platform'|t({'@platform': card.label}) }}">
+    <span class="reg-x-feed__eyebrow">{% include '@reg_core/reg-social-card-icon.html.twig' with {platform: card.id} only %}{{ card.label }}</span>
+    <h3><a href="{{ card.url }}" target="_blank" rel="noopener noreferrer">{{ card.name }}</a></h3>
+    <div class="reg-social-profile-card__content">
+      <div class="reg-social-profile-card__copy">
+        {% if card.post %}
+          {% if card.post.date %}<time class="reg-youtube-card__date" datetime="{{ card.post.date_iso }}">{{ card.post.date }}</time>{% endif %}
+          <p>{{ card.post.text }}</p>
+        {% else %}
+          <p>{{ 'Visit the official REG profile for public updates.'|t }}</p>
+        {% endif %}
+      </div>
+      {% if card.post.image.render %}
+        <a class="reg-social-profile-card__preview" href="{{ card.post.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ 'View REG post on @platform'|t({'@platform': card.label}) }}">{{ card.post.image.render }}</a>
+      {% endif %}
+    </div>
+    <a class="reg-news-card__action" href="{{ card.post.url ?: card.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ card.post ? 'View REG post on @platform'|t({'@platform': card.label}) : 'View REG profile on @platform'|t({'@platform': card.label}) }}">{{ card.post ? 'View post'|t : 'View Profile'|t }} &nearr;</a>
+  </aside>
+{% endif %}

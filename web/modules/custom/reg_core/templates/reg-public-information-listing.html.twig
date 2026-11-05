@@ -136,8 +136,8 @@
     {% if bundle == 'reg_tender' %}
       <aside class="reg-pi-handoff">
         <div><span class="reg-pi-kicker">{{ 'Bid submission'|t }}</span><h2>{{ 'Use the official procurement process'|t }}</h2></div>
-        <p>{{ 'Each notice identifies its authoritative submission channel. REG Online tenders use the authenticated supplier workspace; UMUCYO and other external tenders remain on their named platform.'|t }}</p>
-        {% if handoff.procurement_url %}<a class="reg-pi-button" href="{{ handoff.procurement_url }}">{{ 'Open official procurement system'|t }}</a>{% endif %}
+        <p>{{ 'Each notice identifies its approved submission instructions and authoritative external channel. REG notice-only tenders do not accept online bids through this website.'|t }}</p>
+        {% if handoff.reg_online_bidding_enabled and handoff.procurement_url %}<a class="reg-pi-button" href="{{ handoff.procurement_url }}">{{ 'Open official procurement system'|t }}</a>{% endif %}
       </aside>
     {% elseif bundle == 'reg_job' %}
       <aside class="reg-pi-handoff">

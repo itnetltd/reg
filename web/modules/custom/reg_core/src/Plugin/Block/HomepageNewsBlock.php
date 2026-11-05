@@ -10,6 +10,7 @@ use Drupal\Core\Url;
 use Drupal\reg_core\News\NewsRepositoryInterface;
 use Drupal\reg_core\Social\SocialMediaManager;
 use Drupal\reg_core\Social\XFeedServiceInterface;
+use Drupal\reg_core\Social\YouTubeFeedService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -29,6 +30,7 @@ final class HomepageNewsBlock extends BlockBase implements ContainerFactoryPlugi
     private readonly NewsRepositoryInterface $newsRepository,
     private readonly SocialMediaManager $socialMediaManager,
     private readonly XFeedServiceInterface $xFeed,
+    private readonly YouTubeFeedService $youtubeFeed,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
@@ -44,6 +46,7 @@ final class HomepageNewsBlock extends BlockBase implements ContainerFactoryPlugi
       $container->get(NewsRepositoryInterface::class),
       $container->get('reg_core.social_media_manager'),
       $container->get(XFeedServiceInterface::class),
+      $container->get('reg_core.youtube_feed'),
     );
   }
 
@@ -55,17 +58,25 @@ final class HomepageNewsBlock extends BlockBase implements ContainerFactoryPlugi
     $content['x_feed'] = $this->socialMediaManager->homepageXFeed();
     if ($content['x_feed'] !== []) {
       $x_feed = $this->xFeed->homepageFeed();
-      $content['x_feed']['posts'] = $x_feed['items'];
+      $content['x_feed']['posts'] = array_slice($x_feed['items'], 0, 4);
       $content['cache_tags'] = array_merge($content['cache_tags'], $x_feed['cache_tags']);
     }
+    $content['youtube'] = $this->socialMediaManager->homepageYouTubeChannel();
+    if (!empty($content['youtube']['videos_enabled'])) {
+      $youtube = $this->youtubeFeed->homepageFeed();
+      $content['youtube']['video'] = $youtube['video'];
+      $content['cache_tags'] = array_merge($content['cache_tags'], $youtube['cache_tags']);
+    }
+    $content['social'] = $this->socialMediaManager->homepageSocialCards($content['x_feed'], $content['youtube']);
+    $content['cache_tags'] = array_merge($content['cache_tags'], $content['social']['cache_tags']);
     return [
       '#theme' => 'reg_news_homepage',
       '#content' => $content,
       '#view_all_url' => Url::fromRoute('reg_core.news')->toString(),
       '#attached' => ['library' => ['reg_core/newsroom']],
       '#cache' => [
-        'contexts' => ['languages:language_content', 'languages:language_interface', 'user.node_grants:view'],
-        'tags' => array_values(array_unique(array_merge($content['cache_tags'], ['config:reg_core.social_media', 'reg_core:x_feed']))),
+        'contexts' => ['user.permissions', 'languages:language_content', 'languages:language_interface', 'user.node_grants:view'],
+        'tags' => array_values(array_unique(array_merge($content['cache_tags'], ['config:reg_core.social_media', 'reg_core:x_feed', 'reg_core:youtube_feed', 'node_list:reg_video', 'media_list', 'file_list']))),
         'max-age' => 300,
       ],
     ];

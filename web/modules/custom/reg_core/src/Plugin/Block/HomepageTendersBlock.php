@@ -52,7 +52,7 @@ final class HomepageTendersBlock extends BlockBase implements ContainerFactoryPl
       '#attached' => ['library' => ['reg_core/tenders']],
       '#cache' => [
         'contexts' => ['languages:language_content', 'languages:language_interface', 'user.node_grants:view'],
-        'tags' => ['node_list:reg_tender', 'taxonomy_term_list:reg_procurement_category'],
+        'tags' => ['node_list:reg_tender', 'taxonomy_term_list:reg_procurement_category', 'config:reg_core.settings'],
         'max-age' => 300,
       ],
     ];

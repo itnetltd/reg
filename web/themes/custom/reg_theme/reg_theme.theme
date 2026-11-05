@@ -92,7 +92,30 @@ function reg_theme_preprocess_page(array &$variables): void {
     $variables['reg_main_menu'] = reg_theme_build_menu('main', 4);
   $variables['reg_utility_menu'] = reg_theme_build_menu('reg-utility-menu', 1);
   $variables['reg_utility_menu_mobile'] = reg_theme_build_menu('reg-utility-menu', 1);
-  $variables['reg_utility_menu_footer'] = reg_theme_build_menu('reg-utility-menu', 1);
+  $footer = \Drupal::config('reg_core.footer');
+  foreach (\Drupal\reg_core\Footer\FooterConfiguration::DEFAULTS as $key => $default) {
+    // Null, rather than empty text, means no editorial value was provided.
+    $variables['reg_footer'][$key] = $footer->get($key) ?? $default;
+  }
+  $variables['reg_footer']['copyright'] = strtr($variables['reg_footer']['copyright'], ['@year' => $variables['reg_year']]);
+  $variables['reg_footer_quick_links'] = reg_theme_build_menu('reg-footer-quick-links', 4);
+  $variables['reg_footer_support'] = reg_theme_build_menu('reg-footer-support', 4);
+  // Keep the shared telephone link visible even when editors remove all links.
+  $variables['reg_footer_support']['#theme'] = 'menu__reg_footer_support';
+  $variables['reg_footer_support']['#menu_name'] = 'reg-footer-support';
+  $variables['reg_footer_support']['#items'] ??= [];
+  $variables['page']['#cache']['tags'][] = 'config:reg_core.footer';
+  // These variables are printed individually, so page preprocessing metadata
+  // alone does not bubble. Render an empty cache carrier inside the footer.
+  $variables['reg_footer_cache'] = [
+    '#markup' => '',
+    '#cache' => [
+      'tags' => ['config:reg_core.footer', 'config:reg_core.settings', 'config:reg_core.social_media', 'config:system.date'],
+      'contexts' => ['languages:language_interface'],
+      'max-age' => max(1, $next_year->getTimestamp() - $request_time),
+    ],
+  ];
+  $variables['page']['#cache']['contexts'][] = 'languages:language_interface';
   $social_media = \Drupal::service('reg_core.social_media_manager');
   $variables['reg_social_links'] = [
     'utility' => $social_media->linksForPlacement('utility'),
@@ -137,12 +160,23 @@ function reg_theme_preprocess_page(array &$variables): void {
   $variables['page']['#cache']['tags'][] = 'node_list:reg_sports_fixture';
   $variables['page']['#cache']['tags'][] = 'config:reg_core.settings';
   $variables['page']['#cache']['contexts'][] = 'user.permissions';
+  $variables['page']['#cache']['contexts'][] = 'user.node_grants:view';
+  $variables['page']['#cache']['max-age'] = min($variables['page']['#cache']['max-age'] ?? 300, 300);
   $variables['reg_fallback']['news']['x_feed'] = $social_media->homepageXFeed();
   if ($variables['reg_fallback']['news']['x_feed'] !== [] && \Drupal::hasService('reg_core.x_feed')) {
     $x_feed = \Drupal::service('reg_core.x_feed')->homepageFeed();
-    $variables['reg_fallback']['news']['x_feed']['posts'] = $x_feed['items'];
+    $variables['reg_fallback']['news']['x_feed']['posts'] = array_slice($x_feed['items'], 0, 4);
     $variables['page']['#cache']['tags'] = array_merge($variables['page']['#cache']['tags'], $x_feed['cache_tags']);
   }
+
+  $variables['reg_fallback']['news']['youtube'] = $social_media->homepageYouTubeChannel();
+  if (!empty($variables['reg_fallback']['news']['youtube']['videos_enabled'])) {
+    $youtube = \Drupal::service('reg_core.youtube_feed')->homepageFeed();
+    $variables['reg_fallback']['news']['youtube']['video'] = $youtube['video'];
+    $variables['page']['#cache']['tags'] = array_merge($variables['page']['#cache']['tags'], $youtube['cache_tags']);
+  }
+  $variables['page']['#cache']['tags'] = array_merge($variables['page']['#cache']['tags'], ['node_list:reg_video', 'media_list', 'file_list', 'reg_core:youtube_feed']);
+  $variables['reg_fallback']['news']['social'] = $social_media->homepageSocialCards($variables['reg_fallback']['news']['x_feed'], $variables['reg_fallback']['news']['youtube']);
 
 }
 
@@ -150,6 +184,11 @@ function reg_theme_preprocess_page(array &$variables): void {
  * Implements hook_preprocess_menu().
  */
 function reg_theme_preprocess_menu(array &$variables): void {
+  if (($variables['menu_name'] ?? '') === 'reg-footer-support') {
+    $variables['reg_call_center'] = trim((string) (\Drupal::config('reg_core.settings')->get('support.call_center') ?: '2727'));
+    $variables['reg_call_center_uri'] = preg_replace('/[^0-9+]/', '', $variables['reg_call_center']) ?: '2727';
+    $variables['reg_call_label'] = \Drupal::config('reg_core.footer')->get('call_label') ?? 'Call';
+  }
   if (($variables['menu_name'] ?? '') === 'main' || ($variables['menu_name'] ?? '') === 'reg-utility-menu') {
     $route_name = \Drupal::routeMatch()->getRouteName() ?: '';
     $active_section = ($variables['menu_name'] ?? '') === 'main'

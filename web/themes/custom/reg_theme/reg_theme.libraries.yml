@@ -1,5 +1,5 @@
 global:
-  version: 1.x
+  version: 1.1.0
   css:
     base:
       css/base.css: {}
@@ -13,6 +13,7 @@ global:
   js:
     js/reg-theme.js: {}
   dependencies:
+    - reg_theme/fonts
     - core/drupal
     - core/once
     - reg_core/public_filters
@@ -27,3 +28,8 @@ homepage_work:
     component:
       css/homepage-work.css: {}
 
+fonts:
+  version: 1.0.0
+  css:
+    base:
+      css/fonts.css: {}

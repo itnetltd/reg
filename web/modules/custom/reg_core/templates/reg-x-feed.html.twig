@@ -1,4 +1,4 @@
-<aside class="reg-x-feed" data-reg-x-feed aria-labelledby="reg-x-feed-title">
+<aside class="reg-x-feed"{% if feed.social_card %} data-reg-social-card="x"{% endif %} data-reg-x-feed aria-roledescription="{{ 'carousel'|t }}" aria-labelledby="reg-x-feed-title">
   <header class="reg-x-feed__header">
     <span class="reg-x-feed__icon" aria-hidden="true"></span>
     <div class="reg-x-feed__identity">
@@ -9,22 +9,31 @@
   </header>
 
   {% if feed.posts %}
-    <div class="reg-x-feed__posts">
+    <div class="reg-x-feed__posts" tabindex="0" role="region" aria-label="{{ 'Latest REG posts on X'|t }}">
       {% for post in feed.posts %}
-        <article class="reg-x-feed__post{{ post.image.url ? ' reg-x-feed__post--media' : '' }}">
+        <article class="reg-x-feed__post{{ (post.image.url or post.image.render) ? ' reg-x-feed__post--media' : '' }}" role="group" aria-label="{{ 'Post @current of @total'|t({'@current': loop.index, '@total': feed.posts|length}) }}">
           <div class="reg-x-feed__post-copy">
             {% if post.date %}<time datetime="{{ post.date_iso }}">{{ post.date }}</time>{% endif %}
             <p>{{ post.text }}</p>
             <a href="{{ post.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ 'View this Rwanda Energy Group post on X'|t }}">{{ 'VIEW POST'|t }} <span aria-hidden="true">&nearr;</span></a>
           </div>
-          {% if post.image.url %}
+          {% if post.image.url or post.image.render %}
             <a class="reg-x-feed__media" href="{{ post.url }}" target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true">
+              {% if post.image.render %}{{ post.image.render }}{% else %}
               <img src="{{ post.image.url }}" alt="{{ post.image.alt }}" loading="lazy"{% if post.image.width %} width="{{ post.image.width }}"{% endif %}{% if post.image.height %} height="{{ post.image.height }}"{% endif %}>
+              {% endif %}
             </a>
           {% endif %}
         </article>
       {% endfor %}
     </div>
+    {% if feed.posts|length > 1 %}
+      <div class="reg-x-feed__controls" hidden>
+        <button type="button" data-x-prev aria-label="{{ 'Previous X post'|t }}">&larr;</button>
+        <span data-x-status aria-live="polite" aria-atomic="true"></span>
+        <button type="button" data-x-next aria-label="{{ 'Next X post'|t }}">&rarr;</button>
+      </div>
+    {% endif %}
   {% else %}
     <div class="reg-x-feed__fallback" data-reg-x-fallback>
       <span class="reg-x-feed__eyebrow">{{ 'Stay connected'|t }}</span>

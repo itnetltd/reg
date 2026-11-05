@@ -117,6 +117,15 @@ reg_core.settings:
       type: mapping
       label: 'Public Information Hub settings'
       mapping:
+        procurement_plan_integration:
+          type: boolean
+          label: 'Annual Procurement Plan Integration'
+        reg_online_bidding:
+          type: boolean
+          label: 'REG Online Bidding'
+        tender_security_approved:
+          type: boolean
+          label: 'REG online procurement security workflow approved'
         enable_tender_submission:
           type: boolean
           label: 'Enable tender submission handoff'
@@ -273,6 +282,17 @@ reg_core.social_media:
   type: config_object
   label: 'REG social media settings'
   mapping:
+    homepage_rotation:
+      type: mapping
+      label: 'Homepage social card rotation'
+      mapping:
+        enabled:
+          type: boolean
+          label: 'Enable automatic social rotation'
+        interval:
+          type: integer
+          label: 'Rotation interval in seconds'
+
     platforms:
       type: mapping
       label: 'Official social media platforms'
@@ -292,6 +312,9 @@ reg_core.social_media:
         linkedin:
           type: reg_core.social_media_platform
           label: 'LinkedIn'
+        tiktok:
+          type: reg_core.social_media_platform
+          label: 'TikTok'
         flickr:
           type: reg_core.social_media_platform
           label: 'Flickr'
@@ -300,6 +323,13 @@ reg_core.social_media_platform:
   type: mapping
   label: 'Social media platform'
   mapping:
+    show_homepage_card:
+      type: boolean
+      label: 'Include in homepage social cards'
+    homepage_order:
+      type: integer
+      label: 'Homepage social display order'
+
     url:
       type: uri
       label: 'Official profile URL'
@@ -324,6 +354,9 @@ reg_core.social_media_platform:
     videos_enabled:
       type: boolean
       label: 'Enable videos'
+    feed_cache_lifetime:
+      type: integer
+      label: 'YouTube refresh interval in seconds'
     user_id:
       type: string
       label: 'Flickr User ID'
@@ -380,3 +413,22 @@ reg_core.procurement_settings:
     require_supplier_approval:
       type: boolean
       label: 'Require Supplier Approval'
+
+reg_core.media_security:
+  type: config_object
+  label: 'REG public Media scope registry'
+  mapping:
+    sports_news_scopes_initialized:
+      type: boolean
+      label: 'Original Sports News scope classification completed'
+    legacy_scopes:
+      type: sequence
+      label: 'Fixed scope assignments for pre-existing Media UUIDs'
+      sequence:
+        type: sequence
+        sequence:
+          type: string
+
+entity_reference_selection.reg_procurement:
+  type: entity_reference_selection.default
+  label: 'REG procurement reference selection'

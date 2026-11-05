@@ -9,6 +9,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\reg_core\Social\XFeedService;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Response;
@@ -137,6 +138,72 @@ final class XFeedServiceTest extends TestCase {
     }
   }
 
+  public function testFourPostsRespectReplyAndRepostExclusions(): void {
+    $previous = getenv('X_BEARER_TOKEN');
+    putenv('X_BEARER_TOKEN=unit-test-token');
+    try {
+      $http = $this->createMock(ClientInterface::class);
+      $http->expects(self::exactly(2))->method('request')->willReturnCallback(static function (string $method, string $url, array $options): Response {
+        self::assertFalse($options['allow_redirects']);
+        if (str_contains($url, '/by/username/')) {
+          return new Response(200, [], '{"data":{"id":"12345"}}');
+        }
+        self::assertSame('replies,retweets', $options['query']['exclude']);
+        self::assertSame(5, $options['query']['max_results']);
+        $data = [];
+        foreach (range(1, 5) as $id) {
+          $data[] = ['id' => (string) $id, 'text' => 'Unit fixture post', 'created_at' => '2026-08-27T08:00:00Z'];
+        }
+        return new Response(200, [], json_encode(['data' => $data]));
+      });
+      $cache = $this->createMock(CacheBackendInterface::class);
+      $cache->method('get')->willReturn(FALSE);
+      $state = $this->createMock(StateInterface::class);
+      self::assertCount(4, $this->service($http, $cache, $state, ['api_homepage_post_count' => 4])->homepageFeed()['items']);
+    }
+    finally {
+      $this->restoreEnvironment($previous);
+    }
+  }
+
+  public function testEmptyTimelineIsAValidEmptyResponse(): void {
+    $previous = getenv('X_BEARER_TOKEN');
+    putenv('X_BEARER_TOKEN=unit-test-token');
+    try {
+      $http = $this->createMock(ClientInterface::class);
+      $http->expects(self::exactly(2))->method('request')->willReturnOnConsecutiveCalls(new Response(200, [], '{"data":{"id":"12345"}}'), new Response(200, [], '{"meta":{"result_count":0}}'));
+      $cache = $this->createMock(CacheBackendInterface::class);
+      $cache->method('get')->willReturn(FALSE);
+      $result = $this->service($http, $cache, $this->createMock(StateInterface::class))->homepageFeed();
+      self::assertSame([], $result['items']);
+      self::assertSame('', $result['error']);
+    }
+    finally {
+      $this->restoreEnvironment($previous);
+    }
+  }
+
+  public function testTimeoutUsesDurableFallbackWithoutLeakingException(): void {
+    $previous = getenv('X_BEARER_TOKEN');
+    putenv('X_BEARER_TOKEN=unit-test-token');
+    try {
+      $http = $this->createMock(ClientInterface::class);
+      $http->expects(self::once())->method('request')->willThrowException(new \GuzzleHttp\Exception\ConnectException('secret request detail', new \GuzzleHttp\Psr7\Request('GET', 'https://api.x.com/2')));
+      $cache = $this->createMock(CacheBackendInterface::class);
+      $cache->method('get')->willReturn(FALSE);
+      $state = $this->createMock(StateInterface::class);
+      $stale = [['id' => '1', 'text' => 'Unit fixture cached post']];
+      $state->method('get')->willReturnCallback(static fn(string $key, mixed $default = NULL) => str_ends_with($key, '.last_good') ? $stale : $default);
+      $result = $this->service($http, $cache, $state)->homepageFeed();
+      self::assertSame($stale, $result['items']);
+      self::assertTrue($result['stale']);
+      self::assertSame('X API is temporarily unavailable.', $result['error']);
+    }
+    finally {
+      $this->restoreEnvironment($previous);
+    }
+  }
+
   /**
    * Builds the service with safe defaults and test doubles.
    *
@@ -150,6 +217,7 @@ final class XFeedServiceTest extends TestCase {
     array $overrides = [],
   ): XFeedService {
     $platform = array_replace([
+      'url' => 'https://x.com/reg_rwanda',
       'enabled' => TRUE,
       'show_homepage_feed' => TRUE,
       'api_enabled' => TRUE,
@@ -173,6 +241,8 @@ final class XFeedServiceTest extends TestCase {
     $date_formatter = $this->createMock(DateFormatterInterface::class);
     $date_formatter->method('format')->willReturn('Aug 27, 2026');
 
+    $lock = $this->createMock(LockBackendInterface::class);
+    $lock->method('acquire')->willReturn(TRUE);
     return new XFeedService(
       $http,
       $config_factory,
@@ -182,6 +252,7 @@ final class XFeedServiceTest extends TestCase {
       $time,
       $date_formatter,
       $this->createMock(LoggerInterface::class),
+      $lock,
     );
   }
 

@@ -141,3 +141,39 @@ manage reg migration metadata:
   title: 'Manage REG migration metadata'
   description: 'Edit technical source and import metadata on News content.'
   restrict access: true
+
+manage reg editorial media:
+  title: 'Manage public editorial Media'
+  restrict access: true
+
+manage reg procurement media:
+  title: 'Manage public procurement Media'
+  restrict access: true
+
+manage reg hr media:
+  title: 'Manage public hr Media'
+  restrict access: true
+
+manage reg sports media:
+  title: 'Manage public sports Media'
+  restrict access: true
+
+administer reg footer:
+  title: 'Administer REG footer'
+  description: 'Manage translatable footer wording. Menu and block editing use existing core permissions.'
+  restrict access: true
+
+approve reg procurement plans:
+  title: 'Approve REG procurement plans and verify items'
+  description: 'Approval is separate from permission to publish content.'
+  restrict access: true
+
+import reg procurement plans:
+  title: 'Import annual procurement plan CSV'
+  description: 'Preview and import private procurement sources into unpublished plans. Assign explicitly to authorized Procurement Administrators.'
+  restrict access: true
+
+confirm reg tender plan relationships:
+  title: 'Confirm existing tender plan relationships'
+  description: 'Explicitly confirm linking or unlinking an existing tender; never inferred from similar activity titles.'
+  restrict access: true

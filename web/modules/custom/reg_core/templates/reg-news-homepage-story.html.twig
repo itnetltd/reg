@@ -1,4 +1,4 @@
-<article class="reg-news-card reg-news-card--homepage">
+<article class="reg-news-card reg-news-card--homepage{{ featured|default(false) ? ' reg-news-card--featured' : '' }}">
   <a class="reg-news-card__media" href="{{ item.url }}" aria-label="{{ 'Read @title'|t({'@title': item.title}) }}">
     {% if item.image.render %}
       {{ item.image.render }}
@@ -14,7 +14,6 @@
       {% if item.date %}<time datetime="{{ item.date_iso }}">{{ item.date }}</time>{% endif %}
     </div>
     <h3><a href="{{ item.url }}">{{ item.title }}</a></h3>
-    {% if item.summary %}<p>{{ item.summary }}</p>{% endif %}
     <a class="reg-news-card__action" href="{{ item.url }}">{{ 'Read story'|t }} <span aria-hidden="true">→</span></a>
   </div>
 </article>

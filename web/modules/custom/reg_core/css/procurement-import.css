@@ -1,0 +1,11 @@
+/* Scoped to the procurement import form; long audit tables scroll locally. */
+.reg-procurement-import { min-width: 0; }
+.reg-procurement-import select,
+.reg-procurement-import textarea,
+.reg-procurement-import input { max-width: 100%; box-sizing: border-box; }
+.reg-procurement-import__table { max-width: 100%; overflow-x: auto; margin-block: 1rem; }
+.reg-procurement-import__table table { width: 100%; min-width: 42rem; table-layout: fixed; }
+.reg-procurement-import__table th,
+.reg-procurement-import__table td { overflow-wrap: anywhere; }
+.reg-procurement-import__table th:last-child { width: 45%; }
+.reg-procurement-import__table:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }

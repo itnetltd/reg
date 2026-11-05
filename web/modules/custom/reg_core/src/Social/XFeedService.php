@@ -9,6 +9,7 @@ use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\Core\Lock\LockBackendInterface;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
 use Psr\Log\LoggerInterface;
@@ -31,6 +32,7 @@ final class XFeedService implements XFeedServiceInterface {
     private readonly TimeInterface $time,
     private readonly DateFormatterInterface $dateFormatter,
     private readonly LoggerInterface $logger,
+    private readonly LockBackendInterface $lock,
   ) {}
 
   /**
@@ -39,16 +41,22 @@ final class XFeedService implements XFeedServiceInterface {
   public function homepageFeed(bool $force_refresh = FALSE): array {
     $settings = $this->settings();
     if (!$settings['enabled']) {
-      return $this->result([], FALSE, FALSE, '');
+      return $this->result([], FALSE, FALSE, $settings['error']);
     }
 
-    $cache_id = $this->postsCacheId($settings['username']);
+    $cache_id = $this->postsCacheId($settings);
+    $state_key = 'reg_core.x_feed.result.' . hash('sha256', $cache_id);
     $cached = $this->cache->get($cache_id, TRUE);
     if (!$force_refresh && $cached && $cached->valid && is_array($cached->data)) {
       return $this->result($cached->data, TRUE, FALSE, '');
     }
 
-    $stale_items = ($cached && is_array($cached->data)) ? $cached->data : [];
+    $last_good = $this->state->get($state_key . '.last_good', []);
+    $stale_items = ($cached && is_array($cached->data)) ? $cached->data : (is_array($last_good) ? $last_good : []);
+    if (!$force_refresh && (int) $this->state->get($state_key . '.next_attempt', 0) > $this->time->getRequestTime()) {
+      return $this->result($stale_items, $stale_items !== [], $stale_items !== [], (string) $this->state->get(self::STATE_PREFIX . 'last_error', ''));
+    }
+    $this->state->set($state_key . '.next_attempt', $this->time->getRequestTime() + 300);
     $token = $this->bearerToken();
     if ($token === '') {
       $message = 'X API bearer token is not configured.';
@@ -56,6 +64,9 @@ final class XFeedService implements XFeedServiceInterface {
       return $this->result($stale_items, $stale_items !== [], $stale_items !== [], $message);
     }
 
+    if (!$this->lock->acquire($cache_id, 30)) {
+      return $this->result($stale_items, $stale_items !== [], $stale_items !== [], '');
+    }
     try {
       $user_id = $this->resolveUserId($settings, $token);
       $items = $this->fetchPosts($user_id, $settings, $token);
@@ -68,6 +79,8 @@ final class XFeedService implements XFeedServiceInterface {
         ['config:reg_core.social_media', 'reg_core:x_feed'],
       );
       $this->state->setMultiple([
+        $state_key . '.last_good' => $items,
+        $state_key . '.next_attempt' => $now + $settings['cache_lifetime'],
         self::STATE_PREFIX . 'last_success' => $now,
         self::STATE_PREFIX . 'cached_posts' => count($items),
         self::STATE_PREFIX . 'last_error' => '',
@@ -82,6 +95,9 @@ final class XFeedService implements XFeedServiceInterface {
         '@message' => $message,
       ]);
       return $this->result($stale_items, $stale_items !== [], $stale_items !== [], $message);
+    }
+    finally {
+      $this->lock->release($cache_id);
     }
   }
 
@@ -99,7 +115,7 @@ final class XFeedService implements XFeedServiceInterface {
    */
   public function status(): array {
     $settings = $this->settings();
-    $cached = $this->cache->get($this->postsCacheId($settings['username']), TRUE);
+    $cached = $this->cache->get($this->postsCacheId($settings), TRUE);
     $cached_count = ($cached && is_array($cached->data)) ? count($cached->data) : 0;
     return [
       'configured' => $this->bearerToken() !== '',
@@ -107,7 +123,7 @@ final class XFeedService implements XFeedServiceInterface {
       'account' => '@' . $settings['username'],
       'last_success' => (int) $this->state->get(self::STATE_PREFIX . 'last_success', 0),
       'cached_posts' => $cached_count,
-      'last_error' => $this->safeMessage((string) $this->state->get(self::STATE_PREFIX . 'last_error', '')),
+      'last_error' => $settings['error'] ?: (!$settings['enabled'] ? 'X API feed is disabled in Social Media Settings.' : ($this->bearerToken() === '' ? 'X API bearer token is not configured.' : $this->safeMessage((string) $this->state->get(self::STATE_PREFIX . 'last_error', '')))),
     ];
   }
 
@@ -118,13 +134,12 @@ final class XFeedService implements XFeedServiceInterface {
    *   Normalized X configuration.
    */
   private function resolveUserId(array $settings, string $token): string {
-    if ($settings['user_id'] !== '') {
-      return $settings['user_id'];
-    }
-
     $cache_id = 'reg_core:x:user:' . strtolower($settings['username']);
     $cached = $this->cache->get($cache_id);
-    if ($cached && preg_match('/^\d+$/', (string) $cached->data)) {
+    if ($cached && is_string($cached->data) && preg_match('/^\d+$/', $cached->data)) {
+      if ($settings['user_id'] !== '' && $settings['user_id'] !== (string) $cached->data) {
+        throw new XFeedException('Configured X user ID does not match the official account.');
+      }
       return (string) $cached->data;
     }
 
@@ -136,6 +151,9 @@ final class XFeedService implements XFeedServiceInterface {
     $user_id = trim((string) ($payload['data']['id'] ?? ''));
     if (!preg_match('/^\d+$/', $user_id)) {
       throw new XFeedException('X API did not return a valid user ID for the configured account.');
+    }
+    if ($settings['user_id'] !== '' && $settings['user_id'] !== $user_id) {
+      throw new XFeedException('Configured X user ID does not match the official account.');
     }
     $this->cache->set(
       $cache_id,
@@ -174,6 +192,9 @@ final class XFeedService implements XFeedServiceInterface {
     }
 
     $payload = $this->request('/users/' . $user_id . '/tweets', $query, $token);
+    if ((!isset($payload['data']) || !is_array($payload['data'])) && ($payload['meta']['result_count'] ?? NULL) !== 0) {
+      throw new XFeedException('X API returned an invalid post listing.');
+    }
     $media = [];
     foreach (($payload['includes']['media'] ?? []) as $item) {
       if (!is_array($item) || ($item['type'] ?? '') !== 'photo') {
@@ -193,8 +214,11 @@ final class XFeedService implements XFeedServiceInterface {
 
     $posts = [];
     foreach (($payload['data'] ?? []) as $post) {
-      if (!is_array($post) || count($posts) >= $settings['post_count']) {
+      if (count($posts) >= $settings['post_count']) {
         break;
+      }
+      if (!is_array($post)) {
+        continue;
       }
       $id = trim((string) ($post['id'] ?? ''));
       $text = $this->safeText((string) ($post['text'] ?? ''));
@@ -243,6 +267,7 @@ final class XFeedService implements XFeedServiceInterface {
         'connect_timeout' => 3,
         'timeout' => 6,
         'http_errors' => FALSE,
+        'allow_redirects' => FALSE,
       ]);
     }
     catch (GuzzleException $exception) {
@@ -285,16 +310,20 @@ final class XFeedService implements XFeedServiceInterface {
     $platform = $this->configFactory->get('reg_core.social_media')->get('platforms.x');
     $platform = is_array($platform) ? $platform : [];
     $username = ltrim(trim((string) ($platform['api_username'] ?? 'reg_rwanda')), '@');
-    if (!preg_match('/^[A-Za-z0-9_]{1,15}$/', $username)) {
-      $username = 'reg_rwanda';
-    }
+    $parts = parse_url((string) ($platform['url'] ?? ''));
+    $valid = is_array($parts) && ($parts['scheme'] ?? '') === 'https'
+      && in_array(strtolower($parts['host'] ?? ''), ['x.com', 'www.x.com', 'twitter.com', 'www.twitter.com'], TRUE)
+      && !isset($parts['user']) && !isset($parts['pass']) && !isset($parts['port'])
+      && preg_match('/^[A-Za-z0-9_]{1,15}$/D', $username)
+      && strcasecmp(trim($parts['path'] ?? '', '/'), $username) === 0;
     $user_id = trim((string) ($platform['api_user_id'] ?? ''));
     return [
-      'enabled' => !empty($platform['api_enabled']) && !empty($platform['enabled']) && !empty($platform['show_homepage_feed']),
+      'error' => !$valid ? 'The X API username must match the configured official X profile URL.' : '',
+      'enabled' => $valid && !empty($platform['api_enabled']) && !empty($platform['enabled']) && !empty($platform['show_homepage_feed']),
       'username' => $username,
       'user_id' => preg_match('/^\d+$/', $user_id) ? $user_id : '',
       'cache_lifetime' => max(300, min(86400, (int) ($platform['api_cache_lifetime'] ?? 900))),
-      'post_count' => max(1, min(5, (int) ($platform['api_homepage_post_count'] ?? 3))),
+      'post_count' => max(3, min(4, (int) ($platform['api_homepage_post_count'] ?? 4))),
       'exclude_replies' => !array_key_exists('api_exclude_replies', $platform) || !empty($platform['api_exclude_replies']),
       'exclude_reposts' => !array_key_exists('api_exclude_reposts', $platform) || !empty($platform['api_exclude_reposts']),
     ];
@@ -305,8 +334,9 @@ final class XFeedService implements XFeedServiceInterface {
     return is_string($value) ? trim($value) : '';
   }
 
-  private function postsCacheId(string $username): string {
-    return 'reg_core:x:posts:' . strtolower($username);
+  private function postsCacheId(array $settings): string {
+    // Exclusions and account changes must never reuse incompatible stale posts.
+    return 'reg_core:x:posts:' . strtolower($settings['username']) . ':' . hash('sha256', json_encode([$settings['user_id'], $settings['post_count'], $settings['exclude_replies'], $settings['exclude_reposts']]));
   }
 
   private function recordError(string $message): void {

@@ -29,8 +29,8 @@ final class PlanPortalController extends ControllerBase {
 
   public function procurementPlan(Request $request): array { return $this->publicPlan('procurement', $request); }
   public function recruitmentPlan(Request $request): array { return $this->publicPlan('recruitment', $request); }
-  public function procurementPlansAdmin(Request $request): array { return $this->adminOverview('reg_procurement_plan', $request); }
-  public function procurementItemsAdmin(Request $request): array { return $this->adminOverview('reg_procurement_plan_item', $request); }
+  public function procurementPlansAdmin(Request $request): array { return $this->formBuilder()->getForm(\Drupal\reg_core\Form\ProcurementPlanAdminForm::class, 'reg_procurement_plan'); }
+  public function procurementItemsAdmin(Request $request): array { return $this->formBuilder()->getForm(\Drupal\reg_core\Form\ProcurementPlanAdminForm::class, 'reg_procurement_plan_item'); }
   public function recruitmentPlansAdmin(Request $request): array { return $this->adminOverview('reg_recruitment_plan', $request); }
   public function recruitmentItemsAdmin(Request $request): array { return $this->adminOverview('reg_recruitment_plan_item', $request); }
   public function jobsAdmin(Request $request): array { return $this->adminOverview('reg_job', $request); }
@@ -116,6 +116,7 @@ final class PlanPortalController extends ControllerBase {
     $node = $this->regEntityTypeManager->getStorage('node')->load($id);
     if (!$node instanceof NodeInterface || $node->bundle() !== $bundle || !$node->isPublished()) throw new NotFoundHttpException();
     $deadline = strtotime((string) $node->get('field_reg_closing_date')->value . ' UTC') ?: 0;
+    if ($bundle === 'reg_tender' && !\Drupal\reg_core\Procurement\TenderSubmissionPolicy::onlineEnabled()) throw new AccessDeniedHttpException('REG online bidding is not enabled.');
     if ((string) $node->get($method_field)->value !== $method || (string) $node->get($status_field)->value !== $status || !$deadline || $deadline <= $this->time->getRequestTime()) throw new AccessDeniedHttpException('This submission channel is not open.');
     return ['#theme' => 'reg_private_portal', '#heading' => $this->t($heading), '#items' => [], '#notice' => $this->t('This authenticated workflow is gated pending production security accreditation. No bid or application files are accepted by this screen.'), '#cache' => ['contexts' => ['user'], 'tags' => $node->getCacheTags(), 'max-age' => 0]];
   }

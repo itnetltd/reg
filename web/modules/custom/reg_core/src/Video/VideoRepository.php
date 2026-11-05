@@ -114,6 +114,9 @@ final class VideoRepository implements VideoRepositoryInterface {
       ->condition('status', NodeInterface::PUBLISHED)
       ->condition('langcode', $langcode);
 
+    if (($filters['provider'] ?? '') === 'youtube') {
+      $query->condition('field_reg_video_provider', 'youtube');
+    }
     $search = trim((string) ($filters['search'] ?? ''));
     if ($search !== '') {
       $or = $query->orConditionGroup()

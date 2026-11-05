@@ -884,3 +884,101 @@ function reg_core_post_update_carbon_factor_metadata(?array &$sandbox = NULL): s
   $config->set('carbon', $defaults)->save();
   return 'Configured Rwanda 2024 factor 0.35398 kg CO2e/kWh, pending REG approval.';
 }
+
+/** Adds safe feed defaults without overwriting editorial choices or content. */
+function reg_core_post_update_dynamic_social_feeds(?array &$sandbox = NULL): string {
+  $config = \Drupal::configFactory()->getEditable('reg_core.social_media');
+  if ($config->get('platforms.youtube.feed_cache_lifetime') === NULL) {
+    $config->set('platforms.youtube.feed_cache_lifetime', 3600);
+  }
+  if (trim((string) $config->get('platforms.youtube.channel_id')) === '') {
+    $parts = parse_url((string) $config->get('platforms.youtube.url'));
+    if (is_array($parts) && ($parts['scheme'] ?? '') === 'https'
+      && in_array(strtolower($parts['host'] ?? ''), ['youtube.com', 'www.youtube.com'], TRUE)
+      && !isset($parts['user']) && !isset($parts['pass']) && !isset($parts['port'])
+      && preg_match('#^/channel/(UC[A-Za-z0-9_-]{22})/?$#D', $parts['path'] ?? '', $match)) {
+      $config->set('platforms.youtube.channel_id', $match[1]);
+    }
+  }
+  $count = $config->get('platforms.x.api_homepage_post_count');
+  $config->set('platforms.x.api_homepage_post_count', $count === NULL ? 4 : max(3, min(4, (int) $count)));
+  $config->save();
+  return 'Added social feed refresh defaults and derived the channel ID only from an existing approved channel URL. Feed enablement and content were preserved.';
+}
+
+/** Initializes independent footer menus without changing header links or blocks. */
+function reg_core_post_update_managed_footer(?array &$sandbox = NULL): string {
+  \Drupal\reg_core\Footer\FooterConfiguration::initialize();
+  return 'Created independent footer menus and translatable footer settings. Existing menus, blocks and shared contact/social settings were preserved.';
+}
+
+/** Adds homepage social rotation defaults without changing accounts or placements. */
+function reg_core_post_update_homepage_social_pairs(?array &$sandbox = NULL): string {
+  $config = \Drupal::configFactory()->getEditable('reg_core.social_media');
+  if ($config->get('langcode') === NULL) {
+    $config->set('langcode', \Drupal::languageManager()->getDefaultLanguage()->getId());
+  }
+  foreach (\Drupal\reg_core\Social\SocialMediaManager::HOMEPAGE_PLATFORMS as $id => $label) {
+    if ($id === 'tiktok' && $config->get('platforms.tiktok') === NULL) {
+      $config->set('platforms.tiktok', ['url' => '', 'display_name' => 'Rwanda Energy Group', 'enabled' => FALSE, 'show_utility' => FALSE, 'show_footer' => FALSE]);
+    }
+    foreach (['show_homepage_card' => TRUE, 'homepage_order' => array_search($id, array_keys(\Drupal\reg_core\Social\SocialMediaManager::HOMEPAGE_PLATFORMS), TRUE) * 10] as $key => $default) {
+      if ($config->get('platforms.' . $id . '.' . $key) === NULL) {
+        $config->set('platforms.' . $id . '.' . $key, $default);
+      }
+    }
+  }
+  foreach (['enabled' => TRUE, 'interval' => 5] as $key => $default) {
+    if ($config->get('homepage_rotation.' . $key) === NULL) {
+      $config->set('homepage_rotation.' . $key, $default);
+    }
+  }
+  $config->save();
+  $field = \Drupal\field\Entity\FieldStorageConfig::loadByName('node', 'field_reg_social_platform');
+  if ($field) {
+    $field->setSetting('allowed_values', ($field->getSetting('allowed_values') ?? []) + ['instagram' => 'Instagram', 'tiktok' => 'TikTok', 'linkedin' => 'LinkedIn'])->save();
+  }
+  $homepage_field = \Drupal\field\Entity\FieldConfig::loadByName('node', 'reg_social_post', 'field_reg_social_homepage');
+  if ($homepage_field && $homepage_field->getDescription() === 'Only published, featured X posts are eligible for the homepage.') {
+    $homepage_field->setDescription('Only published, approved social posts from enabled official accounts are eligible for homepage cards.')->save();
+  }
+  return 'Added independent five-second homepage social rotation, CMS platform options and disabled TikTok support. Existing official account URLs and header/footer placements were preserved.';
+}
+
+/** Extends existing annual procurement planning without importing content. */
+function reg_core_post_update_annual_procurement_management(?array &$sandbox = NULL): string {
+  \Drupal\reg_core\Procurement\ProcurementPlanSetup::apply();
+  return 'Extended existing procurement plans/items, nullable budgets, private sources and approval management. No activities or tenders were imported.';
+}
+
+/** Repairs existing CKEditor allowed-type key shape without widening the list. */
+function reg_core_post_update_procurement_editor_media_types(?array &$sandbox = NULL): string {
+  \Drupal\reg_core\Procurement\ProcurementPlanSetup::normalizeEditorMediaTypes();
+  return 'Normalized existing Media embed type keys for CKEditor compatibility; no media types or content added.';
+}
+
+/** Enables authorized staff to select existing unpublished plans and tenders. */
+function reg_core_post_update_procurement_draft_references(?array &$sandbox = NULL): string {
+  \Drupal\reg_core\Procurement\ProcurementPlanSetup::configureReferences();
+  return 'Reused procurement references with permission-checked draft selection; no new content created.';
+}
+
+/** Adds importer metadata to existing procurement entities; imports no content. */
+function reg_core_post_update_procurement_csv_import(?array &$sandbox = NULL): string {
+  \Drupal\reg_core\Procurement\ProcurementImportSetup::apply();
+  return 'Added private procurement import tracking and original method codes. Grant import permission explicitly to Procurement Administrators.';
+}
+
+/** Integrates existing approved procurement activities and tender workflows. */
+function reg_core_post_update_tender_plan_workflow(?array &$sandbox = NULL): string {
+  \Drupal\reg_core\Procurement\TenderPlanSetup::apply();
+  return 'Added guided approved-plan tender selection, source snapshots and explicit legacy-link confirmation; existing content and bids unchanged. Security approval remains disabled until configured.';
+}
+
+/** Temporarily enables standalone tender notices while retaining plan/bid data. */
+function reg_core_post_update_standalone_tender_notices(?array &$sandbox = NULL): string {
+  \Drupal\reg_core\Procurement\SimpleTenderSetup::apply();
+  \Drupal::configFactory()->getEditable('reg_core.settings')->set('public_information.procurement_plan_integration', FALSE)->set('public_information.reg_online_bidding', FALSE)->save();
+  \Drupal::service('plugin.manager.menu.link')->rebuild();
+  return 'Standalone tender notice publishing enabled. Plan integration and REG online bidding OFF. Existing plans, tenders, suppliers and bids preserved.';
+}

@@ -12,4 +12,7 @@ interface SocialPostRepositoryInterface {
    */
   public function homepageXPosts(int $limit = 2): array;
 
+  /** Returns the latest accessible, published and approved homepage record. */
+  public function latestHomepagePost(string $platform): array;
+
 }

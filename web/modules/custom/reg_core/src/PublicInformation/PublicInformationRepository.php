@@ -42,6 +42,17 @@ final class PublicInformationRepository implements PublicInformationRepositoryIn
     }
 
     $storage = $this->regEntityTypeManager->getStorage('node');
+    if (!\Drupal\reg_core\Procurement\TenderSubmissionPolicy::plansEnabled()) {
+      $ids = $storage->getQuery()->accessCheck(TRUE)->condition('type', 'reg_tender')->condition('status', NodeInterface::PUBLISHED)->sort('field_reg_issue_date', 'DESC')->sort('nid', 'DESC')->range(0, $limit)->execute();
+      $items = []; $tags = ['node_list:reg_tender', 'config:reg_core.settings'];
+      foreach ($storage->loadMultiple($ids) as $node) {
+        if (!$node->access('view')) continue;
+        if ($node->hasTranslation($langcode) && $node->getTranslation($langcode)->isPublished()) $node = $node->getTranslation($langcode);
+        $items[] = $this->normalizeNode($node); $tags = Cache::mergeTags($tags, $node->getCacheTags());
+      }
+      $this->cache->set($cid, $items, $this->time->getRequestTime() + 300, $tags);
+      return $items;
+    }
     $base_query = static fn () => $storage->getQuery()
       ->accessCheck(TRUE)
       ->condition('type', 'reg_tender')
@@ -77,7 +88,7 @@ final class PublicInformationRepository implements PublicInformationRepositoryIn
       $items[] = $this->normalizeNode($node);
       $tags = Cache::mergeTags($tags, $node->getCacheTags());
     }
-    $this->cache->set($cid, $items, $this->time->getRequestTime() + 300, $tags);
+    $this->cache->set($cid, $items, $this->time->getRequestTime() + 300, Cache::mergeTags($tags, ['config:reg_core.settings']));
     return $items;
   }
 
@@ -208,6 +219,18 @@ final class PublicInformationRepository implements PublicInformationRepositoryIn
     if ($status_field === NULL) {
       return;
     }
+    if ($bundle === 'reg_tender' && !\Drupal\reg_core\Procurement\TenderSubmissionPolicy::plansEnabled()) {
+      $now = gmdate('Y-m-d\TH:i:s', $this->time->getRequestTime());
+      if ($filters['status'] === 'active' || ($filters['status'] === '' && $filters['mode'] === 'current')) {
+        $query->condition($status_field, 'active')->condition('field_reg_closing_date', $now, '>');
+        return;
+      }
+      if ($filters['status'] === 'closed' || ($filters['status'] === '' && $filters['mode'] === 'archive')) {
+        $expired = $query->andConditionGroup()->condition($status_field, 'active')->condition($query->orConditionGroup()->condition('field_reg_closing_date', $now, '<=')->notExists('field_reg_closing_date'));
+        $query->condition($query->orConditionGroup()->condition($status_field, $filters['status'] === 'closed' ? ['closed'] : ['closed', 'cancelled', 'archived'], 'IN')->condition($expired));
+        return;
+      }
+    }
     if ($filters['status'] !== '') {
       $query->condition($status_field, $filters['status']);
       return;
@@ -253,7 +276,7 @@ final class PublicInformationRepository implements PublicInformationRepositoryIn
       $node = $node->getTranslation($langcode);
     }
     $item = $this->normalizeNode($node);
-    $this->cache->set($cid, $item, $this->time->getRequestTime() + 300, $node->getCacheTags());
+    $this->cache->set($cid, $item, $this->time->getRequestTime() + 300, Cache::mergeTags($node->getCacheTags(), ['config:reg_core.settings']));
     return $item;
   }
 
@@ -310,13 +333,15 @@ final class PublicInformationRepository implements PublicInformationRepositoryIn
     $submission_method = $this->value($node, 'field_reg_submission_method');
     $application_method = $this->value($node, 'field_reg_application_method');
     $deadline_timestamp = $closing !== '' ? (strtotime($closing . ' UTC') ?: 0) : 0;
-    $is_open = $status_key === 'active' && $deadline_timestamp > $this->time->getRequestTime();
+    $notice_mode = $bundle === 'reg_tender' && !\Drupal\reg_core\Procurement\TenderSubmissionPolicy::plansEnabled();
+    if ($notice_mode && $status_key === 'active' && $deadline_timestamp <= $this->time->getRequestTime()) $status_key = 'closed';
+    $is_open = $node->isPublished() && $status_key === 'active' && $deadline_timestamp > $this->time->getRequestTime();
     $action = ['label' => '', 'url' => '', 'external' => FALSE, 'enabled' => FALSE];
     if ($bundle === 'reg_tender') {
-      if ($submission_method === 'umucyo' || $publication_channel === 'umucyo' || ($publication_channel === 'both' && $submission_method === 'umucyo')) {
-        $action = ['label' => 'BID ON UMUCYO', 'url' => $this->link($node, 'field_reg_umucyo_url'), 'external' => TRUE, 'enabled' => $is_open];
+      if ($submission_method === 'umucyo') {
+        $action = ['label' => 'BID ON UMUCYO', 'url' => $this->link($node, 'field_reg_umucyo_url'), 'external' => TRUE, 'enabled' => $is_open && \Drupal\reg_core\Procurement\TenderSubmissionPolicy::umucyoUrl($this->link($node, 'field_reg_umucyo_url'))];
       }
-      elseif ($submission_method === 'reg_online') {
+      elseif ($submission_method === 'reg_online' && \Drupal\reg_core\Procurement\TenderSubmissionPolicy::onlineEnabled()) {
         $action = ['label' => 'BID ONLINE', 'url' => $is_open ? Url::fromRoute('reg_core.bid_start', ['tender' => $node->id()])->toString() : '', 'external' => FALSE, 'enabled' => $is_open];
       }
       elseif ($submission_method === 'external') {
@@ -361,9 +386,11 @@ final class PublicInformationRepository implements PublicInformationRepositoryIn
       },
       'category' => $this->referenceLabel($node, $category_field),
       'category_id' => $this->referenceId($node, $category_field),
-      'status' => $status_field !== '' ? $this->listLabel($node, $status_field) : '',
+      'status' => $notice_mode ? (['preparing' => 'Draft', 'active' => 'Open', 'closed' => 'Closed', 'evaluation' => 'Evaluation', 'awarded' => 'Awarded', 'cancelled' => 'Cancelled', 'archived' => 'Archived'][$status_key] ?? $status_key) : ($status_field !== '' ? $this->listLabel($node, $status_field) : ''),
       'status_key' => $status_key,
       'status_short' => match ($status_key) {
+        'preparing' => 'DRAFT',
+        'evaluation' => 'EVALUATION',
         'active' => 'OPEN',
         'closed' => 'CLOSED',
         'awarded' => 'AWARDED',
@@ -390,8 +417,10 @@ final class PublicInformationRepository implements PublicInformationRepositoryIn
       'eligibility' => $this->value($node, 'field_reg_eligibility'),
       'contact' => $this->value($node, 'field_reg_contact'),
       'procurement_plan' => $this->value($node, 'field_reg_procurement_plan'),
+      'submission_instructions' => $this->value($node, 'field_reg_bid_instructions'),
       'plan_item' => $this->referenceLabel($node, $bundle === 'reg_tender' ? 'field_reg_proc_plan_item' : ($bundle === 'reg_job' ? 'field_reg_recruit_plan_item' : '')),
-      'publication_channel' => $this->listLabel($node, 'field_reg_publication_channel'),
+      'publication_channel' => $notice_mode ? (['umucyo' => 'UMUCYO', 'external' => 'OTHER APPROVED EXTERNAL CHANNEL'][$submission_method] ?? 'REG WEBSITE - NOTICE ONLY') : $this->listLabel($node, 'field_reg_publication_channel'),
+      'online_bidding_enabled' => \Drupal\reg_core\Procurement\TenderSubmissionPolicy::onlineEnabled(),
       'publication_channel_key' => $publication_channel,
       'submission_method' => $this->listLabel($node, 'field_reg_submission_method'),
       'submission_method_key' => $submission_method,
@@ -399,7 +428,7 @@ final class PublicInformationRepository implements PublicInformationRepositoryIn
       'application_method_key' => $application_method,
       'umucyo_number' => $this->value($node, 'field_reg_umucyo_number'),
       'action' => $action,
-      'supplier_ctas' => $bundle === 'reg_tender' && $submission_method === 'reg_online' ? [
+      'supplier_ctas' => $bundle === 'reg_tender' && $submission_method === 'reg_online' && \Drupal\reg_core\Procurement\TenderSubmissionPolicy::onlineEnabled() ? [
         'register_url' => Url::fromRoute('reg_core.supplier_register')->toString(),
         'login_url' => Url::fromRoute('reg_core.supplier_login')->toString(),
       ] : [],

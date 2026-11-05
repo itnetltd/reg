@@ -6,6 +6,7 @@ use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Cache\Context\CacheContextsManager;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
@@ -28,6 +29,7 @@ final class NewsRepository implements NewsRepositoryInterface {
     private readonly FileUrlGeneratorInterface $fileUrlGenerator,
     private readonly CacheBackendInterface $cache,
     private readonly TimeInterface $time,
+    private readonly CacheContextsManager $cacheContextsManager,
   ) {}
 
   /**
@@ -35,21 +37,33 @@ final class NewsRepository implements NewsRepositoryInterface {
    */
   public function homepage(): array {
     $langcode = $this->languageManager->getCurrentLanguage()->getId();
-    $cid = 'reg_core:news:homepage:' . $langcode;
+    $contexts = $this->cacheContextsManager->convertTokensToKeys(['user.permissions', 'user.node_grants:view']);
+    $cid = 'reg_core:news:homepage:pairs:' . $langcode . ':' . hash('sha256', serialize($contexts->getKeys()));
     if ($cached = $this->cache->get($cid)) {
       return $cached->data;
     }
 
-    $ids = $this->publishedQuery()
+    // Keep the approved homepage ordering, filling gaps after access/translation checks.
+    $query = $this->publishedQuery()
       ->sort('field_reg_publication_date', 'DESC')
-      ->sort('nid', 'DESC')
-      ->range(0, 3)
-      ->execute();
+      ->sort('nid', 'DESC');
+    $nodes = [];
+    $offset = 0;
+    do {
+      $ids = $query->range($offset, 5)->execute();
+      foreach ($this->loadTranslated($ids) as $node) {
+        $nodes[(int) $node->id()] = $node;
+        if (count($nodes) === 5) {
+          break;
+        }
+      }
+      $offset += 5;
+    } while (count($ids) === 5 && count($nodes) < 5);
 
     $primary = [];
     $secondary = [];
-    $tags = $this->listCacheTags();
-    foreach ($this->loadTranslated($ids) as $index => $node) {
+    $tags = Cache::mergeTags($this->listCacheTags(), $contexts->getCacheTags());
+    foreach (array_values($nodes) as $index => $node) {
       if ($index === 0) {
         $primary = $this->item($node, 'reg_news_featured', 'eager');
         $tags = Cache::mergeTags($tags, $primary['cache_tags']);

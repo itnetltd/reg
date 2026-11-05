@@ -43,7 +43,10 @@ dms:
   synchronization_interval: 300
   cache_lifetime: 300
 public_information:
+  procurement_plan_integration: false
+  reg_online_bidding: false
   enable_tender_submission: false
+  tender_security_approved: false
   job_application_mode: external
   enable_tender_sms: false
   allow_zip_uploads: false

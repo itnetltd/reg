@@ -309,6 +309,7 @@ services:
     class: Drupal\reg_core\Social\SocialMediaManager
     arguments:
       - '@config.factory'
+      - '@reg_core.social_post_repository'
 
   reg_core.flickr_gallery:
     class: Drupal\reg_core\Media\FlickrGallery
@@ -336,6 +337,7 @@ services:
       - '@datetime.time'
       - '@date.formatter'
       - '@logger.channel.reg_x_feed'
+      - '@lock'
 
   reg_core.supplier_manager:
     class: Drupal\reg_core\Supplier\SupplierManager
@@ -363,6 +365,7 @@ services:
       - '@file_url_generator'
       - '@cache.data'
       - '@datetime.time'
+      - '@cache_contexts_manager'
 
   logger.channel.reg_media_center_migration:
     parent: logger.channel_base
@@ -413,3 +416,26 @@ services:
       - '@reg_core.video_provider_manager'
       - '@cache.data'
       - '@datetime.time'
+
+  reg_core.public_media_policy:
+    class: Drupal\reg_core\Media\PublicMediaPolicy
+
+  reg_core.media_security_routes:
+    class: Drupal\reg_core\Routing\MediaSecurityRouteSubscriber
+    tags:
+      - { name: event_subscriber }
+
+  reg_core.youtube_feed:
+    class: Drupal\reg_core\Social\YouTubeFeedService
+    arguments:
+      - '@http_client'
+      - '@config.factory'
+      - '@cache.data'
+      - '@cache_tags.invalidator'
+      - '@state'
+      - '@datetime.time'
+      - '@date.formatter'
+      - '@lock'
+
+  reg_core.procurement_importer:
+    class: Drupal\reg_core\Procurement\ProcurementImporter

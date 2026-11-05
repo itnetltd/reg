@@ -61,6 +61,7 @@ final class SupplierManager {
   }
 
   public function tenderAcceptsRegBids(NodeInterface $tender): bool {
+    if (!\Drupal\reg_core\Procurement\TenderSubmissionPolicy::onlineEnabled()) return FALSE;
     if ($tender->bundle() !== 'reg_tender' || !$tender->isPublished()) return FALSE;
     if ((string) $tender->get('field_reg_submission_method')->value !== 'reg_online' || (string) $tender->get('field_reg_tender_status')->value !== 'active') return FALSE;
     $deadline = strtotime((string) $tender->get('field_reg_closing_date')->value . ' UTC') ?: 0;

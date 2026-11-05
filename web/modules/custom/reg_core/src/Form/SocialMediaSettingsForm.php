@@ -5,6 +5,8 @@ namespace Drupal\reg_core\Form;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Drupal\reg_core\Social\SocialMediaManager;
 
 /**
  * Configures official REG social media destinations and placements.
@@ -21,6 +23,7 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
     'instagram' => 'Instagram',
     'linkedin' => 'LinkedIn',
     'flickr' => 'Flickr',
+    'tiktok' => 'TikTok',
   ];
 
   /**
@@ -44,6 +47,23 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
     $config = $this->config('reg_core.social_media');
     $form['intro'] = [
       '#markup' => '<p>' . $this->t('Add only verified official REG profile URLs. A platform remains hidden everywhere when it is disabled or its URL is empty.') . '</p>',
+    ];
+    $form['homepage_rotation'] = [
+      '#type' => 'details', '#title' => $this->t('Homepage social card rotation'), '#open' => TRUE, '#tree' => TRUE,
+    ];
+    $form['homepage_rotation']['enabled'] = [
+      '#type' => 'checkbox', '#title' => $this->t('Enable automatic homepage social rotation'),
+      '#default_value' => (bool) ($config->get('homepage_rotation.enabled') ?? TRUE),
+      '#description' => $this->t('Both visible cards switch together. Manual controls remain available when automatic rotation is disabled. Motion pauses on hover, focus, hidden tabs and reduced-motion preferences.'),
+    ];
+    $form['homepage_rotation']['interval'] = [
+      '#type' => 'number', '#title' => $this->t('Social rotation interval'), '#min' => 3, '#max' => 60, '#required' => TRUE,
+      '#default_value' => (int) ($config->get('homepage_rotation.interval') ?? 5), '#field_suffix' => $this->t('seconds'),
+      '#description' => $this->t('Default: 5 seconds. The independent middle news rotation remains at 4 seconds.'),
+    ];
+    $form['homepage_rotation']['posts'] = [
+      '#type' => 'link', '#title' => $this->t('Manage approved Drupal social posts'), '#url' => Url::fromRoute('reg_core.social_posts_admin'),
+      '#access' => Url::fromRoute('reg_core.social_posts_admin')->access(),
     ];
     $form['platforms'] = [
       '#type' => 'container',
@@ -78,18 +98,47 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
         '#title' => $this->t('Show in footer'),
         '#default_value' => (bool) ($values['show_footer'] ?? FALSE),
       ];
+      if (isset(SocialMediaManager::HOMEPAGE_PLATFORMS[$id])) {
+        $form['platforms'][$id]['display_name'] = [
+          '#type' => 'textfield', '#title' => $this->t('Official display name'), '#maxlength' => 120,
+          '#default_value' => $values['display_name'] ?? '', '#description' => $this->t('Leave empty to use Rwanda Energy Group.'),
+        ];
+        $form['platforms'][$id]['show_homepage_card'] = [
+          '#type' => 'checkbox', '#title' => $this->t('Include in homepage social cards'),
+          '#default_value' => (bool) ($values['show_homepage_card'] ?? TRUE),
+        ];
+        $form['platforms'][$id]['homepage_order'] = [
+          '#type' => 'number', '#title' => $this->t('Homepage display order'), '#min' => -100, '#max' => 100,
+          '#default_value' => (int) ($values['homepage_order'] ?? array_search($id, array_keys(SocialMediaManager::HOMEPAGE_PLATFORMS), TRUE) * 10),
+          '#description' => $this->t('Lower numbers appear first. Default pairs: X / YouTube; Instagram / Facebook; TikTok / LinkedIn. Disabled or invalid accounts are skipped. An odd final pair reuses the first enabled account so both slots stay filled. This order does not change the header or footer.'),
+        ];
+      }
+      if ($id === 'tiktok') {
+        // TikTok is introduced for this homepage feature only.
+        $form['platforms'][$id]['show_utility']['#access'] = FALSE;
+        $form['platforms'][$id]['show_footer']['#access'] = FALSE;
+      }
       if ($id === 'youtube') {
         $form['platforms'][$id]['channel_id'] = [
           '#type' => 'textfield',
           '#title' => $this->t('YouTube Channel ID'),
           '#default_value' => $values['channel_id'] ?? '',
-          '#maxlength' => 100,
-          '#description' => $this->t('Optional public channel identifier. API credentials must remain in the server environment.'),
+          '#maxlength' => 24,
+          '#description' => $this->t('Verified channel ID: UC followed by 22 letters, numbers, underscores or hyphens. The public uploads feed needs no key; optional YOUTUBE_API_KEY must remain in the server environment.'),
         ];
         $form['platforms'][$id]['videos_enabled'] = [
           '#type' => 'checkbox',
           '#title' => $this->t('Videos enabled'),
           '#default_value' => (bool) ($values['videos_enabled'] ?? FALSE),
+        ];
+      }
+      if ($id === 'youtube') {
+        $form['platforms'][$id]['feed_cache_lifetime'] = [
+          '#type' => 'select',
+          '#title' => $this->t('YouTube refresh interval'),
+          '#options' => [1800 => $this->t('30 minutes'), 3600 => $this->t('60 minutes')],
+          '#default_value' => (int) ($values['feed_cache_lifetime'] ?? 3600),
+          '#description' => $this->t('Drupal cron refreshes due feeds. Failed requests retry after five minutes and retain the last verified result.'),
         ];
       }
       if ($id === 'flickr') {
@@ -125,7 +174,7 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
           '#type' => 'checkbox',
           '#title' => $this->t('Show X feed on homepage'),
           '#default_value' => (bool) ($values['show_homepage_feed'] ?? TRUE),
-          '#description' => $this->t('Shows cached public posts from the server-side X API integration beneath the secondary homepage news cards.'),
+          '#description' => $this->t('Shows cached public posts from the server-side X API integration in the homepage social column.'),
         ];
         $form['platforms'][$id]['api_enabled'] = [
           '#type' => 'checkbox',
@@ -159,9 +208,9 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
         $form['platforms'][$id]['api_homepage_post_count'] = [
           '#type' => 'number',
           '#title' => $this->t('Number of homepage posts'),
-          '#default_value' => (int) ($values['api_homepage_post_count'] ?? 3),
-          '#min' => 1,
-          '#max' => 5,
+          '#default_value' => (int) ($values['api_homepage_post_count'] ?? 4),
+          '#min' => 3,
+          '#max' => 4,
         ];
         $form['platforms'][$id]['api_exclude_replies'] = [
           '#type' => 'checkbox',
@@ -225,6 +274,52 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
       '#description' => $this->t('Uses saved settings and performs at most one controlled API refresh.'),
     ];
 
+    $youtube = \Drupal::service('reg_core.youtube_feed')->status();
+    $form['youtube_status'] = [
+      '#type' => 'details', '#title' => $this->t('YouTube feed status'), '#open' => TRUE, '#weight' => 11,
+    ];
+    foreach ([
+      'channel_id' => $this->t('Configured channel ID'),
+      'last_success' => $this->t('Last successful refresh'),
+      'last_error' => $this->t('Last error'),
+      'source' => $this->t('Last successful source'),
+    ] as $key => $label) {
+      $value = $youtube[$key];
+      if ($key === 'last_success') {
+        $value = $value ? \Drupal::service('date.formatter')->format($value, 'medium') : $this->t('Never');
+      }
+      $form['youtube_status'][$key] = ['#type' => 'item', '#title' => $label, '#plain_text' => (string) ($value ?: $this->t('None'))];
+    }
+    $form['youtube_status']['enabled'] = ['#type' => 'item', '#title' => $this->t('Feed enabled'), '#markup' => $youtube['enabled'] ? $this->t('Yes') : $this->t('No')];
+    $form['youtube_status']['api'] = ['#type' => 'item', '#title' => $this->t('Optional YouTube API credential'), '#markup' => $youtube['api_configured'] ? $this->t('Configured') : $this->t('Not configured; public uploads feed will be used')];
+    $automatic_cron = (int) $this->configFactory->get('automated_cron.settings')->get('interval');
+    $form['youtube_status']['cron'] = [
+      '#type' => 'item', '#title' => $this->t('Cron scheduling'),
+      '#markup' => $automatic_cron > 0
+        ? $this->t('Automatic cron is enabled. Run cron at least every five minutes for timely feed refreshes.')
+        : $this->t('Automatic cron is disabled. Schedule Drupal cron at least every five minutes; due page requests can also refresh feeds.'),
+    ];
+    $form['youtube_status']['refresh'] = [
+      '#type' => 'submit', '#value' => $this->t('Refresh YouTube feed'), '#submit' => ['::refreshYouTubeFeed'], '#limit_validation_errors' => [],
+      '#description' => $this->t('Refreshes once using saved settings. Save configuration changes before refreshing.'),
+    ];
+
+    $summary = \Drupal::service('reg_core.social_media_manager')->homepageSocialCards();
+    $rows = [];
+    foreach ($summary['cards'] as $card) {
+      $post = $card['post'];
+      $source = match ($card['id']) {
+        'x' => $status['cached_posts'] ? $this->t('Existing cached X API feed') : ($post ? $this->t('Approved Drupal social post') : $this->t('Official profile only; see X diagnostics below')),
+        'youtube' => $youtube['last_success'] ? $this->t('Existing YouTube feed; see refresh status below') : $this->t('Official channel only; see YouTube diagnostics below'),
+        default => $post ? $this->t('Approved Drupal social post') : $this->t('Official profile only; no approved homepage post available'),
+      };
+      $rows[] = [$card['label'], $source, $post['date'] ?? $this->t('See feed status / not available')];
+    }
+    $form['homepage_status'] = [
+      '#type' => 'details', '#title' => $this->t('Homepage social content status'), '#open' => TRUE,
+      'summary' => ['#type' => 'table', '#header' => [$this->t('Platform'), $this->t('Content source'), $this->t('Publication date')], '#rows' => $rows, '#empty' => $this->t('No enabled, correctly configured homepage accounts.')],
+      'help' => ['#markup' => '<p>' . $this->t('Instagram, Facebook, TikTok and LinkedIn use published homepage-featured posts approved through the existing Social Post Editorial workflow. Confirm each permalink belongs to the official account. Changes appear automatically after saving/publishing in Drupal; no scraper or provider login is used. X and YouTube keep their existing automatic cache/refresh behavior. TikTok stays disabled until an official profile is supplied.') . '</p>'],
+    ];
     return parent::buildForm($form, $form_state);
   }
 
@@ -233,6 +328,13 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
     parent::validateForm($form, $form_state);
+    foreach (array_keys(SocialMediaManager::HOMEPAGE_PLATFORMS) as $id) {
+      $platform = (array) $form_state->getValue(['platforms', $id]);
+      $url = trim((string) ($platform['url'] ?? ''));
+      if (($url !== '' || !empty($platform['enabled'])) && SocialMediaManager::validatedProfileUrl($id, $url) === '') {
+        $form_state->setErrorByName('platforms][' . $id . '][url', $this->t('Enter a valid official HTTPS profile URL for @platform, or disable it and clear its URL.', ['@platform' => SocialMediaManager::HOMEPAGE_PLATFORMS[$id]]));
+      }
+    }
     $values = (array) $form_state->getValue(['platforms', 'x']);
     $username = ltrim(trim((string) ($values['api_username'] ?? '')), '@');
     if (!preg_match('/^[A-Za-z0-9_]{1,15}$/', $username)) {
@@ -247,6 +349,18 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
         'platforms][x][api_user_id',
         $this->t('The optional X user ID must contain numbers only.'),
       );
+    }
+    $profile = parse_url(trim((string) ($values['url'] ?? '')));
+    if (!empty($values['api_enabled']) && (!is_array($profile) || ($profile['scheme'] ?? '') !== 'https'
+      || !in_array(strtolower($profile['host'] ?? ''), ['x.com', 'www.x.com', 'twitter.com', 'www.twitter.com'], TRUE)
+      || isset($profile['user']) || isset($profile['pass']) || isset($profile['port'])
+      || strcasecmp(trim($profile['path'] ?? '', '/'), $username) !== 0)) {
+      $form_state->setErrorByName('platforms][x][api_username', $this->t('The API username must match the official HTTPS X profile URL.'));
+    }
+    $youtube = (array) $form_state->getValue(['platforms', 'youtube']);
+    $channel = trim((string) ($youtube['channel_id'] ?? ''));
+    if (($channel !== '' || !empty($youtube['videos_enabled'])) && !preg_match('/^UC[A-Za-z0-9_-]{22}$/D', $channel)) {
+      $form_state->setErrorByName('platforms][youtube][channel_id', $this->t('Enter a verified channel ID beginning with UC followed by 22 letters, numbers, underscores or hyphens.'));
     }
     $flickr = (array) $form_state->getValue(['platforms', 'flickr']);
     foreach (['user_id', 'album_id'] as $field) {
@@ -275,13 +389,17 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
         'show_footer' => (bool) ($values['show_footer'] ?? FALSE),
         'show_homepage_feed' => $id === 'x' ? (bool) ($values['show_homepage_feed'] ?? FALSE) : FALSE,
       ];
+      if (isset(SocialMediaManager::HOMEPAGE_PLATFORMS[$id])) {
+        $platform_config['show_homepage_card'] = (bool) ($values['show_homepage_card'] ?? FALSE);
+        $platform_config['homepage_order'] = max(-100, min(100, (int) ($values['homepage_order'] ?? 0)));
+      }
       if ($id === 'x') {
         $platform_config += [
           'api_enabled' => (bool) ($values['api_enabled'] ?? FALSE),
           'api_username' => ltrim(trim((string) ($values['api_username'] ?? 'reg_rwanda')), '@'),
           'api_user_id' => trim((string) ($values['api_user_id'] ?? '')),
           'api_cache_lifetime' => max(300, min(86400, (int) ($values['api_cache_lifetime'] ?? 900))),
-          'api_homepage_post_count' => max(1, min(5, (int) ($values['api_homepage_post_count'] ?? 3))),
+          'api_homepage_post_count' => max(3, min(4, (int) ($values['api_homepage_post_count'] ?? 4))),
           'api_exclude_replies' => (bool) ($values['api_exclude_replies'] ?? TRUE),
           'api_exclude_reposts' => (bool) ($values['api_exclude_reposts'] ?? TRUE),
         ];
@@ -290,6 +408,7 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
         $platform_config += [
           'channel_id' => trim((string) ($values['channel_id'] ?? '')),
           'videos_enabled' => (bool) ($values['videos_enabled'] ?? FALSE),
+          'feed_cache_lifetime' => max(1800, min(3600, (int) ($values['feed_cache_lifetime'] ?? 3600))),
         ];
       }
       if ($id === 'flickr') {
@@ -301,6 +420,10 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
       }
       $config->set('platforms.' . $id, $platform_config);
     }
+    $config->set('homepage_rotation', [
+      'enabled' => (bool) $form_state->getValue(['homepage_rotation', 'enabled']),
+      'interval' => max(3, min(60, (int) $form_state->getValue(['homepage_rotation', 'interval']))),
+    ]);
     $config->save();
     parent::submitForm($form, $form_state);
   }
@@ -310,13 +433,31 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
    */
   public function refreshXFeed(array &$form, FormStateInterface $form_state): void {
     $result = \Drupal::service('reg_core.x_feed')->homepageFeed(TRUE);
-    if ($result['items'] !== []) {
+    if ($result['error'] !== '') {
+      $this->messenger()->addWarning($this->t('X refresh failed: @message Previously cached posts or the official account link remain available.', ['@message' => $result['error']]));
+    }
+    elseif ($result['items'] !== []) {
       $this->messenger()->addStatus($this->t('The X feed cache contains @count posts.', [
         '@count' => count($result['items']),
       ]));
     }
     else {
       $this->messenger()->addWarning($this->t('No X posts were refreshed. The homepage fallback remains active.'));
+    }
+    $form_state->setRebuild();
+  }
+
+  /** Performs a controlled refresh without saving pending configuration edits. */
+  public function refreshYouTubeFeed(array &$form, FormStateInterface $form_state): void {
+    $result = \Drupal::service('reg_core.youtube_feed')->homepageFeed(TRUE);
+    if ($result['error'] !== '') {
+      $this->messenger()->addWarning($this->t('YouTube refresh failed: @message Previously verified data or the official channel link remain available.', ['@message' => $result['error']]));
+    }
+    elseif ($result['video'] !== []) {
+      $this->messenger()->addStatus($this->t('The latest verified YouTube upload is cached.'));
+    }
+    else {
+      $this->messenger()->addWarning($this->t('No public video is available or the YouTube feed is disabled.'));
     }
     $form_state->setRebuild();
   }

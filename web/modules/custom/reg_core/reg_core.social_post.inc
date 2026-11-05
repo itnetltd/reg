@@ -43,6 +43,9 @@ function reg_core_apply_social_posts(): void {
         'x' => 'X',
         'facebook' => 'Facebook',
         'youtube' => 'YouTube',
+        'instagram' => 'Instagram',
+        'tiktok' => 'TikTok',
+        'linkedin' => 'LinkedIn',
         'other' => 'Other approved platform',
       ]],
       'widget' => 'options_select',
@@ -85,7 +88,7 @@ function reg_core_apply_social_posts(): void {
     'field_reg_social_author_name' => reg_core_string_field('Author display name'),
     'field_reg_social_author_handle' => reg_core_string_field('Author handle', FALSE),
     'field_reg_social_homepage' => array_replace(reg_core_boolean_field('Featured on homepage', FALSE), [
-      'description' => 'Only published, featured X posts are eligible for the homepage.',
+      'description' => 'Only published, approved social posts from enabled official accounts are eligible for homepage cards.',
     ]),
     'field_reg_social_order' => array_replace(reg_core_integer_field('Display order', FALSE), [
       'description' => 'Lower numbers appear first; equal values fall back to latest publication date.',

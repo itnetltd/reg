@@ -68,6 +68,41 @@ final class SocialPostRepository implements SocialPostRepositoryInterface {
     return ['items' => $items, 'cache_tags' => $tags];
   }
 
+
+  /** {@inheritdoc} */
+  public function latestHomepagePost(string $platform): array {
+    $tags = ['config:reg_core.social_media', 'node_list:reg_social_post', 'media_list', 'file_list'];
+    if (!isset(SocialMediaManager::HOMEPAGE_PLATFORMS[$platform])) {
+      return ['item' => [], 'cache_tags' => $tags];
+    }
+    $langcode = $this->languageManager->getCurrentLanguage()->getId();
+    $storage = $this->entityTypeManager->getStorage('node');
+    // Default published revisions only; newer drafts never replace approved copy.
+    for ($offset = 0; ; $offset += 25) {
+      $ids = $storage->getQuery()->accessCheck(TRUE)
+        ->condition('type', 'reg_social_post')->condition('status', NodeInterface::PUBLISHED)
+        ->condition('langcode', $langcode)->condition('field_reg_social_platform', $platform)
+        ->condition('field_reg_social_homepage', 1)
+        ->condition('field_reg_social_published_at', gmdate('Y-m-d\TH:i:s'), '<=')
+        ->sort('field_reg_social_published_at', 'DESC')->sort('nid', 'DESC')->range($offset, 25)->execute();
+      if (!$ids) {
+        break;
+      }
+      foreach ($storage->loadMultiple($ids) as $node) {
+        $node = $node->hasTranslation($langcode) ? $node->getTranslation($langcode) : $node;
+        $tags = Cache::mergeTags($tags, $node->getCacheTags());
+        if (!$node->isPublished() || !$node->access('view')
+          || ($node->hasField('moderation_state') && $node->get('moderation_state')->value !== 'published')) {
+          continue;
+        }
+        if ($item = $this->item($node)) {
+          return ['item' => $item, 'cache_tags' => Cache::mergeTags($tags, $item['cache_tags'])];
+        }
+      }
+    }
+    return ['item' => [], 'cache_tags' => $tags];
+  }
+
   /**
    * Normalizes one approved social-post record for Twig.
    */
@@ -103,26 +138,12 @@ final class SocialPostRepository implements SocialPostRepositoryInterface {
     if (!$node->hasField('field_reg_social_post_url') || $node->get('field_reg_social_post_url')->isEmpty()) {
       return '';
     }
-    $url = trim((string) $node->get('field_reg_social_post_url')->uri);
-    $parts = parse_url($url);
-    $profile = parse_url((string) $this->configFactory->get('reg_core.social_media')->get('platforms.x.url'));
-    if (!is_array($parts) || !is_array($profile)) {
-      return '';
-    }
-    $host = strtolower((string) ($parts['host'] ?? ''));
-    $profile_handle = trim((string) ($profile['path'] ?? ''), '/');
-    $path = trim((string) ($parts['path'] ?? ''), '/');
-    if (
-      strtolower((string) ($parts['scheme'] ?? '')) !== 'https'
-      || !in_array($host, ['x.com', 'www.x.com', 'twitter.com', 'www.twitter.com'], TRUE)
-      || $profile_handle === ''
-      || !preg_match('#^' . preg_quote($profile_handle, '#') . '/status/[0-9]+$#i', $path)
-      || isset($parts['user'])
-      || isset($parts['pass'])
-    ) {
-      return '';
-    }
-    return 'https://x.com/' . $path;
+    $platform = $this->value($node, 'field_reg_social_platform');
+    return SocialMediaManager::validatedPostUrl(
+      $platform,
+      trim((string) $node->get('field_reg_social_post_url')->uri),
+      (string) $this->configFactory->get('reg_core.social_media')->get('platforms.' . $platform . '.url'),
+    );
   }
 
   /**

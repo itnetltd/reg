@@ -206,7 +206,7 @@ a.partner-card:hover, a.partner-card:focus-visible { color: var(--reg-red); bord
 .site-footer { padding: 64px 0; color: #fff; background: #000; border-top: 1px solid rgba(255,255,255,.1); }
 .footer-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
 .footer-grid h2 { font-size: 1.25rem; }
-.footer-grid h3 { font-family: Inter, sans-serif; font-size: .875rem; letter-spacing: .06em; text-transform: uppercase; }
+.footer-grid h3 { font-family: var(--reg-font-heading, "Hanken Grotesk", Inter, Arial, sans-serif); font-size: .875rem; letter-spacing: .06em; text-transform: uppercase; }
 .footer-grid p, .footer-grid a { color: rgba(255,255,255,.75); }
 .footer-grid ul { margin: 0; padding: 0; list-style: none; }
 .footer-grid li + li { margin-top: 12px; }

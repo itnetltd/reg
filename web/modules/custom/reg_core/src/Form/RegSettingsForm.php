@@ -263,11 +263,20 @@ final class RegSettingsForm extends ConfigFormBase {
       '#open' => TRUE,
       '#description' => $this->t('Drupal publishes approved notices and files. Bid submission and job applications remain in their authoritative external systems unless an approved mode is configured.'),
     ];
+    foreach (['procurement_plan_integration' => $this->t('Annual Procurement Plan Integration'), 'reg_online_bidding' => $this->t('REG Online Bidding')] as $key => $label) {
+      $form['public_information'][$key] = ['#type' => 'checkbox', '#title' => $label, '#default_value' => (bool) $config->get('public_information.' . $key), '#description' => $this->t('Temporarily OFF. Saved plan, tender and supplier data are retained for future reactivation.')];
+    }
     $form['public_information']['enable_tender_submission'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Show the approved procurement-system submission handoff'),
+      '#title' => $this->t('Enable REG online procurement workflow'),
       '#default_value' => (bool) $config->get('public_information.enable_tender_submission'),
-      '#description' => $this->t('Disabled by default. Drupal never accepts or stores bids.'),
+      '#description' => $this->t('REG online bid intake also requires explicit security approval. External UMUCYO bidding remains authoritative when selected.'),
+    ];
+    $form['public_information']['tender_security_approved'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('REG online procurement security workflow approved'),
+      '#default_value' => (bool) $config->get('public_information.tender_security_approved'),
+      '#description' => $this->t('Enable only after approval of supplier authorization, private bid storage and malware-scanning workflows. Existing supplier checks remain mandatory.'),
     ];
     $form['public_information']['job_application_mode'] = [
       '#type' => 'select',
@@ -429,7 +438,7 @@ final class RegSettingsForm extends ConfigFormBase {
     ];
     $form['carbon']['emission_factor'] = [
       '#type' => 'number',
-      '#title' => $this->t('Electricity emission factor (kg CO₂e per kWh)'),
+      '#title' => $this->t('Electricity emission factor (kg COÃƒÂ¢Ã¢â‚¬Å¡Ã¢â‚¬Å¡e per kWh)'),
       '#default_value' => number_format((float) $config->get('carbon.emission_factor'), 5, '.', ''),
       '#min' => 0,
       '#step' => '0.00001',
@@ -514,6 +523,9 @@ final class RegSettingsForm extends ConfigFormBase {
       ->set('outages.source', 'manual')
       ->set('outages.default_safety_message', trim((string) $form_state->getValue('outage_default_safety_message')))
       ->set('outages.default_customer_message', trim((string) $form_state->getValue('outage_default_customer_message')))
+      ->set('public_information.procurement_plan_integration', (bool) $form_state->getValue('procurement_plan_integration'))
+      ->set('public_information.reg_online_bidding', (bool) $form_state->getValue('reg_online_bidding'))
+      ->set('public_information.tender_security_approved', (bool) $form_state->getValue('tender_security_approved'))
       ->set('public_information.enable_tender_submission', (bool) $form_state->getValue('enable_tender_submission'))
       ->set('public_information.job_application_mode', $form_state->getValue('job_application_mode'))
       ->set('public_information.enable_tender_sms', (bool) $form_state->getValue('enable_tender_sms'))
@@ -542,6 +554,8 @@ final class RegSettingsForm extends ConfigFormBase {
       ->set('carbon.status', $form_state->getValue('carbon_status'));
 
     $config->save();
+    \Drupal::service('plugin.manager.menu.link')->rebuild();
+    \Drupal::service('cache_tags.invalidator')->invalidateTags(['node_type_list']);
 
     parent::submitForm($form, $form_state);
   }

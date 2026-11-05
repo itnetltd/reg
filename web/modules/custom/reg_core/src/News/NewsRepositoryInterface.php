@@ -10,7 +10,7 @@ use Drupal\node\NodeInterface;
 interface NewsRepositoryInterface {
 
   /**
-   * Returns the homepage lead story and two latest secondary stories.
+   * Returns the homepage lead and up to four ordered, unique secondary stories.
    */
   public function homepage(): array;
 

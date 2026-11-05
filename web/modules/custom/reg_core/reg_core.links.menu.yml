@@ -289,3 +289,22 @@ reg_core.dashboard_operations:
   route_name: reg_core.dashboard_operations
   parent: reg_core.dashboard
   weight: 8
+
+reg_core.footer_management:
+  title: 'Footer Management'
+  description: 'Manage footer wording, dedicated menus, social channels, and footer blocks.'
+  route_name: reg_core.footer_management
+  parent: system.admin_content
+  weight: 18
+
+reg_core.footer_settings:
+  title: 'Footer Settings'
+  route_name: reg_core.footer_settings
+  parent: reg_core.footer_management
+
+reg_core.procurement_import:
+  title: 'Import procurement plan'
+  description: 'Private CSV upload, validation, review and idempotent import.'
+  route_name: reg_core.procurement_import
+  parent: system.admin_content
+  weight: 20

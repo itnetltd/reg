@@ -1,0 +1,31 @@
+reg_core.footer:
+  type: config_object
+  label: 'REG Footer Settings'
+  mapping:
+    organization_name:
+      type: label
+      label: 'Organization name'
+    organization_description:
+      type: text
+      label: 'Short organization description'
+    quick_links_heading:
+      type: label
+      label: 'Quick links heading'
+    support_heading:
+      type: label
+      label: 'Customer support heading'
+    support_description:
+      type: text
+      label: 'Customer support description'
+    call_label:
+      type: label
+      label: 'Call label'
+    social_heading:
+      type: label
+      label: 'Social media heading'
+    language_heading:
+      type: label
+      label: 'Language heading'
+    copyright:
+      type: label
+      label: 'Copyright wording'

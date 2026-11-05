@@ -1,0 +1,35 @@
+/* Keep native Media Directories controls and desktop geometry unchanged. */
+@media (max-width: 767px) {
+  .media-directories-browser[data-reg-media-responsive] { flex-direction: column; }
+  .media-directories-browser[data-reg-media-responsive] > .sidebar {
+    box-sizing: border-box;
+    width: 100%;
+    max-height: 200px;
+    flex: 0 1 200px;
+    overflow: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--mdb-color-border);
+    padding: 12px 16px;
+  }
+  .media-directories-browser[data-reg-media-responsive] > .main-content { flex: 1 1 0; }
+}
+
+/* The provider expands focused search to 280px; constrain narrow toolbars. */
+@media (max-width: 1023px) {
+  .media-directories-browser[data-reg-media-responsive] .path-bar { flex-wrap: wrap; }
+  .media-directories-browser[data-reg-media-responsive] .path-bar > .toolbar__group { min-width: 0; flex-wrap: wrap; }
+  .media-directories-browser[data-reg-media-responsive] .path-bar > .toolbar__group--end {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+  .media-directories-browser[data-reg-media-responsive] .path-bar .toolbar__search {
+    flex: 1 1 180px;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .media-directories-browser[data-reg-media-responsive] .path-bar .toolbar__search-input {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+  }
+}

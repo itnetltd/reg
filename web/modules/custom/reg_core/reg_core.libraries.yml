@@ -183,7 +183,7 @@ section_hero:
       css/section-hero.css: {}
 
 newsroom:
-  version: 1.x
+  version: 2.0.1
   css:
     component:
       css/newsroom.css: {}
@@ -195,7 +195,12 @@ newsroom:
     - core/once
 
 x_feed:
-  version: 4.x
+  version: 5.x
+  js:
+    js/x-feed.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
   css:
     component:
       css/x-feed.css: {}
@@ -247,3 +252,19 @@ news_homepage:
   dependencies:
     - reg_core/newsroom
 
+
+media_browser_mobile:
+  version: 1.0.0
+  css:
+    component:
+      css/media-browser-mobile.css: {}
+  js:
+    js/media-browser-mobile.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+procurement_import:
+  css:
+    component:
+      css/procurement-import.css: {}

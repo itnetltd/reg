@@ -1,0 +1,78 @@
+[
+  {
+    "family": "inter",
+    "commit": "0b58fb370093f9a9f4ff785d94405710b79de67c",
+    "file": "Inter[opsz,wght].ttf",
+    "url": "https://raw.githubusercontent.com/google/fonts/0b58fb370093f9a9f4ff785d94405710b79de67c/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf",
+    "size": 876576,
+    "output": "inter-normal-6609e27c9370.woff2",
+    "sha256": "6609e27c93706d80d2b66489da5a79a298862bcc833d9c774c27c90c6ca6cd9c",
+    "woff2_size": 350184,
+    "axes": {
+      "opsz": [
+        14.0,
+        32.0
+      ],
+      "wght": [
+        100.0,
+        900.0
+      ]
+    },
+    "font_version": "Version 4.001;git-66647c0bb"
+  },
+  {
+    "family": "inter",
+    "commit": "0b58fb370093f9a9f4ff785d94405710b79de67c",
+    "file": "Inter-Italic[opsz,wght].ttf",
+    "url": "https://raw.githubusercontent.com/google/fonts/0b58fb370093f9a9f4ff785d94405710b79de67c/ofl/inter/Inter-Italic%5Bopsz%2Cwght%5D.ttf",
+    "size": 906596,
+    "output": "inter-italic-29a42189d2c3.woff2",
+    "sha256": "29a42189d2c3264ea6f25ccb3bc21511a977b6d89f21f42e2956ee1cedac68d6",
+    "woff2_size": 386076,
+    "axes": {
+      "opsz": [
+        14.0,
+        32.0
+      ],
+      "wght": [
+        100.0,
+        900.0
+      ]
+    },
+    "font_version": "Version 4.001;git-66647c0bb"
+  },
+  {
+    "family": "hankengrotesk",
+    "commit": "c1eda9233c33ad7775b27efd794f931095cf6133",
+    "file": "HankenGrotesk[wght].ttf",
+    "url": "https://raw.githubusercontent.com/google/fonts/c1eda9233c33ad7775b27efd794f931095cf6133/ofl/hankengrotesk/HankenGrotesk%5Bwght%5D.ttf",
+    "size": 132892,
+    "output": "hankengrotesk-normal-650e9dc6b2f7.woff2",
+    "sha256": "650e9dc6b2f7e5cbaec2ce4c51764ddd45b03457708b0bef5f4e74d337593146",
+    "woff2_size": 57336,
+    "axes": {
+      "wght": [
+        100.0,
+        900.0
+      ]
+    },
+    "font_version": "Version 3.013"
+  },
+  {
+    "family": "hankengrotesk",
+    "commit": "c1eda9233c33ad7775b27efd794f931095cf6133",
+    "file": "HankenGrotesk-Italic[wght].ttf",
+    "url": "https://raw.githubusercontent.com/google/fonts/c1eda9233c33ad7775b27efd794f931095cf6133/ofl/hankengrotesk/HankenGrotesk-Italic%5Bwght%5D.ttf",
+    "size": 139388,
+    "output": "hankengrotesk-italic-a4a171e4ba0a.woff2",
+    "sha256": "a4a171e4ba0a76401e3d81500bf7d8a0ca1084352e59786343cf847bc5f95027",
+    "woff2_size": 60348,
+    "axes": {
+      "wght": [
+        100.0,
+        900.0
+      ]
+    },
+    "font_version": "Version 3.013"
+  }
+]

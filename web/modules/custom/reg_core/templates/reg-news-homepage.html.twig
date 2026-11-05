@@ -1,41 +1,54 @@
 {{ attach_library('reg_core/news_homepage') }}
-{% if content.primary %}
-  <div class="reg-news-homepage reg-news-homepage--visual">
-    <article class="reg-news-lead">
-      <a class="reg-news-lead__media" href="{{ content.primary.url }}" aria-label="{{ 'Read @title'|t({'@title': content.primary.title}) }}">
-        {% if content.primary.image.render %}
-          {{ content.primary.image.render }}
-        {% elseif content.primary.image.absolute_url %}
-          <img src="{{ content.primary.image.absolute_url }}" alt="{{ content.primary.image.alt }}" loading="eager" decoding="async">
-        {% else %}
-          <span class="reg-news-image-fallback reg-news-image-fallback--lead" aria-hidden="true"><span>REG</span><strong>{{ 'News & Insights'|t }}</strong></span>
-        {% endif %}
-      </a>
-      <div class="reg-news-lead__body">
-        <div class="reg-news-card__meta">
-          {% if content.primary.category.label %}<span>{{ content.primary.category.label }}</span>{% endif %}
-          {% if content.primary.date %}<time datetime="{{ content.primary.date_iso }}">{{ content.primary.date }}</time>{% endif %}
-        </div>
-        <h3><a href="{{ content.primary.url }}">{{ content.primary.title }}</a></h3>
-        {% if content.primary.summary %}<p>{{ content.primary.summary }}</p>{% endif %}
-        <a class="reg-news-card__action" href="{{ content.primary.url }}">{{ 'Read story'|t }} <span aria-hidden="true">→</span></a>
-      </div>
-    </article>
-
+<div class="reg-news-homepage reg-news-homepage--visual">
+  {% if content.primary %}
+    {% include '@reg_core/reg-news-homepage-story.html.twig' with {item: content.primary, featured: true} only %}
     {% if content.secondary %}
-      <div class="reg-news-homepage__secondary">
-        {% for item in content.secondary %}
+      <div class="reg-news-homepage__secondary"{% if content.secondary|length > 2 %} data-reg-news-pairs role="group" aria-label="{{ 'More REG news'|t }}" aria-roledescription="{{ 'carousel'|t }}"{% endif %}>
+        {% for item in content.secondary|slice(0, 2) %}
           {% include '@reg_core/reg-news-homepage-story.html.twig' with {item: item} only %}
         {% endfor %}
+        {% if content.secondary|length > 2 %}
+          <template data-reg-news-pair>
+            {% for item in content.secondary|slice(2, 2) %}
+              {% include '@reg_core/reg-news-homepage-story.html.twig' with {item: item} only %}
+            {% endfor %}
+          </template>
+          <div class="reg-news-pair-controls" data-reg-news-pair-controls hidden role="group" aria-label="{{ 'News pair navigation'|t }}">
+            <button type="button" data-reg-news-page="0" aria-label="{{ 'Show news pair 1'|t }}" aria-current="true"><span aria-hidden="true"></span></button>
+            <button type="button" data-reg-news-page="1" aria-label="{{ 'Show news pair 2'|t }}"><span aria-hidden="true"></span></button>
+            <button type="button" data-reg-news-pause aria-label="{{ 'Pause news rotation'|t }}" aria-pressed="false"><span aria-hidden="true"></span></button>
+          </div>
+        {% endif %}
       </div>
-      {% if content.x_feed %}
-        <div class="reg-news-homepage__social" tabindex="0" role="region" aria-label="{{ 'Stay connected on X'|t }}">
-          {{ attach_library('reg_core/x_feed') }}
-          {% include '@reg_core/reg-x-feed.html.twig' with {feed: content.x_feed} only %}
-        </div>
-      {% endif %}
     {% endif %}
-  </div>
-{% else %}
-  <div class="reg-news-empty"><p>{{ 'No News & Insights stories are currently published.'|t }}</p></div>
-{% endif %}
+  {% else %}
+    <div class="reg-news-empty"><p>{{ 'No News & Insights stories are currently published.'|t }}</p></div>
+  {% endif %}
+    {{ content.social.cache }}
+    {% if content.social.pairs %}
+      {{ attach_library('reg_core/x_feed') }}
+      <div class="reg-news-homepage__social" data-reg-social-pairs data-reg-social-count="{{ content.social.cards|length }}" data-social-auto="{{ content.social.enabled ? 'true' : 'false' }}" data-social-interval="{{ content.social.interval }}" role="group" aria-label="{{ 'Official REG social channels'|t }}" {% if content.social.pairs|length > 1 %}aria-roledescription="{{ 'carousel'|t }}"{% endif %} aria-live="off">
+        {% for card in content.social.pairs|first %}
+          {% include '@reg_core/reg-social-homepage-card.html.twig' with {card: card} only %}
+        {% endfor %}
+        {% if content.social.pairs|length > 1 %}
+          {% for pair in content.social.pairs|slice(1) %}
+            <template data-reg-social-pair>
+              {% for card in pair %}
+                {% include '@reg_core/reg-social-homepage-card.html.twig' with {card: card} only %}
+              {% endfor %}
+            </template>
+          {% endfor %}
+          <div class="reg-social-pair-controls" data-reg-social-controls hidden role="group" aria-label="{{ 'Social card navigation'|t }}">
+            <button type="button" data-reg-social-previous aria-label="{{ 'Previous social pair'|t }}">&#8249;</button>
+            {% for pair in content.social.pairs %}
+              <button type="button" data-reg-social-page="{{ loop.index0 }}" aria-label="{{ 'Show @first and @second'|t({'@first': pair[0].label, '@second': pair[1].label}) }}"{% if loop.first %} aria-current="true"{% endif %}><span aria-hidden="true"></span></button>
+            {% endfor %}
+            <button type="button" data-reg-social-next aria-label="{{ 'Next social pair'|t }}">&#8250;</button>
+            <button type="button" data-reg-social-pause aria-label="{{ 'Pause social rotation'|t }}" aria-pressed="false"><span aria-hidden="true"></span></button>
+            <span class="visually-hidden" data-reg-social-status role="status" aria-live="polite" aria-atomic="true"></span>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+</div>

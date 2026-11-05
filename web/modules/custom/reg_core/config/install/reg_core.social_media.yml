@@ -1,5 +1,11 @@
+langcode: en
+homepage_rotation:
+  enabled: true
+  interval: 5
 platforms:
   x:
+    show_homepage_card: true
+    homepage_order: 0
     url: ''
     display_name: 'Rwanda Energy Group'
     enabled: false
@@ -10,27 +16,36 @@ platforms:
     api_username: 'reg_rwanda'
     api_user_id: ''
     api_cache_lifetime: 900
-    api_homepage_post_count: 3
+    api_homepage_post_count: 4
     api_exclude_replies: true
     api_exclude_reposts: true
   facebook:
+    show_homepage_card: true
+    homepage_order: 30
     url: ''
     enabled: false
     show_utility: true
     show_footer: true
   youtube:
+    show_homepage_card: true
+    homepage_order: 10
     url: ''
     enabled: false
     show_utility: true
     show_footer: true
     channel_id: ''
     videos_enabled: false
+    feed_cache_lifetime: 3600
   instagram:
+    show_homepage_card: true
+    homepage_order: 20
     url: ''
     enabled: false
     show_utility: false
     show_footer: true
   linkedin:
+    show_homepage_card: true
+    homepage_order: 50
     url: ''
     enabled: false
     show_utility: false
@@ -43,3 +58,11 @@ platforms:
     user_id: '127491669@N07'
     album_id: ''
     gallery_enabled: true
+  tiktok:
+    url: ''
+    display_name: 'Rwanda Energy Group'
+    enabled: false
+    show_utility: false
+    show_footer: false
+    show_homepage_card: true
+    homepage_order: 40

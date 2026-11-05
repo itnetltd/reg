@@ -103,7 +103,7 @@ final class TenderAdminController implements ContainerInjectionInterface {
       }
       $category_label = $node->get('field_reg_tender_category')->entity?->label() ?? '';
       $status = (string) ($node->get('field_reg_tender_status')->value ?? '');
-      $status_labels = ['active' => 'Current / Open', 'closed' => 'Closed', 'awarded' => 'Awarded', 'cancelled' => 'Cancelled', 'archived' => 'Archived'];
+      $status_labels = ['preparing' => 'Draft', 'evaluation' => 'Evaluation', 'active' => 'Open', 'closed' => 'Closed', 'awarded' => 'Awarded', 'cancelled' => 'Cancelled', 'archived' => 'Archived'];
       $state = (string) ($node->get('moderation_state')->value ?? ($node->isPublished() ? 'published' : 'draft'));
       $date_value = (string) ($node->get('field_reg_closing_date')->value ?? '');
       $deadline = $date_value !== '' ? $this->dateFormatter->format(strtotime($date_value . ' UTC'), 'short') : '—';

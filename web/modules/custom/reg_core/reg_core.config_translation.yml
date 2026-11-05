@@ -1,0 +1,5 @@
+reg_core.footer:
+  title: 'Footer Settings'
+  base_route_name: reg_core.footer_settings
+  names:
+    - reg_core.footer

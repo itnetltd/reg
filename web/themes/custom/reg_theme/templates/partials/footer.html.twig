@@ -1,20 +1,21 @@
+{{ reg_footer_cache }}
 <footer class="site-footer">
   <div class="reg-container footer-grid">
     <div>
       {% if page.footer_brand %}
         {{ page.footer_brand }}
       {% else %}
-        <h2>{{ 'Rwanda Energy Group'|t }}</h2>
-        <p>{{ 'Powering Rwanda’s future through innovation and reliable service delivery.'|t }}</p>
+        <h2>{{ reg_footer.organization_name }}</h2>
+        <p>{{ reg_footer.organization_description }}</p>
       {% endif %}
     </div>
     <div>
       {% if page.footer_services %}
         {{ page.footer_services }}
       {% else %}
-        <h3>{{ 'Quick links'|t }}</h3>
+        <h3>{{ reg_footer.quick_links_heading }}</h3>
         <nav class="footer-menu" aria-label="{{ 'Footer utility navigation'|t }}">
-          {{ reg_utility_menu_footer }}
+          {{ reg_footer_quick_links }}
         </nav>
       {% endif %}
     </div>
@@ -22,19 +23,15 @@
       {% if page.footer_resources %}
         {{ page.footer_resources }}
       {% else %}
-        <h3>{{ 'Customer support'|t }}</h3>
-        <p>{{ 'For electricity service help, contact the REG call center.'|t }}</p>
-        <ul class="footer-support-links">
-          <li><a href="{{ reg_links.branches }}">{{ 'Branch Locator'|t }}</a></li>
-          <li><a class="footer-call" href="tel:{{ reg_call_center_uri }}">{{ 'Call'|t }} <strong>{{ reg_call_center }}</strong></a></li>
-          <li><a href="{{ reg_links.contact }}">{{ 'Contact REG'|t }}</a></li>
-        </ul>
+        <h3>{{ reg_footer.support_heading }}</h3>
+        <p>{{ reg_footer.support_description }}</p>
+        {{ reg_footer_support }}
       {% endif %}
     </div>
     <div>
       {% if reg_social_links.footer %}
         <div class="footer-social">
-          <h3>{{ 'Follow REG'|t }}</h3>
+          <h3>{{ reg_footer.social_heading }}</h3>
           {% include '@reg_core/reg-social-links.html.twig' with {
             items: reg_social_links.footer,
             variant: 'footer'
@@ -44,13 +41,13 @@
       {% if page.footer_connect %}
         {{ page.footer_connect }}
       {% else %}
-        <h3 class="footer-language-heading">{{ 'Language'|t }}</h3>
+        <h3 class="footer-language-heading">{{ reg_footer.language_heading }}</h3>
         {% include '@reg_theme/partials/language-switcher.html.twig' %}
       {% endif %}
     </div>
   </div>
   <div class="reg-container footer-bottom">
-    <p>{{ '© @year Rwanda Energy Group Limited. All Rights Reserved.'|t({'@year': reg_year}) }}</p>
+    <p>{{ reg_footer.copyright }}</p>
     {% if page.footer_bottom %}
       {{ page.footer_bottom|without('reg_theme_powered') }}
     {% endif %}

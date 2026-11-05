@@ -1,0 +1,18 @@
+{% macro links(items) %}
+  {% for item in items %}
+    <li{{ item.attributes }}>
+      {% include '@reg_theme/navigation/menu-link.html.twig' with {title: item.title, url: item.url} only %}
+      {% if item.below %}<ul>{{ _self.links(item.below) }}</ul>{% endif %}
+    </li>
+  {% endfor %}
+{% endmacro %}
+<ul{{ attributes.addClass('footer-support-links') }}>
+  {% for item in items %}
+    {{ _self.links([item]) }}
+    {% if loop.first %}
+      <li><a class="footer-call" href="tel:{{ reg_call_center_uri }}">{{ reg_call_label }} <strong>{{ reg_call_center }}</strong></a></li>
+    {% endif %}
+  {% else %}
+    <li><a class="footer-call" href="tel:{{ reg_call_center_uri }}">{{ reg_call_label }} <strong>{{ reg_call_center }}</strong></a></li>
+  {% endfor %}
+</ul>

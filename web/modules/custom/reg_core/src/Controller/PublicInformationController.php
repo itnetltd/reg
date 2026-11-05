@@ -240,6 +240,7 @@ final class PublicInformationController extends ControllerBase {
       '#subscribe_url' => $bundle === 'reg_tender' ? Url::fromRoute('reg_core.tender_subscribe')->toString() : '',
       '#handoff' => [
         'procurement_enabled' => (bool) $settings->get('public_information.enable_tender_submission'),
+        'reg_online_bidding_enabled' => \Drupal\reg_core\Procurement\TenderSubmissionPolicy::onlineEnabled(),
         'procurement_url' => (string) $settings->get('links.procurement'),
         'job_mode' => (string) ($settings->get('public_information.job_application_mode') ?: 'external'),
         'recruitment_url' => (string) $settings->get('links.recruitment'),
@@ -324,6 +325,7 @@ final class PublicInformationController extends ControllerBase {
       },
       '#handoff' => [
         'procurement_enabled' => (bool) $settings->get('public_information.enable_tender_submission'),
+        'reg_online_bidding_enabled' => \Drupal\reg_core\Procurement\TenderSubmissionPolicy::onlineEnabled(),
         'procurement_url' => $item['external_url'] ?: (string) $settings->get('links.procurement'),
         'job_mode' => (string) ($settings->get('public_information.job_application_mode') ?: 'external'),
         'recruitment_url' => $item['application_url'] ?: (string) $settings->get('links.recruitment'),
@@ -410,7 +412,9 @@ final class PublicInformationController extends ControllerBase {
    */
   private function statusOptions(string $bundle): array {
     return $bundle === 'reg_tender' ? [
-      'active' => $this->t('Current / Open'),
+      'preparing' => $this->t('Draft'),
+      'evaluation' => $this->t('Evaluation'),
+      'active' => $this->t('Open'),
       'closed' => $this->t('Closed'),
       'awarded' => $this->t('Awarded'),
       'cancelled' => $this->t('Cancelled'),

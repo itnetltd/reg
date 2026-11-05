@@ -31,9 +31,10 @@
       <section class="reg-tender-detail__section reg-pi-how-to" aria-labelledby="reg-how-to-bid">
         <h2 id="reg-how-to-bid">{{ 'How to bid'|t }}</h2>
         {% if item.submission_method_key == 'umucyo' %}<p>{{ 'This tender is managed through UMUCYO. REG does not accept a duplicate bid.'|t }}</p>
-        {% elseif item.submission_method_key == 'reg_online' %}<p>{{ 'Applications for this tender are accepted through the authenticated REG Procurement Portal.'|t }}</p>
+        {% elseif item.submission_method_key == 'reg_online' and item.online_bidding_enabled %}<p>{{ 'Applications for this tender are accepted through the authenticated REG Procurement Portal.'|t }}</p>
         {% elseif item.submission_method_key == 'external' %}<p>{{ 'Use only the approved external submission platform identified for this tender.'|t }}</p>
         {% else %}<p>{{ 'Follow the approved submission instructions in the official tender documents.'|t }}</p>{% endif %}
+        {% if item.submission_instructions %}<p>{{ item.submission_instructions|nl2br }}</p>{% endif %}
         {% if item.action.enabled and item.action.url %}<a class="reg-pi-button" href="{{ item.action.url }}"{% if item.action.external %} rel="noopener noreferrer"{% endif %}>{{ item.action.label }}{% if item.action.external %} ↗{% endif %}</a>{% elseif not item.is_open %}<strong>{{ 'Online bidding is not available for this tender.'|t }}</strong>{% endif %}
         {% if item.supplier_ctas %}<p><a href="{{ item.supplier_ctas.register_url }}">{{ 'REGISTER AS SUPPLIER'|t }}</a> · <a href="{{ item.supplier_ctas.login_url }}">{{ 'SUPPLIER LOGIN'|t }}</a></p>{% endif %}
       </section>

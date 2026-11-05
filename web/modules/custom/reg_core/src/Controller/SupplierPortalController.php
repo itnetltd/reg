@@ -180,7 +180,7 @@ final class SupplierPortalController extends ControllerBase {
       ['label' => $this->t('Account Settings'), 'url' => Url::fromRoute('entity.user.edit_form', ['user' => $this->regCurrentUser->id()])->toString()],
     ];
     if ((string) ($this->supplierManager->organization()?->get('field_reg_supplier_status')->value ?? '') === 'approved') {
-      $links[] = ['label' => $this->t('Open REG Tenders'), 'url' => Url::fromRoute('reg_core.supplier_tenders')->toString()];
+      if (\Drupal\reg_core\Procurement\TenderSubmissionPolicy::onlineEnabled()) $links[] = ['label' => $this->t('Open REG Tenders'), 'url' => Url::fromRoute('reg_core.supplier_tenders')->toString()];
       $links[] = ['label' => $this->t('My Bids'), 'url' => Url::fromRoute('reg_core.supplier_bids')->toString()];
       $links[] = ['label' => $this->t('Team'), 'url' => Url::fromRoute('reg_core.supplier_team')->toString()];
     }

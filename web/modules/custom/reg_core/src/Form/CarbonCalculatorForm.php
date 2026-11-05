@@ -95,7 +95,7 @@ final class CarbonCalculatorForm extends FormBase {
       ];
     }
     $form['disclaimer'] = [
-      '#markup' => '<p class="reg-calculator__notice">' . $this->t("Indicative estimate based on Rwanda's published @year lifecycle electricity generation intensity. This is not a verified carbon inventory.", [
+      '#markup' => '<p class="reg-calculator__notice">' . $this->t("Indicative estimate based on Rwanda's published @year lifecycle electricity generation intensity.", [
         '@year' => $carbon['data_year'] ?? 2024,
       ]) . '</p>',
     ];
