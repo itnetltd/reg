@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\reg_core\Recruitment\RecruitmentPlanWorkflow;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -347,13 +348,23 @@ function reg_core_form_node_form_alter(array &$form, FormStateInterface $form_st
   if ($form_state->getFormObject()->getEntity()->bundle() === 'reg_bid' && !\Drupal\reg_core\Procurement\TenderSubmissionPolicy::onlineEnabled()) {
     throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException('REG online bidding is temporarily disabled.');
   }
+  $entity = $form_state->getFormObject()->getEntity();
+  if (!RecruitmentPlanWorkflow::enabled() && in_array($entity->bundle(), RecruitmentPlanWorkflow::BUNDLES, TRUE)) {
+    throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException('Annual Recruitment Plan management is temporarily disabled.');
+  }
   reg_core_procurement_form_alter($form, $form_state);
   \Drupal\reg_core\Procurement\TenderPlanWorkflow::form($form, $form_state);
   $node = $form_state->getFormObject()->getEntity();
   if ($node instanceof NodeInterface && $node->bundle() === 'reg_news') reg_core_news_editor_form($form);
   if ($node instanceof NodeInterface && in_array($node->bundle(), ['reg_tender', 'reg_job'], TRUE)) {
     $form['#validate'][] = 'reg_core_plan_link_form_validate';
-    if ($node->isNew() && $node->bundle() !== 'reg_tender') {
+    if ($node->bundle() === 'reg_job' && !RecruitmentPlanWorkflow::enabled()) {
+      foreach (RecruitmentPlanWorkflow::FIELDS as $field) {
+        if (isset($form[$field])) $form[$field]['#access'] = FALSE;
+      }
+      $form['#cache']['tags'][] = 'config:reg_core.settings';
+    }
+    if ($node->isNew() && $node->bundle() !== 'reg_tender' && RecruitmentPlanWorkflow::enabled()) {
       $tender = $node->bundle() === 'reg_tender';
       $permission = $tender ? 'override reg procurement plan defaults' : 'override reg recruitment plan defaults';
       if (!\Drupal::currentUser()->hasPermission($permission)) {
@@ -372,9 +383,10 @@ function reg_core_plan_link_form_validate(array &$form, FormStateInterface $form
     $input = $form_state->getValue($field);
     return $input[0]['target_id'] ?? $input[0]['uri'] ?? $input[0]['value'] ?? NULL;
   };
-  $unplanned = (bool) $value('field_reg_unplanned');
+  $planning = RecruitmentPlanWorkflow::enabled();
+  $unplanned = $planning && (bool) $value('field_reg_unplanned');
   $plan_field = $node->bundle() === 'reg_tender' ? 'field_reg_proc_plan_item' : 'field_reg_recruit_plan_item';
-  if ($node->isNew() && !$value($plan_field) && !$unplanned) $form_state->setErrorByName($plan_field, t('Select an approved annual plan item or mark this as unplanned/exceptional procurement or recruitment.'));
+  if ($planning && $node->isNew() && !$value($plan_field) && !$unplanned) $form_state->setErrorByName($plan_field, t('Select an approved annual plan item or mark this as unplanned/exceptional procurement or recruitment.'));
   if ($unplanned) {
     foreach (['field_reg_exception_reason' => 'reason', 'field_reg_approval_ref' => 'approval reference'] as $field => $label) if (!trim((string) $value($field))) $form_state->setErrorByName($field, t('An exception @label is required.', ['@label' => $label]));
     if ($node->bundle() === 'reg_tender') {
@@ -401,6 +413,10 @@ function reg_core_plan_link_form_validate(array &$form, FormStateInterface $form
 function reg_core_apply_plan_defaults(NodeInterface $node): void {
   if ($node->bundle() === 'reg_tender') {
     \Drupal\reg_core\Procurement\TenderPlanWorkflow::presave($node);
+    return;
+  }
+  if ($node->bundle() === 'reg_job' && !RecruitmentPlanWorkflow::enabled()) {
+    RecruitmentPlanWorkflow::standalonePresave($node);
     return;
   }
   $is_tender = $node->bundle() === 'reg_tender';
@@ -499,6 +515,9 @@ function reg_core_secure_submission_presave(NodeInterface $node): void {
 
 /** Implements hook_node_access() for private portal records. */
 function reg_core_node_access(NodeInterface $node, string $operation, AccountInterface $account): AccessResult {
+  if (in_array($node->bundle(), RecruitmentPlanWorkflow::BUNDLES, TRUE) && in_array($operation, ['update', 'delete'], TRUE)) {
+    return AccessResult::forbiddenIf(!RecruitmentPlanWorkflow::enabled())->addCacheableDependency(\Drupal::config('reg_core.settings'));
+  }
   if ($operation === 'view' && in_array($node->bundle(), ['reg_procurement_plan', 'reg_procurement_plan_item'], TRUE) && $account->hasPermission('administer reg procurement plans')) return AccessResult::allowed()->cachePerPermissions()->addCacheableDependency($node);
   if (!in_array($node->bundle(), ['reg_supplier_profile', 'reg_supplier_membership', 'reg_bid', 'reg_applicant_profile', 'reg_job_application'], TRUE)) return AccessResult::neutral();
   $supplier_record = in_array($node->bundle(), ['reg_supplier_profile', 'reg_supplier_membership', 'reg_bid'], TRUE);
@@ -1117,12 +1136,18 @@ function reg_core_page_bottom(array &$page_bottom): void {
 
 /** Hides planning navigation while retaining all route definitions and permissions. */
 function reg_core_menu_links_discovered_alter(array &$links): void {
+  if (!RecruitmentPlanWorkflow::enabled()) {
+    foreach (['reg_core.recruitment_plans_admin', 'reg_core.recruitment_plan_items_admin'] as $id) if (isset($links[$id])) $links[$id]['enabled'] = FALSE;
+  }
   if (\Drupal\reg_core\Procurement\TenderSubmissionPolicy::plansEnabled()) return;
   foreach (['reg_core.procurement_plans_admin', 'reg_core.procurement_plan_items_admin', 'reg_core.procurement_import'] as $id) if (isset($links[$id])) $links[$id]['enabled'] = FALSE;
 }
 
 /** Keeps plan bundles out of the normal Add content page while integration is OFF. */
 function reg_core_preprocess_node_add_list(array &$variables): void {
+  if (!RecruitmentPlanWorkflow::enabled()) {
+    foreach (RecruitmentPlanWorkflow::BUNDLES as $bundle) unset($variables['types'][$bundle], $variables['content'][$bundle], $variables['bundles'][$bundle]);
+  }
   if (!\Drupal\reg_core\Procurement\TenderSubmissionPolicy::onlineEnabled()) unset($variables['types']['reg_bid'], $variables['content']['reg_bid'], $variables['bundles']['reg_bid']);
   if (!\Drupal\reg_core\Procurement\TenderSubmissionPolicy::plansEnabled()) {
     unset($variables['types']['reg_procurement_plan'], $variables['types']['reg_procurement_plan_item'], $variables['content']['reg_procurement_plan'], $variables['content']['reg_procurement_plan_item'], $variables['bundles']['reg_procurement_plan'], $variables['bundles']['reg_procurement_plan_item']);
@@ -1131,6 +1156,9 @@ function reg_core_preprocess_node_add_list(array &$variables): void {
 
 /** Hides plan bundle links in Drupal's generic Add content list. */
 function reg_core_preprocess_entity_add_list(array &$variables): void {
+  if (!RecruitmentPlanWorkflow::enabled()) {
+    foreach (RecruitmentPlanWorkflow::BUNDLES as $bundle) unset($variables['bundles'][$bundle]);
+  }
   if (!\Drupal\reg_core\Procurement\TenderSubmissionPolicy::onlineEnabled()) unset($variables['bundles']['reg_bid']);
   if (!\Drupal\reg_core\Procurement\TenderSubmissionPolicy::plansEnabled()) {
     unset($variables['bundles']['reg_procurement_plan'], $variables['bundles']['reg_procurement_plan_item']);

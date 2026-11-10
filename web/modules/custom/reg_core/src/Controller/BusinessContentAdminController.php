@@ -31,6 +31,9 @@ final class BusinessContentAdminController extends ControllerBase {
       throw new NotFoundHttpException();
     }
     [$label, $bundles] = $areas[$area];
+    if ($area === 'hr' && !\Drupal\reg_core\Recruitment\RecruitmentPlanWorkflow::enabled()) {
+      $bundles = ['reg_job'];
+    }
     $node_storage = $this->regEntityTypeManager->getStorage('node');
     $ids = $node_storage->getQuery()
       ->accessCheck(FALSE)
@@ -77,7 +80,7 @@ final class BusinessContentAdminController extends ControllerBase {
         '#rows' => $rows,
         '#empty' => $this->t('No content is available in this business area.'),
       ],
-      '#cache' => ['contexts' => ['user.permissions'], 'tags' => ['node_list']],
+      '#cache' => ['contexts' => ['user.permissions'], 'tags' => ['config:reg_core.settings', 'node_list']],
     ];
   }
 

@@ -669,6 +669,7 @@ reg_core.recruitment_plans_admin:
     _title: 'Annual Recruitment Plans'
   requirements:
     _permission: 'administer reg recruitment plans'
+    _custom_access: '\Drupal\reg_core\Recruitment\RecruitmentPlanWorkflow::access'
   options:
     _admin_route: true
 
@@ -679,6 +680,7 @@ reg_core.recruitment_plan_items_admin:
     _title: 'Recruitment Plan Items'
   requirements:
     _permission: 'administer reg recruitment plans'
+    _custom_access: '\Drupal\reg_core\Recruitment\RecruitmentPlanWorkflow::access'
   options:
     _admin_route: true
 

@@ -331,6 +331,7 @@ function reg_core_install(): void {
   \Drupal::messenger()->addStatus(new TranslatableMarkup('REG Core content model and service tools have been configured.'));
   reg_core_configure_sports_news();
   \Drupal\reg_core\Footer\FooterConfiguration::initialize();
+  \Drupal\reg_core\Recruitment\RecruitmentWorkflowSetup::apply();
 }
 
 /**

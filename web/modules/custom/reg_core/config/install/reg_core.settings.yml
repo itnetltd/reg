@@ -43,6 +43,7 @@ dms:
   synchronization_interval: 300
   cache_lifetime: 300
 public_information:
+  recruitment_plan_integration: false
   procurement_plan_integration: false
   reg_online_bidding: false
   enable_tender_submission: false

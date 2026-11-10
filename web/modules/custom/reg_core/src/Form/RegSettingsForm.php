@@ -263,9 +263,10 @@ final class RegSettingsForm extends ConfigFormBase {
       '#open' => TRUE,
       '#description' => $this->t('Drupal publishes approved notices and files. Bid submission and job applications remain in their authoritative external systems unless an approved mode is configured.'),
     ];
-    foreach (['procurement_plan_integration' => $this->t('Annual Procurement Plan Integration'), 'reg_online_bidding' => $this->t('REG Online Bidding')] as $key => $label) {
+    foreach (['recruitment_plan_integration' => $this->t('Annual Recruitment Plan Integration'), 'procurement_plan_integration' => $this->t('Annual Procurement Plan Integration'), 'reg_online_bidding' => $this->t('REG Online Bidding')] as $key => $label) {
       $form['public_information'][$key] = ['#type' => 'checkbox', '#title' => $label, '#default_value' => (bool) $config->get('public_information.' . $key), '#description' => $this->t('Temporarily OFF. Saved plan, tender and supplier data are retained for future reactivation.')];
     }
+    $form['public_information']['recruitment_plan_integration']['#description'] = $this->t('Enable annual recruitment planning and plan-linked vacancy creation. Leave unchecked to publish standalone jobs. Existing plans, relationships and applications are retained.');
     $form['public_information']['enable_tender_submission'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enable REG online procurement workflow'),
@@ -523,6 +524,7 @@ final class RegSettingsForm extends ConfigFormBase {
       ->set('outages.source', 'manual')
       ->set('outages.default_safety_message', trim((string) $form_state->getValue('outage_default_safety_message')))
       ->set('outages.default_customer_message', trim((string) $form_state->getValue('outage_default_customer_message')))
+      ->set('public_information.recruitment_plan_integration', (bool) $form_state->getValue('recruitment_plan_integration'))
       ->set('public_information.procurement_plan_integration', (bool) $form_state->getValue('procurement_plan_integration'))
       ->set('public_information.reg_online_bidding', (bool) $form_state->getValue('reg_online_bidding'))
       ->set('public_information.tender_security_approved', (bool) $form_state->getValue('tender_security_approved'))

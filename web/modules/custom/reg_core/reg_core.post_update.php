@@ -982,3 +982,19 @@ function reg_core_post_update_standalone_tender_notices(?array &$sandbox = NULL)
   \Drupal::service('plugin.manager.menu.link')->rebuild();
   return 'Standalone tender notice publishing enabled. Plan integration and REG online bidding OFF. Existing plans, tenders, suppliers and bids preserved.';
 }
+
+/** Defaults recruitment planning OFF without changing plans, jobs or applications. */
+function reg_core_post_update_standalone_job_vacancies(?array &$sandbox = NULL): string {
+  $config = \Drupal::configFactory()->getEditable('reg_core.settings');
+  if ($config->get('public_information.recruitment_plan_integration') === NULL) {
+    $config->set('public_information.recruitment_plan_integration', FALSE)->save();
+  }
+  \Drupal::service('plugin.manager.menu.link')->rebuild();
+  return 'Annual Recruitment Plan Integration defaults OFF. Existing plans, relationships, jobs and applications preserved.';
+}
+
+/** Adds a reversible HR unpublish action while preserving public archives. */
+function reg_core_post_update_recruitment_unpublish_transition(?array &$sandbox = NULL): string {
+  \Drupal\reg_core\Recruitment\RecruitmentWorkflowSetup::apply();
+  return 'Added explicit HR vacancy unpublish and revise transitions. Existing archive/publication states and content unchanged.';
+}

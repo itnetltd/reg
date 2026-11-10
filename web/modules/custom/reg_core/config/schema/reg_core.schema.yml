@@ -117,6 +117,9 @@ reg_core.settings:
       type: mapping
       label: 'Public Information Hub settings'
       mapping:
+        recruitment_plan_integration:
+          type: boolean
+          label: 'Annual Recruitment Plan Integration'
         procurement_plan_integration:
           type: boolean
           label: 'Annual Procurement Plan Integration'
