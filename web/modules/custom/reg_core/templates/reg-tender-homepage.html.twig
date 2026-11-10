@@ -23,16 +23,21 @@
   {% endfor %}
   <article class="reg-tender-feature-card reg-opportunity-card reg-opportunity-card--job" data-opportunity="{{ job ? 'job' : 'no-job' }}">
     <div class="reg-tender-feature-card__top">
-      <span class="reg-tender-feature-card__entity">{{ 'JOB/VACANCY'|t }}</span>
+      <span class="reg-tender-feature-card__entity">{% if job and job.status_key == 'results' %}{{ 'RECRUITMENT RESULTS'|t }}{% else %}{{ 'JOB/VACANCY'|t }}{% endif %}</span>
       {% if job.entity_short or job.entity %}<span class="reg-opportunity-card__company">{{ job.entity_short ?: job.entity }}</span>{% endif %}
     </div>
     {% if job %}
       <h3><a href="{{ job.url }}">{{ job.title }}</a></h3>
       <dl class="reg-tender-feature-card__meta">
-        {% if job.location %}<div><dt>{{ 'Location'|t }}</dt><dd>{{ job.location }}</dd></div>{% endif %}
-        <div><dt>{{ 'Application deadline'|t }}</dt><dd><time datetime="{{ job.closing_date_raw }}Z">{{ job.closing_date }}</time></dd></div>
+        {% if job.status_key == 'results' %}
+          <div><dt>{{ 'Status'|t }}</dt><dd>{{ 'Recruitment results published'|t }}</dd></div>
+          {% if job.date %}<div><dt>{{ 'Publication date'|t }}</dt><dd>{{ job.date }}</dd></div>{% endif %}
+        {% else %}
+          {% if job.location %}<div><dt>{{ 'Location'|t }}</dt><dd>{{ job.location }}</dd></div>{% endif %}
+          <div><dt>{{ 'Application deadline'|t }}</dt><dd><time datetime="{{ job.closing_date_raw }}Z">{{ job.closing_date }}</time></dd></div>
+        {% endif %}
       </dl>
-      <div class="reg-tender-feature-card__actions"><a class="reg-tender-link" href="{{ job.url }}">{{ 'View Job'|t }} <span aria-hidden="true">&rarr;</span></a></div>
+      <div class="reg-tender-feature-card__actions"><a class="reg-tender-link" href="{{ job.url }}">{% if job.status_key == 'results' %}{{ 'View Results'|t }}{% else %}{{ 'View Job'|t }}{% endif %} <span aria-hidden="true">&rarr;</span></a></div>
     {% else %}
       <h3>{{ 'No current vacancies'|t }}</h3>
       <p>{{ 'Visit our Jobs page for recruitment updates.'|t }}</p>

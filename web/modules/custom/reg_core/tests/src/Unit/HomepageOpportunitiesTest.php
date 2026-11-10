@@ -53,7 +53,7 @@ final class HomepageOpportunitiesTest extends UnitTestCase {
     return $node;
   }
 
-  private function select(array $nodes, string $bundle, int $limit, CacheableMetadata $cache): array {
+  private function select(array $nodes, string $bundle, int $limit, CacheableMetadata $cache, bool $resultsOnly = FALSE): array {
     $query = $this->createMock(QueryInterface::class);
     $query->expects(self::once())->method('accessCheck')->with(TRUE)->willReturnSelf();
     $query->method('condition')->willReturnSelf();
@@ -70,7 +70,7 @@ final class HomepageOpportunitiesTest extends UnitTestCase {
     $clock = $this->createMock(TimeInterface::class);
     $clock->method('getRequestTime')->willReturn(self::NOW);
     $repo = new PublicInformationRepository($manager, $languages, $this->createMock(DateFormatterInterface::class), $this->createMock(FileUrlGeneratorInterface::class), $this->createMock(CacheBackendInterface::class), $clock);
-    return (new \ReflectionMethod($repo, 'openHomepageNodes'))->invoke($repo, $bundle, $limit, $cache);
+    return (new \ReflectionMethod($repo, 'openHomepageNodes'))->invoke($repo, $bundle, $limit, $cache, $resultsOnly);
   }
 
   public function testLatestThreeRealOpenTendersAndExpiry(): void {
@@ -93,6 +93,26 @@ final class HomepageOpportunitiesTest extends UnitTestCase {
     self::assertSame([$newer], $this->select([1 => $older, 2 => $newer], 'reg_job', 1, new CacheableMetadata()));
     $tender = $this->node(3, 'reg_tender', self::NOW - 10, self::NOW + 1000);
     self::assertSame([$tender], $this->select([3 => $tender], 'reg_tender', 3, new CacheableMetadata()));
+  }
+
+  public function testPublishedRecruitmentResultsFallback(): void {
+    $older = $this->node(31, 'reg_job', self::NOW - 300, NULL, 'results');
+    $newer = $this->node(32, 'reg_job', self::NOW - 100, NULL, 'results');
+    $unpublished = $this->node(33, 'reg_job', self::NOW - 10, NULL, 'results', FALSE);
+    $restricted = $this->node(34, 'reg_job', self::NOW - 10, NULL, 'results', TRUE, FALSE);
+    $scheduled = $this->node(35, 'reg_job', self::NOW + 20, NULL, 'results');
+    $closed = $this->node(36, 'reg_job', self::NOW - 10, NULL, 'closed');
+    $cache = (new CacheableMetadata())->setCacheMaxAge(300);
+    self::assertSame([$newer], $this->select([31 => $older, 32 => $newer, 33 => $unpublished, 34 => $restricted, 35 => $scheduled, 36 => $closed], 'reg_job', 1, $cache, TRUE));
+    self::assertSame(20, $cache->getCacheMaxAge());
+    self::assertContains('node:35', $cache->getCacheTags());
+  }
+
+  public function testActiveVacanciesHavePriorityOverResults(): void {
+    $open = $this->node(37, 'reg_job', self::NOW - 200, self::NOW + 1000, 'active');
+    $results = $this->node(38, 'reg_job', self::NOW - 10, NULL, 'results');
+    self::assertSame([$open], $this->select([37 => $open, 38 => $results], 'reg_job', 1, new CacheableMetadata()));
+    self::assertSame([$results], $this->select([37 => $open, 38 => $results], 'reg_job', 1, new CacheableMetadata(), TRUE));
   }
 
   public function testDeadlineBoundaryAndScheduledPublication(): void {

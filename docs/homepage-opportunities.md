@@ -1,11 +1,11 @@
 # Homepage Opportunities
 
 The existing homepage tender block now displays up to three latest published,
-currently open tenders and one latest published, currently open job. Selection
+currently open tenders and one latest published, currently open job. If no open vacancy exists, the fourth card shows the latest published recruitment-results notice, clearly labelled as results. Open vacancies take priority. Selection
 uses the issue/posting date, existing lifecycle status, future closing deadline,
-published language fallback, and Drupal access checks. Fewer tenders produce
+published language fallback, and Drupal access checks. Recruitment results do not need a future application deadline, but must be published, visible and not scheduled in the future. Fewer tenders produce
 fewer cards. Without an open job, the vacancy slot links to Jobs with a
-"No current vacancies" message. No content records are created for this fallback.
+"No current vacancies" message when neither open vacancies nor published recruitment results exist. No content records are created for this fallback.
 
 The section retains the existing tender document routes and job detail routes.
 Job application methods and links remain on the existing job detail pages.

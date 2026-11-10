@@ -41,7 +41,12 @@ final class PublicInformationRepository implements PublicInformationRepositoryIn
     $items = [];
     $job = [];
     foreach (['reg_tender' => 3, 'reg_job' => 1] as $bundle => $limit) {
-      foreach ($this->openHomepageNodes($bundle, $limit, $cache) as $node) {
+      $nodes = $this->openHomepageNodes($bundle, $limit, $cache);
+      if ($bundle === 'reg_job' && !$nodes) {
+        // Results are public notices, not currently open vacancies.
+        $nodes = $this->openHomepageNodes($bundle, $limit, $cache, TRUE);
+      }
+      foreach ($nodes as $node) {
         $cache->addCacheableDependency($node);
         // Track even unpublished document references, so publication and removal
         // invalidate a card whose download link was previously unavailable.
@@ -72,16 +77,20 @@ final class PublicInformationRepository implements PublicInformationRepositoryIn
     return $build;
   }
 
-  /** Selects latest open translations, with the existing published fallback. */
-  private function openHomepageNodes(string $bundle, int $limit, CacheableMetadata $cache): array {
+  /** Selects latest open notices, or published recruitment results as fallback. */
+  private function openHomepageNodes(string $bundle, int $limit, CacheableMetadata $cache, bool $resultsOnly = FALSE): array {
     $now = $this->time->getRequestTime();
     $langcode = $this->regLanguageManager->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)->getId();
     $status = $bundle === 'reg_tender' ? 'field_reg_tender_status' : 'field_reg_job_status';
     $date = $bundle === 'reg_tender' ? 'field_reg_issue_date' : 'field_reg_posting_date';
     $storage = $this->regEntityTypeManager->getStorage('node');
-    $ids = $storage->getQuery()->accessCheck(TRUE)
+    $query = $storage->getQuery()->accessCheck(TRUE)
       ->condition('type', $bundle)->condition('status', NodeInterface::PUBLISHED)
-      ->condition($status, 'active')->condition('field_reg_closing_date', gmdate('Y-m-d\TH:i:s', $now), '>')->execute();
+      ->condition($status, $resultsOnly ? 'results' : 'active');
+    if (!$resultsOnly) {
+      $query->condition('field_reg_closing_date', gmdate('Y-m-d\TH:i:s', $now), '>');
+    }
+    $ids = $query->execute();
     $candidates = [];
     foreach ($storage->loadMultiple($ids) as $node) {
       if ($node->hasTranslation($langcode) && $node->getTranslation($langcode)->isPublished()) $node = $node->getTranslation($langcode);
@@ -93,7 +102,8 @@ final class PublicInformationRepository implements PublicInformationRepositoryIn
       $starts = $publication !== '' ? strtotime($publication . ' UTC') : 0;
       // Recheck translated fields after the entity query. No missing deadlines,
       // closed statuses, unpublished translations or future notices are shown.
-      if (!$access->isAllowed() || !$node->isPublished() || $this->value($node, $status) !== 'active' || !$closing || $closing <= $now) continue;
+      if (!$access->isAllowed() || !$node->isPublished() || $this->value($node, $status) !== ($resultsOnly ? 'results' : 'active')) continue;
+      if (!$resultsOnly && (!$closing || $closing <= $now)) continue;
       if ($starts > $now) {
         $cache->setCacheMaxAge(Cache::mergeMaxAges($cache->getCacheMaxAge(), $starts - $now));
         continue;
@@ -102,9 +112,11 @@ final class PublicInformationRepository implements PublicInformationRepositoryIn
     }
     usort($candidates, fn (NodeInterface $a, NodeInterface $b): int => strcmp($this->value($b, $date), $this->value($a, $date)) ?: ((int) $b->id() <=> (int) $a->id()));
     $selected = array_slice($candidates, 0, $limit);
-    foreach ($selected as $node) {
-      $remaining = strtotime($this->value($node, 'field_reg_closing_date') . ' UTC') - $now;
-      $cache->setCacheMaxAge(Cache::mergeMaxAges($cache->getCacheMaxAge(), $remaining));
+    if (!$resultsOnly) {
+      foreach ($selected as $node) {
+        $remaining = strtotime($this->value($node, 'field_reg_closing_date') . ' UTC') - $now;
+        $cache->setCacheMaxAge(Cache::mergeMaxAges($cache->getCacheMaxAge(), $remaining));
+      }
     }
     return $selected;
   }
