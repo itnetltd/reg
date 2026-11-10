@@ -268,3 +268,11 @@ procurement_import:
   css:
     component:
       css/procurement-import.css: {}
+
+
+homepage_opportunities:
+  css:
+    component:
+      css/homepage-opportunities.css: {}
+  dependencies:
+    - reg_core/tenders

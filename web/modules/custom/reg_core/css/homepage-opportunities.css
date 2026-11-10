@@ -1,0 +1,43 @@
+/* Scoped to the existing homepage opportunity cards; other tender layouts stay intact. */
+.site-shell--front .reg-opportunities-grid,
+.reg-opportunities-grid {
+  width: 100%;
+  max-width: none;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 22px;
+  align-items: stretch;
+}
+.reg-opportunities-grid .reg-opportunity-card { height: 100%; }
+.site-shell--front .reg-opportunities-grid .reg-tender-feature-card__meta {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+.site-shell--front .reg-opportunities-grid h3 {
+  display: block;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: unset;
+}
+.site-shell--front .reg-opportunities-grid .reg-tender-feature-card__actions {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 20px;
+}
+.site-shell--front .reg-opportunities-grid .reg-tender-feature-card__actions a,
+.reg-opportunities-links a { min-height: 44px; }
+.reg-opportunity-card__company { color: var(--reg-muted); font-size: var(--reg-text-meta); font-weight: 700; }
+.reg-opportunity-card--job p,
+.reg-opportunities-empty { color: var(--reg-muted); font-size: var(--reg-text-description); }
+.reg-opportunities-links { display: flex; flex-wrap: wrap; gap: 12px 32px; margin-top: 24px; }
+.reg-opportunities-links a { display: inline-flex; align-items: center; gap: 8px; }
+@media (min-width: 768px) {
+  .site-shell--front .reg-opportunities-grid,
+  .reg-opportunities-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1200px) {
+  .site-shell--front .reg-opportunities-grid,
+  .reg-opportunities-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .reg-opportunities-grid .reg-opportunity-card--job { grid-column: 4; }
+}

@@ -5,10 +5,12 @@ namespace Drupal\reg_core\PublicInformation;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\Core\Url;
 use Drupal\media\MediaInterface;
@@ -29,6 +31,83 @@ final class PublicInformationRepository implements PublicInformationRepositoryIn
     private readonly CacheBackendInterface $cache,
     private readonly TimeInterface $time,
   ) {}
+
+  /** Builds the existing homepage block with real open tenders and one vacancy. */
+  public function homepageOpportunities(): array {
+    $cache = (new CacheableMetadata())
+      ->setCacheMaxAge(300)
+      ->addCacheTags(['reg_core:homepage_opportunities', 'node_list:reg_tender', 'node_list:reg_job', 'media_list', 'file_list', 'taxonomy_term_list:reg_procurement_category', 'config:reg_core.settings', 'config:system.date'])
+      ->addCacheContexts(['languages:language_content', 'languages:language_interface', 'languages:language_url', 'user.permissions', 'user.node_grants:view', 'timezone', 'url.site']);
+    $items = [];
+    $job = [];
+    foreach (['reg_tender' => 3, 'reg_job' => 1] as $bundle => $limit) {
+      foreach ($this->openHomepageNodes($bundle, $limit, $cache) as $node) {
+        $cache->addCacheableDependency($node);
+        // Track even unpublished document references, so publication and removal
+        // invalidate a card whose download link was previously unavailable.
+        foreach ($node->referencedEntities() as $reference) {
+          $cache->addCacheableDependency($reference);
+          $cache->addCacheableDependency($reference->access('view', NULL, TRUE));
+          if ($reference instanceof MediaInterface) {
+            foreach ($reference->referencedEntities() as $child) $cache->addCacheableDependency($child);
+          }
+        }
+        $item = $this->normalizeNode($node);
+        if ($bundle === 'reg_tender') $items[] = $item;
+        else $job = $item;
+      }
+    }
+    $tenders_url = Url::fromRoute('reg_core.tenders')->toString(TRUE);
+    $jobs_url = Url::fromRoute('reg_core.jobs')->toString(TRUE);
+    $cache->addCacheableDependency($tenders_url)->addCacheableDependency($jobs_url);
+    $build = [
+      '#theme' => 'reg_tender_homepage',
+      '#items' => $items,
+      '#job' => $job,
+      '#view_all_url' => $tenders_url->getGeneratedUrl(),
+      '#view_all_jobs_url' => $jobs_url->getGeneratedUrl(),
+      '#attached' => ['library' => ['reg_core/homepage_opportunities']],
+    ];
+    $cache->applyTo($build);
+    return $build;
+  }
+
+  /** Selects latest open translations, with the existing published fallback. */
+  private function openHomepageNodes(string $bundle, int $limit, CacheableMetadata $cache): array {
+    $now = $this->time->getRequestTime();
+    $langcode = $this->regLanguageManager->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)->getId();
+    $status = $bundle === 'reg_tender' ? 'field_reg_tender_status' : 'field_reg_job_status';
+    $date = $bundle === 'reg_tender' ? 'field_reg_issue_date' : 'field_reg_posting_date';
+    $storage = $this->regEntityTypeManager->getStorage('node');
+    $ids = $storage->getQuery()->accessCheck(TRUE)
+      ->condition('type', $bundle)->condition('status', NodeInterface::PUBLISHED)
+      ->condition($status, 'active')->condition('field_reg_closing_date', gmdate('Y-m-d\TH:i:s', $now), '>')->execute();
+    $candidates = [];
+    foreach ($storage->loadMultiple($ids) as $node) {
+      if ($node->hasTranslation($langcode) && $node->getTranslation($langcode)->isPublished()) $node = $node->getTranslation($langcode);
+      $access = $node->access('view', NULL, TRUE);
+      $cache->addCacheableDependency($access)->addCacheableDependency($node);
+      $closing_value = $this->value($node, 'field_reg_closing_date');
+      $closing = $closing_value !== '' ? strtotime($closing_value . ' UTC') : FALSE;
+      $publication = $this->value($node, $date);
+      $starts = $publication !== '' ? strtotime($publication . ' UTC') : 0;
+      // Recheck translated fields after the entity query. No missing deadlines,
+      // closed statuses, unpublished translations or future notices are shown.
+      if (!$access->isAllowed() || !$node->isPublished() || $this->value($node, $status) !== 'active' || !$closing || $closing <= $now) continue;
+      if ($starts > $now) {
+        $cache->setCacheMaxAge(Cache::mergeMaxAges($cache->getCacheMaxAge(), $starts - $now));
+        continue;
+      }
+      $candidates[] = $node;
+    }
+    usort($candidates, fn (NodeInterface $a, NodeInterface $b): int => strcmp($this->value($b, $date), $this->value($a, $date)) ?: ((int) $b->id() <=> (int) $a->id()));
+    $selected = array_slice($candidates, 0, $limit);
+    foreach ($selected as $node) {
+      $remaining = strtotime($this->value($node, 'field_reg_closing_date') . ' UTC') - $now;
+      $cache->setCacheMaxAge(Cache::mergeMaxAges($cache->getCacheMaxAge(), $remaining));
+    }
+    return $selected;
+  }
 
   /**
    * {@inheritdoc}

@@ -64,11 +64,11 @@
 
     {{ page.energy_awareness }}
 
-    <section class="section section--tenders">
+    <section class="section section--tenders" aria-labelledby="homepage-opportunities-title">
       <div class="reg-container">
-        <div class="section-heading"><span class="section-kicker">{{ 'Procurement'|t }}</span><h2>{{ 'Tenders'|t }}</h2><p>{{ 'Latest procurement opportunities, clarifications and official links.'|t }}</p></div>
+        <div class="section-heading"><span class="section-kicker">{{ 'OPPORTUNITIES'|t }}</span><h2 id="homepage-opportunities-title">{{ 'Tenders & Jobs'|t }}</h2><p>{{ 'Current tender opportunities and job vacancies at REG.'|t }}</p></div>
         {% if page.tenders %}{{ page.tenders }}{% else %}
-          {% include '@reg_core/reg-tender-homepage.html.twig' with {items: reg_fallback.tenders, view_all_url: path('reg_core.tenders')} only %}
+          {{ reg_fallback.opportunities }}
         {% endif %}
       </div>
     </section>

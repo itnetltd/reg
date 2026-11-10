@@ -439,3 +439,10 @@ services:
 
   reg_core.procurement_importer:
     class: Drupal\reg_core\Procurement\ProcurementImporter
+
+
+  reg_core.homepage_opportunities_expiry:
+    class: Drupal\reg_core\EventSubscriber\HomepageOpportunitiesExpirySubscriber
+    arguments: ['@datetime.time']
+    tags:
+      - { name: event_subscriber }

@@ -767,6 +767,8 @@ function reg_core_theme(): array {
     'reg_tender_homepage' => [
       'variables' => [
         'items' => [],
+        'job' => [],
+        'view_all_jobs_url' => '',
         'view_all_url' => '',
       ],
     ],

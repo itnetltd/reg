@@ -15,6 +15,9 @@ interface PublicInformationRepositoryInterface {
    */
   public function homepageTenders(int $limit = 3): array;
 
+  /** Returns the renderable, deadline-aware homepage opportunities block. */
+  public function homepageOpportunities(): array;
+
   /**
    * Searches one or more public-information bundles.
    *

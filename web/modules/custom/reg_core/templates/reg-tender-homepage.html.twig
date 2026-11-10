@@ -1,33 +1,46 @@
-{{ attach_library('reg_core/tenders') }}
-{% if items %}
-  {% set tender_count = items|length > 3 ? 3 : items|length %}
-  <div class="reg-tender-feature-grid reg-tender-feature-grid--count-{{ tender_count }}">
-    {% for item in items %}
-      <article class="reg-tender-feature-card">
-        <div class="reg-tender-feature-card__top">
-          <span class="reg-tender-feature-card__entity">{{ item.entity_short ?: item.entity }}</span>
-          <span class="reg-tender-status reg-tender-status--{{ item.status_key|clean_class }}">{{ item.status_short ?: item.status }}</span>
-          {% if item.publication_channel %}<span class="reg-pi-channel">{{ item.publication_channel }}</span>{% endif %}
-        </div>
-        <h3><a href="{{ item.url }}">{{ item.title }}</a></h3>
-        <dl class="reg-tender-feature-card__meta">
-          {% if item.reference %}<div><dt>{{ 'Reference'|t }}</dt><dd>{{ item.reference }}</dd></div>{% endif %}
-          {% if item.category %}<div><dt>{{ 'Category'|t }}</dt><dd>{{ item.category }}</dd></div>{% endif %}
-          {% if item.closing_date %}<div><dt>{{ 'Closing date'|t }}</dt><dd>{{ item.closing_date }}</dd></div>{% endif %}
-        </dl>
-        <div class="reg-tender-feature-card__actions">
-          <a class="reg-tender-link" href="{{ item.url }}">{{ 'View tender'|t }} <span aria-hidden="true">→</span></a>
-          {% if item.action.enabled and item.action.url %}<a class="reg-tender-link" href="{{ item.action.url }}"{% if item.action.external %} rel="noopener noreferrer"{% endif %}>{{ item.action.label }}{% if item.action.external %} ↗{% endif %}</a>{% endif %}
-          {% if item.primary_document.url %}
-            <a class="reg-tender-download" href="{{ item.primary_document.url }}">{{ item.primary_document.type_key == 'terms_of_reference' ? 'Download TOR'|t : 'Download tender document'|t }} <span aria-hidden="true">↓</span></a>
-          {% endif %}
-        </div>
-      </article>
-    {% endfor %}
-  </div>
-  <a class="text-link reg-tender-view-all" href="{{ view_all_url }}">{{ 'View all tenders'|t }} <span aria-hidden="true">→</span></a>
-{% else %}
-  <div class="reg-tender-homepage-empty" role="status">
-    <p>{{ 'No current tenders are published.'|t }}</p>
-  </div>
+{{ attach_library('reg_core/homepage_opportunities') }}
+{% if not items %}
+  <p class="reg-opportunities-empty">{{ 'No current tenders are published.'|t }}</p>
 {% endif %}
+<div class="reg-tender-feature-grid reg-opportunities-grid">
+  {% for item in items %}
+    <article class="reg-tender-feature-card reg-opportunity-card" data-opportunity="tender">
+      <div class="reg-tender-feature-card__top">
+        {% if item.entity_short or item.entity %}<span class="reg-tender-feature-card__entity">{{ item.entity_short ?: item.entity }}</span>{% endif %}
+        <span class="reg-tender-status reg-tender-status--{{ item.status_key|clean_class }}">{{ (item.status_short ?: item.status)|t }}</span>
+      </div>
+      <h3><a href="{{ item.url }}">{{ item.title }}</a></h3>
+      <dl class="reg-tender-feature-card__meta">
+        {% if item.reference %}<div><dt>{{ 'Reference'|t }}</dt><dd>{{ item.reference }}</dd></div>{% endif %}
+        {% if item.category %}<div><dt>{{ 'Category'|t }}</dt><dd>{{ item.category }}</dd></div>{% endif %}
+        {% if item.closing_date %}<div><dt>{{ 'Closing date'|t }}</dt><dd><time datetime="{{ item.closing_date_raw }}Z">{{ item.closing_date }}</time></dd></div>{% endif %}
+      </dl>
+      <div class="reg-tender-feature-card__actions">
+        <a class="reg-tender-link" href="{{ item.url }}">{{ 'View Tender'|t }} <span aria-hidden="true">&rarr;</span></a>
+        {% if item.primary_document.url %}<a class="reg-tender-download" href="{{ item.primary_document.url }}">{{ 'Download Tender Document'|t }} <span aria-hidden="true">&darr;</span></a>{% endif %}
+      </div>
+    </article>
+  {% endfor %}
+  <article class="reg-tender-feature-card reg-opportunity-card reg-opportunity-card--job" data-opportunity="{{ job ? 'job' : 'no-job' }}">
+    <div class="reg-tender-feature-card__top">
+      <span class="reg-tender-feature-card__entity">{{ 'JOB/VACANCY'|t }}</span>
+      {% if job.entity_short or job.entity %}<span class="reg-opportunity-card__company">{{ job.entity_short ?: job.entity }}</span>{% endif %}
+    </div>
+    {% if job %}
+      <h3><a href="{{ job.url }}">{{ job.title }}</a></h3>
+      <dl class="reg-tender-feature-card__meta">
+        {% if job.location %}<div><dt>{{ 'Location'|t }}</dt><dd>{{ job.location }}</dd></div>{% endif %}
+        <div><dt>{{ 'Application deadline'|t }}</dt><dd><time datetime="{{ job.closing_date_raw }}Z">{{ job.closing_date }}</time></dd></div>
+      </dl>
+      <div class="reg-tender-feature-card__actions"><a class="reg-tender-link" href="{{ job.url }}">{{ 'View Job'|t }} <span aria-hidden="true">&rarr;</span></a></div>
+    {% else %}
+      <h3>{{ 'No current vacancies'|t }}</h3>
+      <p>{{ 'Visit our Jobs page for recruitment updates.'|t }}</p>
+      <div class="reg-tender-feature-card__actions"><a class="reg-tender-link" href="{{ view_all_jobs_url }}">{{ 'View All Jobs'|t }} <span aria-hidden="true">&rarr;</span></a></div>
+    {% endif %}
+  </article>
+</div>
+<div class="reg-opportunities-links">
+  <a class="text-link" href="{{ view_all_url }}">{{ 'View All Tenders'|t }} <span aria-hidden="true">&rarr;</span></a>
+  <a class="text-link" href="{{ view_all_jobs_url }}">{{ 'View All Jobs'|t }} <span aria-hidden="true">&rarr;</span></a>
+</div>

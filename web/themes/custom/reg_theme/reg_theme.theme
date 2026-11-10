@@ -152,7 +152,8 @@ function reg_theme_preprocess_page(array &$variables): void {
     'services' => reg_theme_service_items($fallback_services),
     'status' => reg_theme_outage_items(),
     'news' => reg_theme_news_items(),
-    'tenders' => reg_theme_tender_items(),
+    'opportunities' => \Drupal::service('path.matcher')->isFrontPage() && empty($variables['page']['tenders'])
+      ? \Drupal::service('reg_core.public_information_repository')->homepageOpportunities() : [],
     'sports' => reg_theme_sports_items(),
   ];
   $variables['page']['#cache']['tags'][] = 'node_list:reg_service';
