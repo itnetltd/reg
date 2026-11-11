@@ -460,3 +460,19 @@ reg_core.homepage_work:
       label: 'Card order'
       sequence:
         type: string
+    image_overrides:
+      type: mapping
+      label: 'Homepage card image Media UUIDs'
+      mapping:
+        generation: { type: string, label: 'Generation image UUID' }
+        transmission: { type: string, label: 'Transmission image UUID' }
+        distribution: { type: string, label: 'Distribution image UUID' }
+        access: { type: string, label: 'Electricity Access image UUID' }
+    image_modes:
+      type: mapping
+      label: 'Homepage card image fit'
+      mapping:
+        generation: { type: string, label: 'Generation image fit' }
+        transmission: { type: string, label: 'Transmission image fit' }
+        distribution: { type: string, label: 'Distribution image fit' }
+        access: { type: string, label: 'Electricity Access image fit' }

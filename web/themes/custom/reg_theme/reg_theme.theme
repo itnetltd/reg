@@ -652,7 +652,29 @@ function reg_theme_homepage_work_card(NodeInterface $node, string $langcode, \Dr
   $image_access = $node->get('field_reg_featured_image')->access('view', NULL, TRUE);
   $cache->addCacheableDependency($image_access);
   $media = $image_access->isAllowed() ? $node->get('field_reg_featured_image')->entity : NULL;
+
+  // Homepage-only optional Media override; original content and translations stay unchanged.
+  $card_key = (string) $node->get('field_reg_wwd_key')->value;
+  $image_config = \Drupal::config('reg_core.homepage_work');
+  $cache->addCacheableDependency($image_config);
+  $override_uuid = (string) ($image_config->get('image_overrides.' . $card_key) ?? '');
+  if ($override_uuid !== '') {
+    $matches = \Drupal::entityTypeManager()->getStorage('media')->loadByProperties(['uuid' => $override_uuid]);
+    $candidate = reset($matches);
+    if ($candidate instanceof \Drupal\media\MediaInterface) {
+      $media = $candidate;
+    }
+  }
+  $override_mode = (string) ($image_config->get('image_modes.' . $card_key) ?? 'default');
+  if (in_array($override_mode, ['cover', 'contain'], TRUE)) {
+    $image_mode = $override_mode;
+  }
   $image = reg_theme_homepage_work_image($media, $cache);
+  // If a selected Media item becomes unavailable, show the content image instead.
+  if ($image === [] && $override_uuid !== '') {
+    $original_media = $image_access->isAllowed() ? $node->get('field_reg_featured_image')->entity : NULL;
+    $image = reg_theme_homepage_work_image($original_media, $cache);
+  }
   $uses_fallback = $image === [];
   if ($uses_fallback) {
     $image = reg_theme_homepage_work_fallback_image($cache);

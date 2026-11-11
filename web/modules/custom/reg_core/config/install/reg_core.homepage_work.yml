@@ -8,3 +8,13 @@ order:
   - transmission
   - distribution
   - access
+image_overrides:
+  generation: ''
+  transmission: ''
+  distribution: ''
+  access: ''
+image_modes:
+  generation: default
+  transmission: default
+  distribution: default
+  access: default
