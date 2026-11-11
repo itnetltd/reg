@@ -280,6 +280,7 @@ procurement_import:
 
 
 homepage_opportunities:
+  version: 1.1.0
   css:
     component:
       css/homepage-opportunities.css: {}
