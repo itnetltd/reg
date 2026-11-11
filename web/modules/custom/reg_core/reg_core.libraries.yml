@@ -194,6 +194,15 @@ newsroom:
     - core/drupal
     - core/once
 
+news_article_modern:
+  version: 1.0.0
+  css:
+    theme:
+      css/news-article-modern.css: {}
+  dependencies:
+    - reg_core/section_hero
+    - reg_core/newsroom
+
 x_feed:
   version: 5.x
   js:

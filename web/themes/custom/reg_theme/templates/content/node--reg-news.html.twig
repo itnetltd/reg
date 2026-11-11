@@ -1,24 +1,24 @@
-{{ attach_library('reg_core/section_hero') }}
-{{ attach_library('reg_core/newsroom') }}
-<article{{ attributes.addClass('reg-news-article') }} data-reg-analytics-event="news_view" data-reg-analytics-id="{{ news.id }}">
+{{ attach_library('reg_core/news_article_modern') }}
+<article{{ attributes.addClass('reg-news-article', 'reg-news-article--modern') }} data-reg-analytics-event="news_view" data-reg-analytics-id="{{ news.id }}">
   <header class="reg-page-hero reg-page-hero--detail reg-news-article__header">
     <div class="reg-page-hero__inner reg-news-article__header-inner">
       <div class="reg-page-hero__content">
-        <p class="reg-page-hero__eyebrow reg-news-article__kicker">{{ news.section == 'sports' ? 'REG Sports'|t : 'Media Center'|t }} / {{ news.section == 'sports' ? 'Sports News'|t : 'Corporate News'|t }}</p>
+        <a class="reg-news-article__breadcrumb" href="{{ news.back_url }}">&larr; {{ news.section == 'sports' ? 'Sports News'|t : 'All News'|t }}</a>
+        <p class="reg-page-hero__eyebrow reg-news-article__kicker">{{ news.section == 'sports' ? 'REG Sports'|t : 'Media Center'|t }} <span aria-hidden="true">/</span> {{ news.section == 'sports' ? 'Sports News'|t : 'Corporate News'|t }}</p>
         <h1 class="reg-page-hero__title">{{ news.title }}</h1>
         <div class="reg-news-article__meta">
           {% if news.date %}<time datetime="{{ news.date_iso }}">{{ 'Published:'|t }} {{ news.date }}</time>{% endif %}
-          {% if news.date and news.category.label %}<span aria-hidden="true">•</span>{% endif %}
+          {% if news.date and news.category.label %}<span class="reg-news-article__meta-separator" aria-hidden="true">•</span>{% endif %}
           {% if news.category.label %}<span>{{ news.category.label }}</span>{% endif %}
-          {% if news.department %}<span aria-hidden="true">•</span><span>{{ news.department }}</span>{% endif %}
+          {% if news.department %}<span class="reg-news-article__meta-separator" aria-hidden="true">•</span><span>{{ news.department }}</span>{% endif %}
         </div>
+        {# The full story already contains its opening paragraphs. Avoid repeating its CMS excerpt above the image. #}
+        {% if news.summary and not news.body %}
+          <p class="reg-news-article__summary">{{ news.summary }}</p>
+        {% endif %}
       </div>
     </div>
   </header>
-  {% if news.summary %}
-    <div class="reg-page-hero-summary"><p class="reg-news-article__summary">{{ news.summary }}</p></div>
-  {% endif %}
-
   {% if news.image.render %}
     <figure class="reg-news-article__hero">
       {{ news.image.render }}
