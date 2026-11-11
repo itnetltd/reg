@@ -195,7 +195,7 @@ newsroom:
     - core/once
 
 news_article_modern:
-  version: 1.0.0
+  version: 1.0.1
   css:
     theme:
       css/news-article-modern.css: {}
