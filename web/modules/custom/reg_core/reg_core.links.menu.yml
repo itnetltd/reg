@@ -1,3 +1,10 @@
+reg_core.homepage_work_settings:
+  title: 'Homepage: What We Do'
+  description: 'Edit the homepage What We Do heading, call-to-action labels and card order.'
+  route_name: reg_core.homepage_work_settings
+  parent: system.admin_config_services
+  weight: 19
+
 reg_core.settings:
   title: 'REG website settings'
   description: 'Configure official service links, calculator factors and customer-support contacts.'

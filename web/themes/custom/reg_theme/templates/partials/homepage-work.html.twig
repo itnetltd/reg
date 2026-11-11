@@ -4,11 +4,11 @@
     <div class="reg-container">
       <div class="homepage-work__heading">
         <div>
-          <span class="section-kicker">{{ 'What We Do'|t }}</span>
-          <h2 id="homepage-work-title">{{ 'Powering Rwanda at every stage'|t }}</h2>
-          <p>{{ 'Explore how REG supports generation, transmission, distribution and electricity access.'|t }}</p>
+          <span class="section-kicker">{{ section.eyebrow }}</span>
+          <h2 id="homepage-work-title">{{ section.heading }}</h2>
+          {% if section.intro %}<p>{{ section.intro }}</p>{% endif %}
         </div>
-        <a class="homepage-work__all" href="{{ overview_url }}">{{ 'Explore all'|t }} <span aria-hidden="true">→</span><span class="visually-hidden"> {{ 'What We Do'|t }}</span></a>
+        <a class="homepage-work__all" href="{{ overview_url }}">{{ section.cta_label }} <span aria-hidden="true">→</span><span class="visually-hidden"> {{ section.eyebrow }}</span></a>
       </div>
       <div class="homepage-work__grid">
         {% for item in items %}
@@ -18,7 +18,7 @@
             <div class="homepage-work__body">
               <h3>{{ item.title }}</h3>
               {% if item.summary %}<p>{{ item.summary }}</p>{% endif %}
-              <span class="homepage-work__explore">{{ 'Explore'|t }} <span class="homepage-work__arrow" aria-hidden="true">→</span></span>
+              <span class="homepage-work__explore">{{ section.card_cta_label }} <span class="homepage-work__arrow" aria-hidden="true">→</span></span>
             </div>
           </a>
         {% endfor %}

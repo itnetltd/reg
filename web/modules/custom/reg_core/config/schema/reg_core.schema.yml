@@ -435,3 +435,28 @@ reg_core.media_security:
 entity_reference_selection.reg_procurement:
   type: entity_reference_selection.default
   label: 'REG procurement reference selection'
+
+reg_core.homepage_work:
+  type: config_object
+  label: 'REG homepage What We Do'
+  mapping:
+    eyebrow:
+      type: label
+      label: 'Section eyebrow'
+    heading:
+      type: label
+      label: 'Section title'
+    intro:
+      type: text
+      label: 'Section introduction'
+    cta_label:
+      type: label
+      label: 'Overview link label'
+    card_cta_label:
+      type: label
+      label: 'Card link label'
+    order:
+      type: sequence
+      label: 'Card order'
+      sequence:
+        type: string

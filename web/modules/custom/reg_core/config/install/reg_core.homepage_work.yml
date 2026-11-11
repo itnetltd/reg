@@ -1,0 +1,10 @@
+eyebrow: 'What We Do'
+heading: 'Powering Rwanda at every stage'
+intro: 'Explore how REG supports generation, transmission, distribution and electricity access.'
+cta_label: 'Explore all'
+card_cta_label: 'Explore'
+order:
+  - generation
+  - transmission
+  - distribution
+  - access

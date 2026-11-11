@@ -1255,6 +1255,16 @@ reg_core.carbon_calculator:
   requirements:
     _permission: 'access content'
 
+reg_core.homepage_work_settings:
+  path: '/admin/config/reg/homepage-work'
+  defaults:
+    _form: '\Drupal\reg_core\Form\HomepageWorkSettingsForm'
+    _title: 'REG homepage: What We Do'
+  requirements:
+    _permission: 'administer reg website settings'
+  options:
+    _admin_route: true
+
 reg_core.settings:
   path: '/admin/config/reg/site-settings'
   defaults:

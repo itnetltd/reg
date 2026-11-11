@@ -29,8 +29,17 @@ function reg_theme_preprocess_html(array &$variables): void {
  */
 function reg_theme_preprocess_page(array &$variables): void {
   if (\Drupal::service('path.matcher')->isFrontPage()) {
+    $work_config = \Drupal::config('reg_core.homepage_work');
+    $variables['reg_homepage_work_settings'] = [
+      'eyebrow' => (string) ($work_config->get('eyebrow') ?? 'What We Do'),
+      'heading' => (string) ($work_config->get('heading') ?? 'Powering Rwanda at every stage'),
+      'intro' => (string) ($work_config->get('intro') ?? 'Explore how REG supports generation, transmission, distribution and electricity access.'),
+      'cta_label' => (string) ($work_config->get('cta_label') ?? 'Explore all'),
+      'card_cta_label' => (string) ($work_config->get('card_cta_label') ?? 'Explore'),
+    ];
     $variables['reg_homepage_work'] = reg_theme_homepage_work($variables['page']);
     $variables['reg_homepage_work_url'] = Url::fromUserInput('/what-we-do');
+    $variables['page']['#cache']['tags'][] = 'config:reg_core.homepage_work';
   }
 
   $request_time = \Drupal::time()->getRequestTime();
@@ -581,9 +590,15 @@ function reg_theme_route(string $route_name, string $fallback): string {
 function reg_theme_homepage_work(array &$page): array {
   $storage = \Drupal::entityTypeManager()->getStorage('node');
   $langcode = \Drupal::languageManager()->getCurrentLanguage(\Drupal\Core\Language\LanguageInterface::TYPE_CONTENT)->getId();
-  $keys = ['generation', 'transmission', 'distribution', 'access'];
+  $default_keys = ['generation', 'transmission', 'distribution', 'access'];
+  $configured_order = (array) \Drupal::config('reg_core.homepage_work')->get('order');
+  // Preserve existing categories even if configuration has missing/invalid keys.
+  $keys = array_values(array_unique(array_merge(
+    array_values(array_intersect($configured_order, $default_keys)),
+    $default_keys,
+  )));
   $cache = \Drupal\Core\Cache\CacheableMetadata::createFromRenderArray($page)
-    ->addCacheTags(['node_list:reg_what_we_do_page', 'node_list:reg_section_hero', 'media_list', 'config:responsive_image.styles.reg_homepage_work'])
+    ->addCacheTags(['node_list:reg_what_we_do_page', 'node_list:reg_section_hero', 'media_list', 'config:responsive_image.styles.reg_homepage_work', 'config:reg_core.homepage_work'])
     ->addCacheContexts(['languages:language_content', 'languages:language_url', 'user.permissions', 'user.node_grants:view']);
   $ids = $storage->getQuery()->accessCheck(TRUE)
     ->condition('type', 'reg_what_we_do_page')
