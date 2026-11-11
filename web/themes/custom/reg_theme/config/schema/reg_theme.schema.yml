@@ -1,0 +1,7 @@
+reg_theme.settings:
+  type: theme_settings
+  label: 'REG theme settings'
+  mapping:
+    reg_language_rw_enabled:
+      type: boolean
+      label: 'Show Kinyarwanda (RW) in website header'

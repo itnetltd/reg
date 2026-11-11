@@ -65,7 +65,14 @@ function reg_theme_preprocess_page(array &$variables): void {
   $route_parameters = $route_match->getRawParameters()->all();
   $query = \Drupal::request()->query->all();
   $variables['reg_language_links'] = [];
+  // Keep RW routes/translations available while withholding the public switcher.
+  // The REG Theme settings page can enable the language when approved.
+  $show_kinyarwanda = (bool) \Drupal::service(\Drupal\Core\Extension\ThemeSettingsProvider::class)
+    ->getSetting('reg_language_rw_enabled', 'reg_theme');
   foreach (['en', 'rw'] as $langcode) {
+    if ($langcode === 'rw' && !$show_kinyarwanda) {
+      continue;
+    }
     $language = $language_manager->getLanguage($langcode);
     if (!$language) {
       continue;
@@ -701,4 +708,27 @@ function reg_theme_homepage_work_fallback_image(\Drupal\Core\Cache\CacheableMeta
     }
   }
   return [];
+}
+
+/**
+ * Implements hook_form_system_theme_settings_alter().
+ *
+ * Controls visibility of the public header language switcher. This does not
+ * disable Kinyarwanda translations, language negotiation or /rw URLs.
+ */
+function reg_theme_form_system_theme_settings_alter(array &$form, \Drupal\Core\Form\FormStateInterface $form_state): void {
+  $show_rw = (bool) \Drupal::service(\Drupal\Core\Extension\ThemeSettingsProvider::class)
+    ->getSetting('reg_language_rw_enabled', 'reg_theme');
+  $form['reg_language_visibility'] = [
+    '#type' => 'details',
+    '#title' => t('REG language visibility'),
+    '#open' => TRUE,
+    '#weight' => -5,
+  ];
+  $form['reg_language_visibility']['reg_language_rw_enabled'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Show Kinyarwanda (RW) in the website header'),
+    '#default_value' => $show_rw,
+    '#description' => t('Leave unchecked until REG approves Kinyarwanda translations. This only hides the RW header option; existing translations remain stored and accessible.'),
+  ];
 }
