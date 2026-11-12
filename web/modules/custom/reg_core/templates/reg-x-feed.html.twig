@@ -12,7 +12,6 @@
     {{ attach_library('reg_core/x_embed') }}
     <div class="reg-x-feed__embed-intro" data-reg-x-embed data-reg-x-embed-profile="{{ feed.url }}">
       <span class="reg-x-feed__eyebrow">{{ 'Latest updates from X'|t }}</span>
-      <p>{{ 'View the official REG public timeline without an X API subscription.'|t }}</p>
       {% if feed.posts %}
         {% set approved = feed.posts|first %}
         <div class="reg-x-feed__embed-approved" data-reg-x-embed-approved>
@@ -23,7 +22,6 @@
         </div>
       {% endif %}
       <button type="button" class="reg-x-feed__embed-load" data-reg-x-embed-load>{{ 'Load X posts'|t }}</button>
-      <p class="reg-x-feed__embed-notice">{{ 'Loading connects your browser to X and may allow X to process your data.'|t }}</p>
       <div class="reg-x-feed__embed-frame" data-reg-x-embed-frame hidden>
         <div data-reg-x-embed-target></div>
         <p data-reg-x-embed-status role="status" aria-live="polite"></p>
