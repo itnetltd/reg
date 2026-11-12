@@ -12,7 +12,7 @@
       widgetScript = new Promise((resolve, reject) => {
         const script = document.createElement('script');
         // Use the host distributed by the official X Publish embed code.
-        script.src = 'https://platform.twitter.com/widgets.js';
+        script.src = 'https://platform.x.com/widgets.js';
         script.async = true;
         script.onload = () => {
           if (window.twttr && typeof window.twttr.ready === 'function') {
@@ -70,6 +70,7 @@
             completed = true;
             window.clearTimeout(deadline);
             status.hidden = false;
+            container.classList.add('is-failed');
             status.textContent = message || Drupal.t('X could not display its timeline here. Open the official REG X profile using the link below.');
           };
           const deadline = window.setTimeout(() => {

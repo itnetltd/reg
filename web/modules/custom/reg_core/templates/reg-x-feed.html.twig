@@ -13,6 +13,15 @@
     <div class="reg-x-feed__embed-intro" data-reg-x-embed data-reg-x-embed-profile="{{ feed.url }}">
       <span class="reg-x-feed__eyebrow">{{ 'Latest updates from X'|t }}</span>
       <p>{{ 'View the official REG public timeline without an X API subscription.'|t }}</p>
+      {% if feed.posts %}
+        {% set approved = feed.posts|first %}
+        <div class="reg-x-feed__embed-approved" data-reg-x-embed-approved>
+          <span class="reg-x-feed__embed-approved-label">{{ 'Latest approved REG X update'|t }}</span>
+          {% if approved.date %}<time datetime="{{ approved.date_iso }}">{{ approved.date }}</time>{% endif %}
+          <p>{{ approved.text|length > 155 ? approved.text|slice(0, 155) ~ '…' : approved.text }}</p>
+          <a href="{{ approved.url }}" rel="noopener noreferrer" target="_blank">{{ 'Read this post on X'|t }} &nearr;</a>
+        </div>
+      {% endif %}
       <button type="button" class="reg-x-feed__embed-load" data-reg-x-embed-load>{{ 'Load X posts'|t }}</button>
       <p class="reg-x-feed__embed-notice">{{ 'Loading connects your browser to X and may allow X to process your data.'|t }}</p>
       <div class="reg-x-feed__embed-frame" data-reg-x-embed-frame hidden>

@@ -178,7 +178,9 @@ final class SocialMediaManager {
         continue;
       }
       $post = [];
-      if ($id !== 'youtube' && ($id !== 'x' || (($platform['feed_mode'] ?? 'embed') === 'api' && empty($x_feed['posts']))) && $this->socialPosts) {
+      // Approved Drupal social posts provide a free, reliable fallback when
+      // the third-party X timeline does not render for some visitors.
+      if ($id !== 'youtube' && ($id !== 'x' || empty($x_feed['posts'])) && $this->socialPosts) {
         $native = $this->socialPosts->latestHomepagePost($id);
         $post = $native['item'];
         $tags = array_merge($tags, $native['cache_tags']);

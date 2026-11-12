@@ -84,3 +84,47 @@
   font-size: .74rem;
   line-height: 1.45;
 }
+
+/* Free fallback sourced only from approved Drupal Social Post content. */
+.reg-x-feed--embed .reg-x-feed__embed-approved {
+  padding: 8px 0 4px;
+  border-top: 1px solid #e5dddb;
+}
+.reg-x-feed--embed .reg-x-feed__embed-approved-label {
+  display: block;
+  color: #da291c;
+  font-size: .66rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.reg-x-feed--embed .reg-x-feed__embed-approved time {
+  display: block;
+  color: #766562;
+  font-size: .68rem;
+}
+.reg-x-feed--embed .reg-x-feed__embed-approved p {
+  display: -webkit-box;
+  margin: 4px 0;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.reg-x-feed--embed .reg-x-feed__embed-approved a {
+  color: #da291c;
+  font-size: .68rem;
+  font-weight: 800;
+}
+.reg-x-feed--embed .reg-x-feed__embed-intro.is-loaded:not(.is-failed) .reg-x-feed__embed-approved {
+  display: none;
+}
+.reg-x-feed--embed .reg-x-feed__embed-intro.is-failed {
+  padding: 8px 12px;
+  gap: 5px;
+}
+.reg-x-feed--embed .reg-x-feed__embed-intro.is-failed .reg-x-feed__embed-frame {
+  height: auto;
+  min-height: 0;
+  max-height: 84px;
+  overflow: auto;
+}
