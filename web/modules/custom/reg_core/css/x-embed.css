@@ -43,7 +43,7 @@
 .reg-x-feed--embed .reg-x-feed__embed-frame {
   box-sizing: border-box;
   width: 100%;
-  height: 235px;
+  height: 210px;
   min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
@@ -59,3 +59,13 @@
   text-decoration: none;
 }
 .reg-x-feed--embed .reg-x-feed__embed-external:hover { text-decoration: underline; }
+
+/* Keep the activated widget within the existing rotating social-card height. */
+.reg-x-feed--embed .reg-x-feed__embed-intro.is-loaded {
+  min-height: 240px;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 8px 12px;
+}
+.reg-x-feed--embed .reg-x-feed__embed-intro.is-loaded > .reg-x-feed__eyebrow,
+.reg-x-feed--embed .reg-x-feed__embed-intro.is-loaded > p { display: none; }

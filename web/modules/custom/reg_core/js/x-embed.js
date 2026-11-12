@@ -44,11 +44,12 @@
 
           button.disabled = true;
           button.hidden = true;
+          container.classList.add('is-loaded');
           frame.hidden = false;
           const link = document.createElement('a');
           link.className = 'twitter-timeline';
           link.href = url.href;
-          link.dataset.height = '230';
+          link.dataset.height = '210';
           link.dataset.theme = 'light';
           link.dataset.dnt = 'true';
           link.dataset.chrome = 'noheader nofooter';
