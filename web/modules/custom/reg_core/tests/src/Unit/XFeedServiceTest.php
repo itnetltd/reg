@@ -23,6 +23,25 @@ use Psr\Log\LoggerInterface;
 #[CoversClass(XFeedService::class)]
 final class XFeedServiceTest extends TestCase {
 
+  public function testFreeEmbedNeverCallsPaidApi(): void {
+    $previous = getenv('X_BEARER_TOKEN');
+    putenv('X_BEARER_TOKEN=unit-test-token');
+    try {
+      $http = $this->createMock(ClientInterface::class);
+      $http->expects(self::never())->method('request');
+      $cache = $this->createMock(CacheBackendInterface::class);
+      $state = $this->createMock(StateInterface::class);
+      $service = $this->service($http, $cache, $state, ['feed_mode' => 'embed']);
+      self::assertFalse($service->status()['enabled']);
+      $result = $service->homepageFeed(TRUE);
+      self::assertSame([], $result['items']);
+      self::assertSame('', $result['error']);
+    }
+    finally {
+      $this->restoreEnvironment($previous);
+    }
+  }
+
   public function testMissingTokenUsesFallbackWithoutHttpRequest(): void {
     $previous = getenv('X_BEARER_TOKEN');
     putenv('X_BEARER_TOKEN');
@@ -220,6 +239,7 @@ final class XFeedServiceTest extends TestCase {
       'url' => 'https://x.com/reg_rwanda',
       'enabled' => TRUE,
       'show_homepage_feed' => TRUE,
+      'feed_mode' => 'api',
       'api_enabled' => TRUE,
       'api_username' => 'reg_rwanda',
       'api_user_id' => '',

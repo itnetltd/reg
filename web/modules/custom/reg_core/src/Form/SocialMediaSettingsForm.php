@@ -163,6 +163,16 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
         ];
       }
       if ($id === 'x') {
+        $form['platforms'][$id]['feed_mode'] = [
+          '#type' => 'select',
+          '#title' => $this->t('Homepage X feed source'),
+          '#options' => [
+            'api' => $this->t('Option 1 — X API (paid credits)'),
+            'embed' => $this->t('Option 2 — Free X Embedded Timeline'),
+          ],
+          '#default_value' => in_array($values['feed_mode'] ?? '', ['api', 'embed'], TRUE) ? $values['feed_mode'] : 'embed',
+          '#description' => $this->t('Free Embed uses the official X widget without API credits. Visitors click to load posts from X. Paid API requires X_BEARER_TOKEN and X API credits. Changing the source does not remove your paid API settings.'),
+        ];
         $form['platforms'][$id]['display_name'] = [
           '#type' => 'textfield',
           '#title' => $this->t('Official display name'),
@@ -174,13 +184,13 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
           '#type' => 'checkbox',
           '#title' => $this->t('Show X feed on homepage'),
           '#default_value' => (bool) ($values['show_homepage_feed'] ?? TRUE),
-          '#description' => $this->t('Shows cached public posts from the server-side X API integration in the homepage social column.'),
+          '#description' => $this->t('Shows the selected X feed source in the homepage social column.'),
         ];
         $form['platforms'][$id]['api_enabled'] = [
           '#type' => 'checkbox',
           '#title' => $this->t('X API enabled'),
           '#default_value' => (bool) ($values['api_enabled'] ?? FALSE),
-          '#description' => $this->t('Requires the X_BEARER_TOKEN environment variable. The token is never stored in Drupal configuration.'),
+          '#description' => $this->t('Used only when Option 1 (paid API) is selected. Requires X_BEARER_TOKEN and API credits. Token is never stored in Drupal configuration.'),
         ];
         $form['platforms'][$id]['api_username'] = [
           '#type' => 'textfield',
@@ -266,8 +276,10 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Last error'),
       '#markup' => $last_error,
     ];
+    $saved_x = (array) ($config->get('platforms.x') ?? []);
     $form['x_api_status']['refresh'] = [
       '#type' => 'submit',
+      '#access' => ($saved_x['feed_mode'] ?? 'embed') === 'api',
       '#value' => $this->t('Refresh X feed'),
       '#submit' => ['::refreshXFeed'],
       '#limit_validation_errors' => [],
@@ -395,6 +407,7 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
       }
       if ($id === 'x') {
         $platform_config += [
+          'feed_mode' => in_array($values['feed_mode'] ?? '', ['api', 'embed'], TRUE) ? $values['feed_mode'] : 'embed',
           'api_enabled' => (bool) ($values['api_enabled'] ?? FALSE),
           'api_username' => ltrim(trim((string) ($values['api_username'] ?? 'reg_rwanda')), '@'),
           'api_user_id' => trim((string) ($values['api_user_id'] ?? '')),

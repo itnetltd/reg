@@ -272,7 +272,7 @@
         let nextAt = performance.now() + interval;
         let measuredWidth = 0;
         let measuredMode = '';
-        const paused = () => !automaticEnabled || manualPaused || hovered || document.hidden || reduced.matches || column.contains(document.activeElement);
+        const paused = () => !automaticEnabled || manualPaused || hovered || document.hidden || reduced.matches || column.contains(document.activeElement) || Boolean(column.querySelector('[data-reg-x-embed-loaded="true"]'));
         const clearAuto = () => { window.clearTimeout(autoTimer); autoTimer = null; };
         const cancelPhase = () => {
           window.clearTimeout(phaseTimer);

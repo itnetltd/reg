@@ -1,4 +1,4 @@
-<aside class="reg-x-feed"{% if feed.social_card %} data-reg-social-card="x"{% endif %} data-reg-x-feed aria-roledescription="{{ 'carousel'|t }}" aria-labelledby="reg-x-feed-title">
+<aside class="reg-x-feed{{ feed.mode == 'embed' ? ' reg-x-feed--embed' : '' }}"{% if feed.social_card %} data-reg-social-card="x"{% endif %}{% if feed.mode != 'embed' %} data-reg-x-feed aria-roledescription="{{ 'carousel'|t }}"{% endif %} aria-labelledby="reg-x-feed-title">
   <header class="reg-x-feed__header">
     <span class="reg-x-feed__icon" aria-hidden="true"></span>
     <div class="reg-x-feed__identity">
@@ -8,7 +8,17 @@
     <a class="reg-x-feed__follow" href="{{ feed.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ 'View Rwanda Energy Group on X'|t }}">{{ 'VIEW ON X'|t }} <span aria-hidden="true">&nearr;</span></a>
   </header>
 
-  {% if feed.posts %}
+  {% if feed.mode == 'embed' %}
+    {{ attach_library('reg_core/x_embed') }}
+    <div class="reg-x-feed__embed-intro" data-reg-x-embed data-reg-x-embed-profile="{{ feed.url }}">
+      <span class="reg-x-feed__eyebrow">{{ 'Latest updates from X'|t }}</span>
+      <p>{{ 'View the official REG public timeline without an X API subscription.'|t }}</p>
+      <button type="button" class="reg-x-feed__embed-load" data-reg-x-embed-load>{{ 'Load X posts'|t }}</button>
+      <p class="reg-x-feed__embed-notice">{{ 'Loading connects your browser to X and may allow X to process your data.'|t }}</p>
+      <div class="reg-x-feed__embed-frame" data-reg-x-embed-frame hidden></div>
+      <a class="reg-x-feed__embed-external" href="{{ feed.url }}" target="_blank" rel="noopener noreferrer">{{ 'Open @handle on X'|t({'@handle': feed.handle}) }} &nearr;</a>
+    </div>
+  {% elseif feed.posts %}
     <div class="reg-x-feed__posts" tabindex="0" role="region" aria-label="{{ 'Latest REG posts on X'|t }}">
       {% for post in feed.posts %}
         <article class="reg-x-feed__post{{ (post.image.url or post.image.render) ? ' reg-x-feed__post--media' : '' }}" role="group" aria-label="{{ 'Post @current of @total'|t({'@current': loop.index, '@total': feed.posts|length}) }}">

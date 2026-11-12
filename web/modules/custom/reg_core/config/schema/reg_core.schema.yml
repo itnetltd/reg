@@ -369,6 +369,9 @@ reg_core.social_media_platform:
     gallery_enabled:
       type: boolean
       label: 'Enable photo gallery'
+    feed_mode:
+      type: string
+      label: 'Homepage X feed source (api or embed)'
     api_enabled:
       type: boolean
       label: 'Enable X API feed'

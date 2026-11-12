@@ -319,7 +319,7 @@ final class XFeedService implements XFeedServiceInterface {
     $user_id = trim((string) ($platform['api_user_id'] ?? ''));
     return [
       'error' => !$valid ? 'The X API username must match the configured official X profile URL.' : '',
-      'enabled' => $valid && !empty($platform['api_enabled']) && !empty($platform['enabled']) && !empty($platform['show_homepage_feed']),
+      'enabled' => $valid && ($platform['feed_mode'] ?? 'api') === 'api' && !empty($platform['api_enabled']) && !empty($platform['enabled']) && !empty($platform['show_homepage_feed']),
       'username' => $username,
       'user_id' => preg_match('/^\d+$/', $user_id) ? $user_id : '',
       'cache_lifetime' => max(300, min(86400, (int) ($platform['api_cache_lifetime'] ?? 900))),

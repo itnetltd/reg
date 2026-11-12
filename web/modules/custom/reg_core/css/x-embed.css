@@ -1,0 +1,61 @@
+/* X free official embed. Scoped to REG's existing social card. */
+.reg-x-feed--embed .reg-x-feed__embed-intro {
+  box-sizing: border-box;
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 9px;
+  padding: 14px 16px;
+  background: #faf8f7;
+}
+.reg-x-feed--embed .reg-x-feed__embed-intro p {
+  margin: 0;
+  font-size: .78rem;
+  line-height: 1.5;
+  color: #51413f;
+}
+.reg-x-feed--embed .reg-x-feed__embed-load {
+  display: inline-flex;
+  align-self: flex-start;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #da291c;
+  border-radius: 7px;
+  min-height: 40px;
+  padding: 8px 14px;
+  font-size: .8rem;
+  color: white;
+  font-weight: 700;
+  background: #da291c;
+  cursor: pointer;
+}
+.reg-x-feed--embed .reg-x-feed__embed-load:hover { background: #a91911; }
+.reg-x-feed--embed .reg-x-feed__embed-load:focus-visible,
+.reg-x-feed--embed .reg-x-feed__embed-external:focus-visible {
+  outline: 3px solid #282021;
+  outline-offset: 3px;
+}
+.reg-x-feed--embed .reg-x-feed__embed-intro .reg-x-feed__embed-notice {
+  color: #766562;
+  font-size: .7rem;
+}
+.reg-x-feed--embed .reg-x-feed__embed-frame {
+  box-sizing: border-box;
+  width: 100%;
+  height: 235px;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-radius: 8px;
+  background: #fff;
+}
+.reg-x-feed--embed [hidden] { display: none !important; }
+.reg-x-feed--embed .reg-x-feed__embed-external {
+  align-self: flex-start;
+  color: #da291c;
+  font-size: .7rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+.reg-x-feed--embed .reg-x-feed__embed-external:hover { text-decoration: underline; }

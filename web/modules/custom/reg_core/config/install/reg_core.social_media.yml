@@ -12,6 +12,7 @@ platforms:
     show_utility: true
     show_footer: true
     show_homepage_feed: true
+    feed_mode: embed
     api_enabled: false
     api_username: 'reg_rwanda'
     api_user_id: ''

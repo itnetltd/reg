@@ -135,6 +135,7 @@ final class SocialMediaManager {
       'url' => 'https://x.com/' . $handle,
       'handle' => '@' . $handle,
       'display_name' => trim((string) ($platform['display_name'] ?? '')) ?: 'Rwanda Energy Group',
+      'mode' => ($platform['feed_mode'] ?? 'embed') === 'api' ? 'api' : 'embed',
     ];
   }
 
@@ -177,7 +178,7 @@ final class SocialMediaManager {
         continue;
       }
       $post = [];
-      if ($id !== 'youtube' && ($id !== 'x' || empty($x_feed['posts'])) && $this->socialPosts) {
+      if ($id !== 'youtube' && ($id !== 'x' || (($platform['feed_mode'] ?? 'embed') === 'api' && empty($x_feed['posts']))) && $this->socialPosts) {
         $native = $this->socialPosts->latestHomepagePost($id);
         $post = $native['item'];
         $tags = array_merge($tags, $native['cache_tags']);

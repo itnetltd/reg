@@ -203,6 +203,17 @@ news_article_modern:
     - reg_core/section_hero
     - reg_core/newsroom
 
+x_embed:
+  version: 1.0.0
+  js:
+    js/x-embed.js: {}
+  css:
+    component:
+      css/x-embed.css: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
 x_feed:
   version: 5.x
   js:

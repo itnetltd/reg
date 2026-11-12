@@ -180,7 +180,9 @@ function reg_theme_preprocess_page(array &$variables): void {
   $variables['page']['#cache']['contexts'][] = 'user.node_grants:view';
   $variables['page']['#cache']['max-age'] = min($variables['page']['#cache']['max-age'] ?? 300, 300);
   $variables['reg_fallback']['news']['x_feed'] = $social_media->homepageXFeed();
-  if ($variables['reg_fallback']['news']['x_feed'] !== [] && \Drupal::hasService('reg_core.x_feed')) {
+  if ($variables['reg_fallback']['news']['x_feed'] !== []
+    && ($variables['reg_fallback']['news']['x_feed']['mode'] ?? 'embed') === 'api'
+    && \Drupal::hasService('reg_core.x_feed')) {
     $x_feed = \Drupal::service('reg_core.x_feed')->homepageFeed();
     $variables['reg_fallback']['news']['x_feed']['posts'] = array_slice($x_feed['items'], 0, 4);
     $variables['page']['#cache']['tags'] = array_merge($variables['page']['#cache']['tags'], $x_feed['cache_tags']);
