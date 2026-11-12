@@ -204,7 +204,7 @@ news_article_modern:
     - reg_core/newsroom
 
 x_embed:
-  version: 1.0.0
+  version: 1.1.0
   js:
     js/x-embed.js: {}
   css:

@@ -15,7 +15,10 @@
       <p>{{ 'View the official REG public timeline without an X API subscription.'|t }}</p>
       <button type="button" class="reg-x-feed__embed-load" data-reg-x-embed-load>{{ 'Load X posts'|t }}</button>
       <p class="reg-x-feed__embed-notice">{{ 'Loading connects your browser to X and may allow X to process your data.'|t }}</p>
-      <div class="reg-x-feed__embed-frame" data-reg-x-embed-frame hidden></div>
+      <div class="reg-x-feed__embed-frame" data-reg-x-embed-frame hidden>
+        <div data-reg-x-embed-target></div>
+        <p data-reg-x-embed-status role="status" aria-live="polite"></p>
+      </div>
       <a class="reg-x-feed__embed-external" href="{{ feed.url }}" target="_blank" rel="noopener noreferrer">{{ 'Open @handle on X'|t({'@handle': feed.handle}) }} &nearr;</a>
     </div>
   {% elseif feed.posts %}

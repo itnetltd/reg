@@ -3,22 +3,33 @@
 
   let widgetScript;
 
-  // X is a third party: fetch its widget JavaScript only after visitor action.
+  // Contact X only when the visitor explicitly chooses to load the timeline.
   function loadOfficialWidget() {
-    if (window.twttr && window.twttr.widgets && window.twttr.widgets.load) {
-      return Promise.resolve();
+    if (window.twttr && window.twttr.widgets && window.twttr.widgets.createTimeline) {
+      return Promise.resolve(window.twttr);
     }
     if (!widgetScript) {
       widgetScript = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'https://platform.x.com/widgets.js';
+        // Use the host distributed by the official X Publish embed code.
+        script.src = 'https://platform.twitter.com/widgets.js';
         script.async = true;
-        script.onload = resolve;
-        script.onerror = () => {
-          widgetScript = null;
-          reject(new Error('X widget could not be loaded'));
+        script.onload = () => {
+          if (window.twttr && typeof window.twttr.ready === 'function') {
+            window.twttr.ready(resolve);
+          }
+          else if (window.twttr && window.twttr.widgets) {
+            resolve(window.twttr);
+          }
+          else {
+            reject(new Error('X widget API did not initialize'));
+          }
         };
+        script.onerror = () => reject(new Error('X widget script could not load'));
         document.head.appendChild(script);
+      }).catch((error) => {
+        widgetScript = null;
+        throw error;
       });
     }
     return widgetScript;
@@ -29,13 +40,14 @@
       once('reg-x-free-embed', '[data-reg-x-embed]', context).forEach((container) => {
         const button = container.querySelector('[data-reg-x-embed-load]');
         const frame = container.querySelector('[data-reg-x-embed-frame]');
-        if (!button || !frame) return;
+        const target = container.querySelector('[data-reg-x-embed-target]');
+        const status = container.querySelector('[data-reg-x-embed-status]');
+        if (!button || !frame || !target || !status) return;
 
         button.addEventListener('click', () => {
-          const profile = container.dataset.regXEmbedProfile || '';
           let url;
           try {
-            url = new URL(profile);
+            url = new URL(container.dataset.regXEmbedProfile || '');
           }
           catch (error) {
             return;
@@ -46,29 +58,59 @@
           button.hidden = true;
           container.classList.add('is-loaded');
           frame.hidden = false;
-          const link = document.createElement('a');
-          link.className = 'twitter-timeline';
-          link.href = url.href;
-          link.dataset.height = '210';
-          link.dataset.theme = 'light';
-          link.dataset.dnt = 'true';
-          link.dataset.chrome = 'noheader nofooter';
-          link.textContent = Drupal.t('View the REG timeline on X');
-          frame.replaceChildren(link);
-
+          status.textContent = Drupal.t('Loading the official X timeline…');
+          status.hidden = false;
           const card = container.closest('[data-reg-social-card]');
           if (card) card.dataset.regXEmbedLoaded = 'true';
 
+          let completed = false;
+          // The X service can leave a bare link indefinitely without notifying us.
+          const fallback = (message) => {
+            if (completed) return;
+            completed = true;
+            window.clearTimeout(deadline);
+            status.hidden = false;
+            status.textContent = message || Drupal.t('X could not display its timeline here. Open the official REG X profile using the link below.');
+          };
+          const deadline = window.setTimeout(() => {
+            if (completed) return;
+            if (target.querySelector('iframe')) {
+              // Cross-origin iframe contents are unreadable. Never claim posts
+              // loaded successfully just because X created an iframe.
+              fallback(Drupal.t('If the timeline remains blank, X may be restricting embedded posts. Use the official profile link below.'));
+            }
+            else {
+              fallback(Drupal.t('X did not load its timeline. It may be blocked by browser privacy settings, site security policy or X itself.'));
+            }
+          }, 10000);
+
           loadOfficialWidget()
-            .then(() => {
-              if (window.twttr && window.twttr.widgets && window.twttr.widgets.load) {
-                return window.twttr.widgets.load(frame);
+            .then((twttr) => {
+              if (!twttr.widgets || typeof twttr.widgets.createTimeline !== 'function') {
+                throw new Error('X timeline creation is unavailable');
               }
-              throw new Error('X widget unavailable');
+              // Explicit widget creation avoids the no-op dynamic-link scan
+              // that previously left only "View the REG timeline on X" text.
+              return twttr.widgets.createTimeline(
+                { sourceType: 'profile', screenName: url.pathname.slice(1) },
+                target,
+                { height: 210, theme: 'light', chrome: 'noheader nofooter', dnt: true }
+              );
+            })
+            .then(() => {
+              if (completed) return;
+              if (!target.querySelector('iframe')) {
+                fallback(Drupal.t('X did not return a displayable timeline. Use the official profile link below.'));
+                return;
+              }
+              // An iframe does not guarantee that X supplied posts. Keep a
+              // small, visible explanation for browsers that show it blank.
+              completed = true;
+              window.clearTimeout(deadline);
+              status.textContent = Drupal.t('If the timeline is blank, open REG on X using the link below.');
             })
             .catch(() => {
-              // The always-visible official profile link remains a reliable fallback.
-              frame.replaceChildren(document.createTextNode(Drupal.t('X posts cannot be displayed in this browser. Use the official profile link below.')));
+              fallback(Drupal.t('The official X timeline could not be loaded. It may be blocked by your browser or REG site security settings.'));
             });
         }, { once: true });
       });

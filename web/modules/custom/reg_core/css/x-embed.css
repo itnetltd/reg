@@ -69,3 +69,18 @@
 }
 .reg-x-feed--embed .reg-x-feed__embed-intro.is-loaded > .reg-x-feed__eyebrow,
 .reg-x-feed--embed .reg-x-feed__embed-intro.is-loaded > p { display: none; }
+
+.reg-x-feed--embed .reg-x-feed__embed-frame {
+  background: #fff;
+  padding: 4px;
+}
+.reg-x-feed--embed .reg-x-feed__embed-frame [data-reg-x-embed-target] {
+  width: 100%;
+  min-width: 0;
+}
+.reg-x-feed--embed .reg-x-feed__embed-frame [data-reg-x-embed-status] {
+  padding: 8px;
+  color: #554642;
+  font-size: .74rem;
+  line-height: 1.45;
+}
