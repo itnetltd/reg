@@ -60,7 +60,14 @@ final class UploadPolicy {
         return ['Macro-enabled, embedded executable or oversized Office packages are not permitted.'];
       }
     }
-    // Reject common active-content payloads, including image/PDF polyglots.
+    // Inspect PDF dictionary syntax, not compressed scan/image bytes.
+    // Actual PDF actions and unsupported opaque object streams remain blocked.
+    if ($extension === 'pdf') {
+      return PdfUploadInspector::isUnsafe($path)
+        ? ['Executable or active content is not permitted in public uploads.']
+        : [];
+    }
+    // Other file types keep their original byte-level active-content gate.
     $handle = fopen($path, 'rb');
     $tail = '';
     while (!feof($handle)) {
