@@ -60,12 +60,12 @@ final class UploadPolicy {
         return ['Macro-enabled, embedded executable or oversized Office packages are not permitted.'];
       }
     }
-    // Inspect PDF dictionary syntax, not compressed scan/image bytes.
-    // Actual PDF actions and unsupported opaque object streams remain blocked.
+    // Public PDFs keep filename, extension, detected MIME, size, scope and
+    // access-control checks. Disable the bespoke PDF active-content heuristic:
+    // it has repeatedly rejected legitimate scanned and official documents.
+    // This is not malware scanning; only publish approved, trusted PDFs.
     if ($extension === 'pdf') {
-      return PdfUploadInspector::isUnsafe($path)
-        ? ['Executable or active content is not permitted in public uploads.']
-        : [];
+      return [];
     }
     // Other file types keep their original byte-level active-content gate.
     $handle = fopen($path, 'rb');
