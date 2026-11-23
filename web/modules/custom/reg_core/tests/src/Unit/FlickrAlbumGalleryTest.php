@@ -84,12 +84,61 @@ final class FlickrAlbumGalleryTest extends TestCase {
     self::assertCount(1, $result['items']);
   }
 
-  private function service(ClientInterface $http): FlickrGallery {
+  public function testManualAlbumsNeedNoApiKeyAndShowTwelvePhotos(): void {
+    putenv('FLICKR_API_KEY');
+    $albumLines = implode("\n", [
+      '72177720300000001 | REG First Album',
+      'https://www.flickr.com/photos/127491669@N07/albums/72177720300000002 | REG Second Album',
+      '72177720300000003 | REG Third Album',
+      '72177720300000004 | REG Fourth Album',
+    ]);
+    $albums = FlickrGallery::parseManualAlbums($albumLines);
+    self::assertCount(4, $albums);
+    self::assertSame('REG Second Album', $albums[1]['title']);
+
+    $photos = [];
+    for ($i = 1; $i <= 14; $i++) {
+      $photos[] = [
+        'title' => 'REG Picture ' . $i,
+        'media' => ['m' => 'https://live.staticflickr.com/12/' . $i . '_123_m.jpg'],
+        'link' => 'https://www.flickr.com/photos/127491669@N07/' . $i,
+      ];
+    }
+    $http = $this->createMock(ClientInterface::class);
+    $http->expects(self::exactly(4))->method('request')->willReturnCallback(
+      function (string $method, string $url, array $options) use ($photos): Response {
+        self::assertSame('GET', $method);
+        self::assertSame('https://www.flickr.com/services/feeds/photoset.gne', $url);
+        self::assertArrayNotHasKey('api_key', $options['query']);
+        self::assertSame('127491669@N07', $options['query']['nsid']);
+        return new Response(200, [], json_encode(['items' => $photos]));
+      }
+    );
+    $result = $this->service($http, $albumLines)->albumGallery('72177720300000002');
+    self::assertCount(4, $result['albums']);
+    self::assertSame('REG Second Album', $result['active_album']['title']);
+    self::assertCount(12, $result['items']);
+    self::assertSame('https://live.staticflickr.com/12/1_123_m.jpg', $result['albums'][0]['image_url']);
+    self::assertTrue($result['album_source_available']);
+    self::assertFalse($result['api_key_configured']);
+  }
+
+  public function testMalformedOrDuplicateManualAlbumLinesAreIgnored(): void {
+    $albums = FlickrGallery::parseManualAlbums(implode("\n", [
+      '72177720300000001 | A valid album',
+      '72177720300000001 | Duplicate album',
+      'javascript:alert(1) | Wrong URL',
+      'https://malicious.example/photos/owner/albums/72177720300000002 | Wrong host',
+    ]));
+    self::assertCount(1, $albums);
+  }
+
+  private function service(ClientInterface $http, string $manualAlbums = ''): FlickrGallery {
     $config = $this->createMock(ImmutableConfig::class);
     $config->method('get')->with('platforms.flickr')->willReturn([
       'enabled' => TRUE, 'gallery_enabled' => TRUE,
       'url' => 'https://www.flickr.com/photos/127491669@N07/albums/',
-      'user_id' => '127491669@N07', 'album_id' => '',
+      'user_id' => '127491669@N07', 'album_id' => '', 'manual_albums' => $manualAlbums,
     ]);
     $factory = $this->createMock(ConfigFactoryInterface::class);
     $factory->method('get')->with('reg_core.social_media')->willReturn($config);
