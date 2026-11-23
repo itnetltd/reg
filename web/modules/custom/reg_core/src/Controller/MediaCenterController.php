@@ -79,13 +79,10 @@ final class MediaCenterController implements ContainerInjectionInterface {
    * Displays the configured official Flickr feed or a clear fallback.
    */
   public function gallery(): array {
+    $selected = \Drupal::request()->query->all()['album'] ?? NULL;
     return [
       '#theme' => 'reg_media_gallery',
-      '#gallery' => $this->flickr->albumGallery(
-        is_string(\Drupal::request()->query->get('album')) ? \Drupal::request()->query->get('album') : NULL,
-        4,
-        12,
-      ),
+      '#gallery' => $this->flickr->albumGallery(is_string($selected) ? $selected : NULL, 4, 12),
       '#attached' => ['library' => ['reg_core/newsroom', 'reg_core/flickr_albums']],
       '#cache' => [
         'contexts' => ['languages:language_interface', 'url.query_args:album'],

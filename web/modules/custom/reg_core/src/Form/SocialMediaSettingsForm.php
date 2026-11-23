@@ -161,6 +161,13 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
           '#title' => $this->t('Photo Gallery enabled'),
           '#default_value' => (bool) ($values['gallery_enabled'] ?? FALSE),
         ];
+        $form['platforms'][$id]['flickr_api_status'] = [
+          '#type' => 'item',
+          '#title' => $this->t('Latest four Flickr albums'),
+          '#markup' => getenv('FLICKR_API_KEY')
+            ? $this->t('Flickr API key is configured on the server. The gallery can retrieve and cache four recent albums.')
+            : $this->t('Flickr API key is not yet configured on the server. The gallery continues showing the public photo feed until then.'),
+        ];
       }
       if ($id === 'x') {
         $form['platforms'][$id]['feed_mode'] = [
