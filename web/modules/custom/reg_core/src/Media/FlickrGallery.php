@@ -124,7 +124,17 @@ final class FlickrGallery {
     if (!$enabled) {
       return $result;
     }
-    if ($userId === '' || !preg_match('/^[A-Za-z0-9@._-]+$/D', $userId) || $apiKey === '') {
+    if ($userId === '' || !preg_match('/^[A-Za-z0-9@._-]+$/D', $userId)) {
+      return $this->albumFallback($result, $photoLimit);
+    }
+
+    // No-key mode: a Communications editor chooses the four public album
+    // links and titles. Photos then come from Flickr's public photoset feeds.
+    $manualAlbums = self::parseManualAlbums((string) ($flickr['manual_albums'] ?? ''));
+    if ($manualAlbums !== []) {
+      return $this->manualAlbumGallery($result, $userId, $manualAlbums, $selectedAlbumId, $photoLimit);
+    }
+    if ($apiKey === '') {
       return $this->albumFallback($result, $photoLimit);
     }
 
@@ -231,6 +241,142 @@ final class FlickrGallery {
       $this->loggerFactory->get('reg_core')->warning('Flickr album listing unavailable; using public photo feed.');
       return $this->albumFallback($result, $photoLimit);
     }
+  }
+
+
+  /**
+   * Parses up to four manually selected public Flickr album IDs and titles.
+   *
+   * Input order is display order (newest first). Lines accept:
+   * 721... | Album title
+   * https://www.flickr.com/photos/USER/albums/721... | Album title
+   */
+  public static function parseManualAlbums(string $raw): array {
+    $albums = [];
+    foreach (preg_split('/\r\n|\r|\n/', $raw) ?: [] as $line) {
+      $line = trim($line);
+      if ($line === '' || count($albums) >= 4) {
+        continue;
+      }
+      [$source, $title] = array_pad(explode('|', $line, 2), 2, '');
+      $source = trim($source);
+      $title = trim(strip_tags(html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+      $id = $source;
+      if (str_starts_with($source, 'https://')) {
+        $url = parse_url($source);
+        $host = strtolower((string) ($url['host'] ?? ''));
+        $path = (string) ($url['path'] ?? '');
+        if (!is_array($url) || !in_array($host, ['www.flickr.com', 'flickr.com'], TRUE)
+          || isset($url['user']) || isset($url['pass']) || isset($url['port'])
+          || !preg_match('#^/photos/[A-Za-z0-9@._-]+/(?:albums|sets)/([0-9]{1,30})/?$#D', $path, $match)) {
+          continue;
+        }
+        $id = $match[1];
+      }
+      if (!preg_match('/^[0-9]{1,30}$/D', $id) || $title === '' || mb_strlen($title) > 140
+        || isset($albums[$id])) {
+        continue;
+      }
+      $albums[$id] = ['id' => $id, 'title' => $title];
+    }
+    return array_values($albums);
+  }
+
+  /**
+   * Album navigation using the public no-key Flickr photoset JSON feeds.
+   */
+  private function manualAlbumGallery(array $result, string $userId, array $manual, ?string $selectedId, int $photoLimit): array {
+    $selectedId = is_string($selectedId) && preg_match('/^[0-9]{1,30}$/D', $selectedId) ? $selectedId : NULL;
+    $itemsForAlbum = [];
+    foreach ($manual as $album) {
+      $id = $album['id'];
+      $photos = $this->publicAlbumFeed($userId, $id, $photoLimit);
+      $itemsForAlbum[$id] = $photos;
+      $result['albums'][] = [
+        'id' => $id,
+        'title' => $album['title'],
+        'url' => 'https://www.flickr.com/photos/' . rawurlencode($userId) . '/albums/' . $id,
+        'image_url' => $photos[0]['image_url'] ?? '',
+        'preview_count' => count($photos),
+        'date_create' => 0,
+      ];
+    }
+    if ($result['albums'] !== []) {
+      $selected = $result['albums'][0];
+      foreach ($result['albums'] as $album) {
+        if ($album['id'] === $selectedId) {
+          $selected = $album;
+          break;
+        }
+      }
+      $result['active_album'] = $selected;
+      $result['items'] = $itemsForAlbum[$selected['id']] ?? [];
+    }
+    $result['album_source_available'] = TRUE;
+    $result['source_available'] = $result['items'] !== [];
+    return $result;
+  }
+
+  /**
+   * Reads one known public album, caching its photo feed for 15 minutes.
+   * No Flickr app key, account token, user login, or HTML scraping.
+   */
+  private function publicAlbumFeed(string $userId, string $albumId, int $photoLimit): array {
+    $cid = 'reg_core:flickr:public_album:' . hash('sha256', $userId . ':' . $albumId . ':' . $photoLimit);
+    if ($cached = $this->cache->get($cid)) {
+      if (is_array($cached->data)) {
+        return $cached->data;
+      }
+    }
+    $items = [];
+    try {
+      $response = $this->httpClient->request('GET', 'https://www.flickr.com/services/feeds/photoset.gne', [
+        'query' => [
+          'set' => $albumId,
+          'nsid' => $userId,
+          'format' => 'json',
+          'nojsoncallback' => '1',
+          'lang' => 'en-us',
+        ],
+        'connect_timeout' => 3,
+        'timeout' => 7,
+        'http_errors' => FALSE,
+        'allow_redirects' => FALSE,
+        'headers' => ['Accept' => 'application/json'],
+      ]);
+      if ($response->getStatusCode() !== 200) {
+        throw new \RuntimeException('Public Flickr album feed returned an unexpected status');
+      }
+      $payload = json_decode((string) $response->getBody(), TRUE);
+      if (!is_array($payload) || !is_array($payload['items'] ?? NULL)
+        || (isset($payload['stat']) && $payload['stat'] !== 'ok')) {
+        throw new \RuntimeException('Public Flickr album feed is unavailable');
+      }
+      foreach (array_slice($payload['items'], 0, $photoLimit) as $rawPhoto) {
+        if (!is_array($rawPhoto)) {
+          continue;
+        }
+        $image = $this->validImageUrl((string) ($rawPhoto['media']['m'] ?? ''));
+        $link = $this->validUrl((string) ($rawPhoto['link'] ?? ''), ['flickr.com', 'www.flickr.com']);
+        if ($image === '' || $link === '') {
+          continue;
+        }
+        $title = trim(strip_tags((string) ($rawPhoto['title'] ?? '')));
+        $items[] = [
+          'image_url' => $image,
+          'url' => $link,
+          'title' => $title !== '' ? $title : 'REG album photo',
+          'date_iso' => preg_match('/^\d{4}-\d{2}-\d{2}/', (string) ($rawPhoto['published'] ?? ''), $match)
+            ? $match[0] : '',
+        ];
+      }
+      $this->cache->set($cid, $items, time() + 900, ['config:reg_core.social_media']);
+    }
+    catch (\Throwable $exception) {
+      $this->loggerFactory->get('reg_core')->warning('A public Flickr album feed is unavailable.');
+      $this->cache->set($cid, [], time() + 300, ['config:reg_core.social_media']);
+    }
+    return $items;
   }
 
   /**
