@@ -147,14 +147,14 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
           '#title' => $this->t('Flickr User ID'),
           '#default_value' => $values['user_id'] ?? '',
           '#maxlength' => 100,
-          '#description' => $this->t('Used by the public Flickr feed. Do not enter API credentials here.'),
+          '#description' => $this->t('Official Flickr user NSID, such as 127491669@N07. The four-album gallery uses FLICKR_API_KEY stored privately on AOS; never put the key in this form.'),
         ];
         $form['platforms'][$id]['album_id'] = [
           '#type' => 'textfield',
           '#title' => $this->t('Flickr Gallery/Album ID'),
           '#default_value' => $values['album_id'] ?? '',
           '#maxlength' => 100,
-          '#description' => $this->t('Optional. Leave empty to use the account public photo feed.'),
+          '#description' => $this->t('Optional fixed album for the legacy photo feed. The Photo Gallery page displays the four newest albums when the server-side Flickr API key is configured.'),
         ];
         $form['platforms'][$id]['gallery_enabled'] = [
           '#type' => 'checkbox',
