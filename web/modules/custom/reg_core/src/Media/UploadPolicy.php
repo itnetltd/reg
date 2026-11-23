@@ -7,6 +7,9 @@ namespace Drupal\reg_core\Media;
  */
 final class UploadPolicy {
 
+  // Practical ceiling for public PDF reports; keep server-side safeguards.
+  public const MAX_PUBLIC_PDF_MB = 250;
+
   public const TYPES = [
     'pdf' => ['application/pdf'],
     'docx' => ['application/zip', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
@@ -31,7 +34,15 @@ final class UploadPolicy {
     if (!is_file($path) || !is_readable($path)) {
       return ['The uploaded file cannot be inspected.'];
     }
-    $limit = in_array($extension, ['mp4'], TRUE) ? 100 : (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'], TRUE) ? 10 : 25);
+    // PDFs used for reports and publications may be substantially larger than
+    // other public documents. The final upload ceiling is also bounded by
+    // PHP upload_max_filesize/post_max_size and the web server request limit.
+    $limit = match ($extension) {
+      'pdf' => self::MAX_PUBLIC_PDF_MB,
+      'mp4' => 100,
+      'jpg', 'jpeg', 'png', 'gif', 'webp' => 10,
+      default => 25,
+    };
     if (filesize($path) <= 0 || filesize($path) > $limit * 1024 * 1024) {
       return ['File size must be greater than zero and no more than ' . $limit . ' MB.'];
     }

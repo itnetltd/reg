@@ -20,6 +20,18 @@ final class UploadPolicyTest extends TestCase {
     });
   }
 
+  public function testLargerPublicationPdfUploadIsAllowedByCustomPolicy(): void {
+    self::assertSame(250, UploadPolicy::MAX_PUBLIC_PDF_MB);
+    // Simulate a scanned report larger than the earlier 25 MB custom limit.
+    $this->withTemporaryFile("%PDF-1.7\n", static function (string $path): void {
+      $handle = fopen($path, 'c+b');
+      self::assertNotFalse($handle);
+      self::assertTrue(ftruncate($handle, 26 * 1024 * 1024));
+      fclose($handle);
+      self::assertSame([], UploadPolicy::errors($path, 'Annual Public Report.pdf'));
+    });
+  }
+
   public function testInvalidMimeAndForbiddenFileNamesAreStillRejected(): void {
     $this->withTemporaryFile('This is not a PDF', static function (string $path): void {
       self::assertContains('The detected MIME type does not match the permitted file extension.', UploadPolicy::errors($path, 'Tender notice.pdf'));
