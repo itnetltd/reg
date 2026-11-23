@@ -2,31 +2,94 @@
   {% set hero = section_hero|default({})|merge({
     eyebrow: 'Media Center'|t,
     title: 'Photo Gallery'|t,
-    description: 'Photos published through Rwanda Energy Group\'s official Flickr gallery.'|t
+    description: 'Explore the latest albums and photos from Rwanda Energy Group\'s official Flickr account.'|t
   }) %}
   {% include '@reg_core/reg-section-hero.html.twig' with {hero: hero} only %}
 
   <main class="reg-container reg-media-center__body">
-    {% if gallery.items %}
-      <div class="reg-media-gallery__grid">
-        {% for photo in gallery.items %}
-          <a href="{{ photo.url }}" target="_blank" rel="noopener noreferrer">
-            <span class="reg-media-gallery__image"><img src="{{ photo.image_url }}" alt="{{ photo.title }}" width="640" height="480" loading="lazy"></span>
-            <span>{{ photo.title }}</span>
-          </a>
-        {% endfor %}
-      </div>
+    {% if gallery.albums %}
+      <section class="reg-flickr-albums" aria-labelledby="reg-flickr-albums-heading">
+        <div class="reg-flickr-albums__heading">
+          <div>
+            <span class="reg-flickr-albums__eyebrow">{{ 'REG on Flickr'|t }}</span>
+            <h2 id="reg-flickr-albums-heading">{{ 'Latest Four Albums'|t }}</h2>
+          </div>
+          {% if gallery.profile_url %}
+            <a href="{{ gallery.profile_url }}" target="_blank" rel="noopener noreferrer">{{ 'View all Flickr albums'|t }} &nearr;</a>
+          {% endif %}
+        </div>
+        <div class="reg-flickr-albums__grid">
+          {% for album in gallery.albums %}
+            <a class="reg-flickr-albums__album{{ gallery.active_album.id == album.id ? ' is-active' : '' }}"
+              href="{{ path('reg_core.media_gallery', {}, {'query': {'album': album.id}}) }}"
+              {% if gallery.active_album.id == album.id %}aria-current="page"{% endif %}>
+              {% if album.image_url %}
+                <span class="reg-flickr-albums__cover"><img src="{{ album.image_url }}" alt="{{ album.title }}" width="640" height="480" loading="lazy"></span>
+              {% else %}
+                <span class="reg-flickr-albums__cover reg-flickr-albums__cover--empty" aria-hidden="true"><span>REG</span></span>
+              {% endif %}
+              <span class="reg-flickr-albums__meta">
+                <strong>{{ album.title }}</strong>
+                <small>{{ '@count photos'|t({'@count': album.photo_count}) }}</small>
+              </span>
+            </a>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    {% if gallery.active_album %}
+      <section class="reg-flickr-albums__selected" aria-labelledby="reg-flickr-selected-heading">
+        <div class="reg-flickr-albums__heading">
+          <div>
+            <span class="reg-flickr-albums__eyebrow">{{ 'Selected album'|t }}</span>
+            <h2 id="reg-flickr-selected-heading">{{ gallery.active_album.title }}</h2>
+            <p>{{ 'Showing up to 12 public photos from this album.'|t }}</p>
+          </div>
+          <a href="{{ gallery.active_album.url }}" target="_blank" rel="noopener noreferrer">{{ 'View album on Flickr'|t }} &nearr;</a>
+        </div>
+        {% if gallery.items %}
+          <div class="reg-media-gallery__grid reg-flickr-albums__photos">
+            {% for photo in gallery.items %}
+              <a href="{{ photo.url }}" target="_blank" rel="noopener noreferrer">
+                <span class="reg-media-gallery__image"><img src="{{ photo.image_url }}" alt="{{ photo.title }}" width="640" height="480" loading="lazy"></span>
+                <span>{{ photo.title }}</span>
+              </a>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="reg-media-center__empty">{{ 'There are no publicly available photographs in this album yet.'|t }}</p>
+        {% endif %}
+      </section>
+    {% elseif gallery.items %}
+      <section class="reg-flickr-albums__selected" aria-labelledby="reg-flickr-recent-heading">
+        <div class="reg-flickr-albums__heading">
+          <div>
+            <span class="reg-flickr-albums__eyebrow">{{ 'REG on Flickr'|t }}</span>
+            <h2 id="reg-flickr-recent-heading">{{ 'Recent Photos'|t }}</h2>
+            <p>{{ 'Latest public photos are shown while album browsing is unavailable.'|t }}</p>
+          </div>
+          {% if gallery.profile_url %}
+            <a href="{{ gallery.profile_url }}" target="_blank" rel="noopener noreferrer">{{ 'View albums on Flickr'|t }} &nearr;</a>
+          {% endif %}
+        </div>
+        <div class="reg-media-gallery__grid">
+          {% for photo in gallery.items %}
+            <a href="{{ photo.url }}" target="_blank" rel="noopener noreferrer">
+              <span class="reg-media-gallery__image"><img src="{{ photo.image_url }}" alt="{{ photo.title }}" width="640" height="480" loading="lazy"></span>
+              <span>{{ photo.title }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      </section>
     {% else %}
       <section class="reg-media-center__fallback">
-        <h2>{{ 'REG photo gallery'|t }}</h2>
-        <p>{{ gallery.enabled ? 'The Flickr gallery is temporarily unavailable. Please use the official gallery link.'|t : 'The official Flickr gallery has not yet been enabled in REG social-media settings.'|t }}</p>
+        <h2>{{ 'REG Photo Gallery'|t }}</h2>
+        <p>{{ gallery.enabled ? 'The Flickr gallery is temporarily unavailable. Please use the official Flickr link.'|t : 'The official Flickr gallery has not yet been enabled in REG social-media settings.'|t }}</p>
         {% if gallery.profile_url %}
           <a href="{{ gallery.profile_url }}" target="_blank" rel="noopener noreferrer">{{ 'View REG photo gallery on Flickr'|t }} &rarr;</a>
         {% endif %}
       </section>
-    {% endif %}
-    {% if gallery.items and gallery.profile_url %}
-      <a class="reg-media-center__external" href="{{ gallery.profile_url }}" target="_blank" rel="noopener noreferrer">{{ 'View REG photo gallery on Flickr'|t }} &rarr;</a>
     {% endif %}
   </main>
 </div>

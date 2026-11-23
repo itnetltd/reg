@@ -226,6 +226,12 @@ x_feed:
       css/x-feed.css: {}
       css/x-feed-layout.css: {}
 
+flickr_albums:
+  version: 1.0.0
+  css:
+    component:
+      css/flickr-albums.css: {}
+
 newsroom_admin:
   version: 1.x
   css:
