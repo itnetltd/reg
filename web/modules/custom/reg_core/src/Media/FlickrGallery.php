@@ -96,6 +96,195 @@ final class FlickrGallery {
     return $result;
   }
 
+
+  /**
+   * Returns the four newest public Flickr albums with selected album photos.
+   *
+   * The Flickr public album API needs an app key, but no OAuth access.
+   * Without a key, the existing public photostream stays available.
+   */
+  public function albumGallery(?string $selectedAlbumId = NULL, int $albumLimit = 4, int $photoLimit = 12): array {
+    $albumLimit = max(1, min(4, $albumLimit));
+    $photoLimit = max(8, min(12, $photoLimit));
+    $flickr = $this->configFactory->get('reg_core.social_media')->get('platforms.flickr');
+    $flickr = is_array($flickr) ? $flickr : [];
+    $enabled = !empty($flickr['enabled']) && !empty($flickr['gallery_enabled']);
+    $userId = trim((string) ($flickr['user_id'] ?? ''));
+    $apiKey = trim((string) (getenv('FLICKR_API_KEY') ?: ''));
+    $result = [
+      'enabled' => $enabled,
+      'profile_url' => $this->validUrl((string) ($flickr['url'] ?? ''), ['flickr.com', 'www.flickr.com']),
+      'items' => [],
+      'albums' => [],
+      'active_album' => [],
+      'source_available' => FALSE,
+      'album_source_available' => FALSE,
+      'api_key_configured' => $apiKey !== '',
+    ];
+    if (!$enabled) {
+      return $result;
+    }
+    if ($userId === '' || !preg_match('/^[A-Za-z0-9@._-]+$/D', $userId) || $apiKey === '') {
+      return $this->albumFallback($result, $photoLimit);
+    }
+
+    $selectedAlbumId = is_string($selectedAlbumId) && preg_match('/^[0-9]{1,30}$/D', $selectedAlbumId)
+      ? $selectedAlbumId : NULL;
+    $cid = 'reg_core:flickr:albums:' . hash('sha256', $userId . ':' . $albumLimit . ':' . $photoLimit . ':' . ($selectedAlbumId ?? ''));
+    if ($cached = $this->cache->get($cid)) {
+      if (is_array($cached->data)) {
+        return $cached->data;
+      }
+    }
+
+    try {
+      $sets = $this->flickrApi('flickr.photosets.getList', $apiKey, [
+        'user_id' => $userId,
+        'per_page' => 500,
+        'page' => 1,
+        'primary_photo_extras' => 'url_m,url_o',
+      ]);
+      $rawSets = $sets['photosets']['photoset'] ?? [];
+      if (!is_array($rawSets)) {
+        throw new \RuntimeException('Flickr album list unavailable');
+      }
+      $albums = [];
+      foreach ($rawSets as $raw) {
+        if (!is_array($raw)) {
+          continue;
+        }
+        $id = (string) ($raw['id'] ?? '');
+        if (!preg_match('/^[0-9]{1,30}$/D', $id)) {
+          continue;
+        }
+        $rawTitle = $raw['title'] ?? '';
+        $title = is_array($rawTitle) ? (string) ($rawTitle['_content'] ?? '') : (string) $rawTitle;
+        $title = trim(strip_tags(html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+        $created = ctype_digit((string) ($raw['date_create'] ?? '')) ? (int) $raw['date_create'] : 0;
+        $albums[] = [
+          'id' => $id,
+          'title' => $title !== '' ? $title : 'REG photo album',
+          'url' => 'https://www.flickr.com/photos/' . rawurlencode($userId) . '/albums/' . $id,
+          'photo_count' => max(0, (int) ($raw['photos'] ?? 0)),
+          'date_create' => $created,
+          'image_url' => $this->flickrPhotoImage([
+            'url_m' => (string) ($raw['url_m'] ?? ''),
+            'id' => (string) ($raw['primary'] ?? ''),
+            'server' => (string) ($raw['server'] ?? ''),
+            'secret' => (string) ($raw['secret'] ?? ''),
+          ]),
+        ];
+      }
+      // Flickr normally returns user-defined album ordering, not latest first.
+      usort($albums, static fn(array $a, array $b): int =>
+        ($b['date_create'] <=> $a['date_create']) ?: strcmp($b['id'], $a['id']));
+      $albums = array_slice($albums, 0, $albumLimit);
+      $result['albums'] = $albums;
+      $result['album_source_available'] = TRUE;
+
+      if ($albums !== []) {
+        $selected = $albums[0];
+        foreach ($albums as $album) {
+          if ($album['id'] === $selectedAlbumId) {
+            $selected = $album;
+            break;
+          }
+        }
+        $result['active_album'] = $selected;
+        $photos = $this->flickrApi('flickr.photosets.getPhotos', $apiKey, [
+          'user_id' => $userId,
+          'photoset_id' => $selected['id'],
+          'media' => 'photos',
+          'extras' => 'url_z,url_m,date_upload,media',
+          'per_page' => $photoLimit,
+          'page' => 1,
+        ]);
+        $rawPhotos = $photos['photoset']['photo'] ?? [];
+        if (!is_array($rawPhotos)) {
+          throw new \RuntimeException('Flickr photo list unavailable');
+        }
+        foreach (array_slice($rawPhotos, 0, $photoLimit) as $rawPhoto) {
+          if (!is_array($rawPhoto) || ($rawPhoto['media'] ?? 'photo') !== 'photo') {
+            continue;
+          }
+          $photoId = (string) ($rawPhoto['id'] ?? '');
+          $imageUrl = $this->flickrPhotoImage($rawPhoto);
+          if (!preg_match('/^[0-9]{1,30}$/D', $photoId) || $imageUrl === '') {
+            continue;
+          }
+          $title = trim(strip_tags((string) ($rawPhoto['title'] ?? '')));
+          $result['items'][] = [
+            'title' => $title !== '' ? $title : $selected['title'],
+            'image_url' => $imageUrl,
+            'url' => 'https://www.flickr.com/photos/' . rawurlencode($userId) . '/' . $photoId,
+            'date_iso' => ctype_digit((string) ($rawPhoto['dateupload'] ?? ''))
+              ? gmdate('Y-m-d', (int) $rawPhoto['dateupload']) : '',
+          ];
+        }
+      }
+      $result['source_available'] = $result['items'] !== [];
+      $this->cache->set($cid, $result, time() + 900, ['config:reg_core.social_media']);
+      return $result;
+    }
+    catch (\Throwable $exception) {
+      // Guzzle exceptions may contain URLs with API keys. Do not log details.
+      $this->loggerFactory->get('reg_core')->warning('Flickr album listing unavailable; using public photo feed.');
+      return $this->albumFallback($result, $photoLimit);
+    }
+  }
+
+  /**
+   * Reads public Flickr REST API data. Never passes API keys to the browser.
+   */
+  private function flickrApi(string $method, string $apiKey, array $query): array {
+    $response = $this->httpClient->request('GET', 'https://www.flickr.com/services/rest/', [
+      'query' => ['method' => $method, 'api_key' => $apiKey, 'format' => 'json', 'nojsoncallback' => '1'] + $query,
+      'connect_timeout' => 3,
+      'timeout' => 8,
+      'http_errors' => FALSE,
+      'allow_redirects' => FALSE,
+      'headers' => ['Accept' => 'application/json'],
+    ]);
+    if ($response->getStatusCode() !== 200) {
+      throw new \RuntimeException('Flickr API returned an unexpected status');
+    }
+    $payload = json_decode((string) $response->getBody(), TRUE);
+    if (!is_array($payload) || ($payload['stat'] ?? '') !== 'ok') {
+      throw new \RuntimeException('Flickr API returned an invalid result');
+    }
+    return $payload;
+  }
+
+  /**
+   * Prefer returned Flickr URLs, then construct the documented public path.
+   */
+  private function flickrPhotoImage(array $raw): string {
+    foreach (['url_z', 'url_m'] as $field) {
+      $url = $this->validImageUrl((string) ($raw[$field] ?? ''));
+      if ($url !== '') {
+        return $url;
+      }
+    }
+    $id = (string) ($raw['id'] ?? '');
+    $server = (string) ($raw['server'] ?? '');
+    $secret = (string) ($raw['secret'] ?? '');
+    if (preg_match('/^[0-9]{1,30}$/D', $id) && preg_match('/^[0-9]{1,20}$/D', $server)
+      && preg_match('/^[A-Za-z0-9]{1,32}$/D', $secret)) {
+      return 'https://live.staticflickr.com/' . $server . '/' . $id . '_' . $secret . '_z.jpg';
+    }
+    return '';
+  }
+
+  /**
+   * Keeps the existing public photo feed if albums cannot be retrieved.
+   */
+  private function albumFallback(array $result, int $photoLimit): array {
+    $feed = $this->gallery($photoLimit);
+    $result['items'] = $feed['items'] ?? [];
+    $result['source_available'] = $feed['source_available'] ?? FALSE;
+    return $result;
+  }
+
   /**
    * Validates an HTTPS public URL against exact allowed hosts.
    */

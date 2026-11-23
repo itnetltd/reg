@@ -81,10 +81,14 @@ final class MediaCenterController implements ContainerInjectionInterface {
   public function gallery(): array {
     return [
       '#theme' => 'reg_media_gallery',
-      '#gallery' => $this->flickr->gallery(16),
-      '#attached' => ['library' => ['reg_core/newsroom']],
+      '#gallery' => $this->flickr->albumGallery(
+        is_string(\Drupal::request()->query->get('album')) ? \Drupal::request()->query->get('album') : NULL,
+        4,
+        12,
+      ),
+      '#attached' => ['library' => ['reg_core/newsroom', 'reg_core/flickr_albums']],
       '#cache' => [
-        'contexts' => ['languages:language_interface'],
+        'contexts' => ['languages:language_interface', 'url.query_args:album'],
         'tags' => ['config:reg_core.social_media'],
         'max-age' => 900,
       ],
