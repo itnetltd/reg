@@ -30,7 +30,11 @@
               {% endif %}
               <span class="reg-flickr-albums__meta">
                 <strong>{{ album.title }}</strong>
-                <small>{{ '@count photos'|t({'@count': album.photo_count}) }}</small>
+                {% if album.preview_count is defined %}
+                  <small>{{ 'Up to @count photos in preview'|t({'@count': album.preview_count}) }}</small>
+                {% else %}
+                  <small>{{ '@count photos'|t({'@count': album.photo_count}) }}</small>
+                {% endif %}
               </span>
             </a>
           {% endfor %}

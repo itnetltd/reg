@@ -147,7 +147,7 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
           '#title' => $this->t('Flickr User ID'),
           '#default_value' => $values['user_id'] ?? '',
           '#maxlength' => 100,
-          '#description' => $this->t('Official Flickr user NSID, such as 127491669@N07. The four-album gallery uses FLICKR_API_KEY stored privately on AOS; never put the key in this form.'),
+          '#description' => $this->t('Official Flickr user NSID, such as 127491669@N07. Use the no-key album list below; an API key is optional.'),
         ];
         $form['platforms'][$id]['album_id'] = [
           '#type' => 'textfield',
@@ -161,12 +161,21 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
           '#title' => $this->t('Photo Gallery enabled'),
           '#default_value' => (bool) ($values['gallery_enabled'] ?? FALSE),
         ];
+        $form['platforms'][$id]['manual_albums'] = [
+          '#type' => 'textarea',
+          '#title' => $this->t('Four public Flickr albums (no API key required)'),
+          '#default_value' => $values['manual_albums'] ?? '',
+          '#rows' => 5,
+          '#description' => $this->t('One album per line, newest first: Album ID | Album title. You may paste a full Flickr album URL instead of the ID. Example: 72177720312345678 | REG Community Event. Up to four albums; the website shows up to 12 public photos from each using Flickr\'s public album feed.'),
+        ];
         $form['platforms'][$id]['flickr_api_status'] = [
           '#type' => 'item',
           '#title' => $this->t('Latest four Flickr albums'),
-          '#markup' => getenv('FLICKR_API_KEY')
-            ? $this->t('Flickr API key is configured on the server. The gallery can retrieve and cache four recent albums.')
-            : $this->t('Flickr API key is not yet configured on the server. The gallery continues showing the public photo feed until then.'),
+          '#markup' => trim((string) ($values['manual_albums'] ?? '')) !== ''
+            ? $this->t('No-key album mode selected: public Flickr album feeds are used for the four configured albums.')
+            : (getenv('FLICKR_API_KEY')
+              ? $this->t('Flickr API key configured: the four newest albums can be retrieved automatically.')
+              : $this->t('No API key is necessary: enter four public Flickr album IDs and titles above, then save.')),
         ];
       }
       if ($id === 'x') {
@@ -382,6 +391,14 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
       $form_state->setErrorByName('platforms][youtube][channel_id', $this->t('Enter a verified channel ID beginning with UC followed by 22 letters, numbers, underscores or hyphens.'));
     }
     $flickr = (array) $form_state->getValue(['platforms', 'flickr']);
+    $manual = trim((string) ($flickr['manual_albums'] ?? ''));
+    if ($manual !== '') {
+      $lines = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $manual) ?: [])));
+      $valid = \Drupal\reg_core\Media\FlickrGallery::parseManualAlbums($manual);
+      if (count($lines) > 4 || count($valid) !== count($lines)) {
+        $form_state->setErrorByName('platforms][flickr][manual_albums', $this->t('Enter up to four unique Flickr album URLs or numeric IDs, each followed by | and a title (maximum 140 characters).'));
+      }
+    }
     foreach (['user_id', 'album_id'] as $field) {
       $value = trim((string) ($flickr[$field] ?? ''));
       if ($value !== '' && !preg_match('/^[A-Za-z0-9@._-]+$/', $value)) {
@@ -436,6 +453,7 @@ final class SocialMediaSettingsForm extends ConfigFormBase {
           'user_id' => trim((string) ($values['user_id'] ?? '')),
           'album_id' => trim((string) ($values['album_id'] ?? '')),
           'gallery_enabled' => (bool) ($values['gallery_enabled'] ?? FALSE),
+          'manual_albums' => trim((string) ($values['manual_albums'] ?? '')),
         ];
       }
       $config->set('platforms.' . $id, $platform_config);

@@ -59,6 +59,7 @@ platforms:
     user_id: '127491669@N07'
     album_id: ''
     gallery_enabled: true
+    manual_albums: ''
   tiktok:
     url: ''
     display_name: 'Rwanda Energy Group'
