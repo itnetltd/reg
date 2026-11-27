@@ -332,6 +332,7 @@ function reg_core_install(): void {
   reg_core_configure_sports_news();
   \Drupal\reg_core\Footer\FooterConfiguration::initialize();
   \Drupal\reg_core\Recruitment\RecruitmentWorkflowSetup::apply();
+  \Drupal\reg_core\Translation\TranslationOnlyRole::apply();
 }
 
 /**

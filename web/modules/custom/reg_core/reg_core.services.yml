@@ -446,3 +446,8 @@ services:
     arguments: ['@datetime.time']
     tags:
       - { name: event_subscriber }
+
+  reg_core.translation_only_landing:
+    class: Drupal\reg_core\EventSubscriber\TranslationOnlyLandingSubscriber
+    tags:
+      - { name: event_subscriber }

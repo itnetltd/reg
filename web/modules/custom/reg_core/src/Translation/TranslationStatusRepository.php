@@ -45,7 +45,7 @@ final class TranslationStatusRepository {
    * Only bundles which exist and have Drupal content translation enabled
    * appear in the workspace. The old report API remains available to dashboards.
    */
-  public function workspaceBundleOptions(): array {
+  public function workspaceBundleOptions(bool $restrictToAccount = TRUE): array {
     $manager = \Drupal::service('content_translation.manager');
     $storage = $this->regEntityTypeManager->getStorage('node_type');
     $public = array_unique(array_merge(self::BUNDLES, [
@@ -57,6 +57,11 @@ final class TranslationStatusRepository {
     $options = [];
     foreach ($storage->loadMultiple($public) as $id => $type) {
       if ($manager->isEnabled('node', $id)) {
+        $account = \Drupal::currentUser();
+        if ($restrictToAccount && in_array(TranslationOnlyRole::ID, $account->getRoles(), TRUE)
+          && !$account->hasPermission("translate $id node")) {
+          continue;
+        }
         $options[$id] = $type->label();
       }
     }

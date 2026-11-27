@@ -998,3 +998,12 @@ function reg_core_post_update_recruitment_unpublish_transition(?array &$sandbox 
   \Drupal\reg_core\Recruitment\RecruitmentWorkflowSetup::apply();
   return 'Added explicit HR vacancy unpublish and revise transitions. Existing archive/publication states and content unchanged.';
 }
+
+
+/**
+ * Creates a least-privilege role for translators without changing staff roles.
+ */
+function reg_core_post_update_translation_only_role(?array &$sandbox = NULL): string {
+  \Drupal\reg_core\Translation\TranslationOnlyRole::apply();
+  return 'Created REG Translation Only role. Assign it exclusively to designated translation accounts.';
+}

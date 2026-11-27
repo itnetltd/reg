@@ -53,6 +53,7 @@ final class TranslationReportController extends ControllerBase {
     $route = \Drupal::routeMatch()->getRouteName();
     $destination = Url::fromRoute($route, [], ['query' => $filters + ['page' => $pager->getCurrentPage()]])->toString();
     $languages = \Drupal::languageManager()->getLanguages();
+    $translationOnly = in_array(\Drupal\reg_core\Translation\TranslationOnlyRole::ID, $this->currentUser()->getRoles(), TRUE);
     foreach ($rows as &$row) {
       $node = $row['id'];
       $row['actions'] = [];
@@ -61,7 +62,8 @@ final class TranslationReportController extends ControllerBase {
         $row['overview_url'] = $overview->toString();
       }
       foreach (['en', 'rw'] as $langcode) {
-        if (!isset($languages[$langcode]) || $row['states'][$langcode] === 'restricted') {
+        if (!isset($languages[$langcode]) || $row['states'][$langcode] === 'restricted'
+          || ($translationOnly && $langcode === $row['source_language'])) {
           continue;
         }
         $options = ['language' => $languages[$langcode], 'query' => ['destination' => $destination]];
