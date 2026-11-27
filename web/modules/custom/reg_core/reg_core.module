@@ -849,7 +849,7 @@ function reg_core_theme(): array {
       'variables' => ['rows' => [], 'filters' => [], 'districts' => [], 'entities' => [], 'review_statuses' => [], 'add_url' => '', 'clear_url' => ''],
     ],
     'reg_translation_report' => [
-      'variables' => ['rows' => [], 'summary' => [], 'filters' => [], 'bundles' => [], 'tabs' => [], 'total' => 0, 'first' => 0, 'last' => 0, 'clear_url' => '', 'pager' => []],
+      'variables' => ['rows' => [], 'summary' => [], 'filters' => [], 'bundles' => [], 'tabs' => [], 'total' => 0, 'first' => 0, 'last' => 0, 'clear_url' => '', 'pager' => [], 'interface_translation_url' => ''],
     ],
     'reg_dashboard' => [
       'variables' => [

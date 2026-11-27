@@ -97,8 +97,10 @@ final class TranslationReportController extends ControllerBase {
       $tabFilters = array_replace($filters, ['status' => $key]);
       $tabs[$key] = ['count' => $count, 'url' => Url::fromRoute($route, [], ['query' => $tabFilters])->toString()];
     }
+    $interfaceUrl = Url::fromRoute('locale.translate_page');
     return [
       '#theme' => 'reg_translation_report',
+      '#interface_translation_url' => $interfaceUrl->access($this->currentUser()) ? $interfaceUrl->toString() : '',
       '#rows' => $rows,
       '#summary' => $result['summary'],
       '#filters' => $filters,

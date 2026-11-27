@@ -1007,3 +1007,20 @@ function reg_core_post_update_translation_only_role(?array &$sandbox = NULL): st
   \Drupal\reg_core\Translation\TranslationOnlyRole::apply();
   return 'Created REG Translation Only role. Assign it exclusively to designated translation accounts.';
 }
+
+
+/**
+ * Enables interface string translation for the restricted translator role.
+ */
+function reg_core_post_update_translation_only_interface(?array &$sandbox = NULL): string {
+  $role = \Drupal\user\Entity\Role::load(\Drupal\reg_core\Translation\TranslationOnlyRole::ID);
+  if (!$role) {
+    \Drupal\reg_core\Translation\TranslationOnlyRole::apply();
+    $role = \Drupal\user\Entity\Role::load(\Drupal\reg_core\Translation\TranslationOnlyRole::ID);
+  }
+  if (!$role || !\Drupal::moduleHandler()->moduleExists('locale')) {
+    throw new \Drupal\Core\Utility\UpdateException('REG Translation Only role or Locale module is missing.');
+  }
+  $role->grantPermission('translate interface')->save();
+  return 'Enabled Drupal user interface translation for REG Translation Only. Other roles and permissions are unchanged.';
+}

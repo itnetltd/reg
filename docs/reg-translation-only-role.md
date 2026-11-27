@@ -11,8 +11,12 @@ Login/password reset/logout are unchanged. Direct workspace links remain valid.
 The role uses native per-bundle translation permissions, not general node edit,
 create, delete or publish permissions. It grants only configured draft/review
 transitions whose destination is unpublished and non-default. Non-moderated
-bundles are intentionally excluded. Interface/configuration translation,
-administration, media upload and unsafe text formats are not granted.
+bundles are intentionally excluded. Interface translation is enabled with Drupal's translate interface permission;
+general configuration translation, administration, media upload and unsafe
+text formats are not granted. The workspace links to interface translation
+when route access allows it. Locale translations apply immediately and this
+permission also permits Locale translation import/export and update reports.
+It covers interface strings across configured languages, including admin UI.
 Original language edit links are suppressed for the dedicated role.
 Review and publication are performed by an existing authorized approver.
 Public site and own account settings remain available.

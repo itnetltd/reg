@@ -25,6 +25,7 @@ final class TranslationOnlyRole {
       'access content',
       'view the administration theme',
       'view reg translation report',
+      'translate interface',
       'create content translations',
       'update content translations',
       'use text format basic_html',

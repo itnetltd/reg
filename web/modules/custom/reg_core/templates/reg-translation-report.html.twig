@@ -1,5 +1,8 @@
 <div class="reg-admin-report reg-translation-workspace">
   <div class="reg-translation-workspace__intro">
+    {% if interface_translation_url %}
+      <p><a class="button" href="{{ interface_translation_url }}">{{ 'Translate website labels (User interface translation)'|t }}</a></p>
+    {% endif %}
     <h2>{{ 'Translation workspace'|t }}</h2>
     <p>{{ 'Find website content that needs English or Kinyarwanda translation. Choose a language and click Add translation or Edit to open Drupal’s normal editorial form.'|t }}</p>
     <p class="reg-translation-workspace__note">{{ 'Only translation-enabled public content types are included. Attached official documents, interface text, menu labels and configuration translations are managed separately.'|t }}</p>
