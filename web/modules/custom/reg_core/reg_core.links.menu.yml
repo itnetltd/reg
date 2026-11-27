@@ -285,8 +285,15 @@ reg_core.dashboard_sports:
   parent: reg_core.dashboard
   weight: 6
 
+reg_core.translation_workspace_content:
+  title: 'Translations'
+  description: 'Search missing English and Kinyarwanda translations and open their editorial forms.'
+  route_name: reg_core.translation_report
+  parent: system.admin_content
+  weight: 10.5
+
 reg_core.dashboard_translations:
-  title: 'Translation status'
+  title: 'Translation workspace'
   route_name: reg_core.dashboard_translations
   parent: reg_core.dashboard
   weight: 7

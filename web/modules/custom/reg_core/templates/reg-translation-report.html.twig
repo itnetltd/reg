@@ -1,8 +1,87 @@
-<div class="reg-admin-report">
-  <p>{{ 'This report tracks editorial translations only. Official PDFs remain in their supplied source language unless REG publishes an approved translated document.'|t }}</p>
-  <div class="reg-kpi-grid">
-    <article><strong>{{ summary.total_priority }}</strong><span>{{ 'Total priority pages'|t }}</span></article><article><strong>{{ summary.fully_translated }}</strong><span>{{ 'Fully translated'|t }}</span></article><article><strong>{{ summary.missing_translation }}</strong><span>{{ 'Missing translation'|t }}</span></article><article><strong>{{ summary.outdated_translation }}</strong><span>{{ 'Translation outdated'|t }}</span></article><article><strong>{{ summary.pending_review }}</strong><span>{{ 'Pending review'|t }}</span></article>
+<div class="reg-admin-report reg-translation-workspace">
+  <div class="reg-translation-workspace__intro">
+    <h2>{{ 'Translation workspace'|t }}</h2>
+    <p>{{ 'Find website content that needs English or Kinyarwanda translation. Choose a language and click Add translation or Edit to open Drupal’s normal editorial form.'|t }}</p>
+    <p class="reg-translation-workspace__note">{{ 'Only translation-enabled public content types are included. Attached official documents, interface text, menu labels and configuration translations are managed separately.'|t }}</p>
   </div>
-  <form method="get" class="reg-admin-filters"><label>{{ 'Translation status'|t }}<select name="status"><option value="">{{ 'All statuses'|t }}</option>{% for key, label in {'missing_rw':'Missing Kinyarwanda','outdated':'Outdated translation','pending_review':'Pending review','complete':'Complete'} %}<option value="{{ key }}"{{ filters.status == key ? ' selected' : '' }}>{{ label|t }}</option>{% endfor %}</select></label><label>{{ 'Content type'|t }}<select name="content_type"><option value="">{{ 'All content types'|t }}</option>{% for key, label in bundles %}<option value="{{ key }}"{{ filters.content_type == key ? ' selected' : '' }}>{{ label }}</option>{% endfor %}</select></label><label>{{ 'Owner or department'|t }}<input name="owner" value="{{ filters.owner }}"></label><label>{{ 'Publication status'|t }}<select name="published"><option value="">{{ 'All'|t }}</option><option value="published"{{ filters.published == 'published' ? ' selected' : '' }}>{{ 'Published'|t }}</option><option value="unpublished"{{ filters.published == 'unpublished' ? ' selected' : '' }}>{{ 'Unpublished'|t }}</option></select></label><button type="submit">{{ 'Apply filters'|t }}</button></form>
-  <div class="reg-admin-table-wrap"><table><caption class="visually-hidden">{{ 'REG translation status'|t }}</caption><thead><tr><th scope="col">{{ 'Content'|t }}</th><th scope="col">{{ 'Content Type'|t }}</th><th scope="col">{{ 'Priority'|t }}</th><th scope="col">{{ 'Source Language'|t }}</th><th scope="col">{{ 'English Status'|t }}</th><th scope="col">{{ 'Kinyarwanda Status'|t }}</th><th scope="col">{{ 'Last Updated'|t }}</th><th scope="col">{{ 'Owner'|t }}</th><th scope="col">{{ 'Review Date'|t }}</th></tr></thead><tbody>{% for row in rows %}<tr><th scope="row">{{ row.title }}</th><td>{{ row.bundle }}</td><td>{{ row.priority }}</td><td>{{ row.source_language }}</td><td>{{ row.english_status }}</td><td>{{ row.kinyarwanda_status }}</td><td>{{ row.last_updated }}</td><td>{{ row.owner }}{% if row.department %}<small>{{ row.department }}</small>{% endif %}</td><td>{{ row.review_date }}</td></tr>{% else %}<tr><td colspan="9">{{ 'No content matched these filters.'|t }}</td></tr>{% endfor %}</tbody></table></div>
+  {% set status_labels = {'all':'All content','missing':'Missing translations','pending':'Draft / review','outdated':'Flagged outdated','complete':'Translated'} %}
+  <nav class="reg-translation-workspace__tabs" aria-label="{{ 'Filter by translation status'|t }}">
+    {% for key, tab in tabs %}
+      <a class="reg-translation-workspace__tab" href="{{ tab.url }}"{% if filters.status == key %} aria-current="page"{% endif %}>
+        <strong>{{ tab.count }}</strong><span>{{ status_labels[key]|t }}</span>
+      </a>
+    {% endfor %}
+  </nav>
+  <form method="get" class="reg-translation-workspace__filters">
+    <input type="hidden" name="status" value="{{ filters.status }}">
+    <label class="reg-translation-workspace__search">
+      <span>{{ 'Search by content title or ID'|t }}</span>
+      <input type="search" name="q" value="{{ filters.q }}" maxlength="120" placeholder="{{ 'Enter a page, news title, tender or other content'|t }}">
+    </label>
+    <label><span>{{ 'Translation language'|t }}</span>
+      <select name="target">
+        <option value="">{{ 'English and Kinyarwanda'|t }}</option>
+        <option value="en"{{ filters.target == 'en' ? ' selected' : '' }}>{{ 'English'|t }}</option>
+        <option value="rw"{{ filters.target == 'rw' ? ' selected' : '' }}>{{ 'Kinyarwanda'|t }}</option>
+      </select>
+    </label>
+    <label><span>{{ 'Content type'|t }}</span>
+      <select name="content_type">
+        <option value="">{{ 'All content types'|t }}</option>
+        {% for key, label in bundles %}<option value="{{ key }}"{{ filters.content_type == key ? ' selected' : '' }}>{{ label }}</option>{% endfor %}
+      </select>
+    </label>
+    <label><span>{{ 'Source publication status'|t }}</span>
+      <select name="published">
+        <option value="">{{ 'All'|t }}</option>
+        <option value="published"{{ filters.published == 'published' ? ' selected' : '' }}>{{ 'Published'|t }}</option>
+        <option value="unpublished"{{ filters.published == 'unpublished' ? ' selected' : '' }}>{{ 'Unpublished'|t }}</option>
+      </select>
+    </label>
+    <label><span>{{ 'Owner or department'|t }}</span>
+      <input name="owner" maxlength="80" value="{{ filters.owner }}" placeholder="{{ 'Any owner'|t }}">
+    </label>
+    <div class="reg-translation-workspace__filter-actions">
+      <button class="button button--primary" type="submit">{{ 'Search / filter'|t }}</button>
+      <a href="{{ clear_url }}">{{ 'Reset'|t }}</a>
+    </div>
+  </form>
+  <div class="reg-translation-workspace__results">
+    <strong>{{ '@total matching items'|t({'@total': total}) }}</strong>
+    {% if total %}<span>{{ 'Showing @first–@last'|t({'@first': first, '@last': last}) }}</span>{% endif %}
+  </div>
+  {% set states = {'missing':'Not translated','pending':'Draft / review','outdated':'Flagged outdated','complete':'Published','restricted':'Restricted'} %}
+  <div class="reg-admin-table-wrap reg-translation-workspace__table">
+    <table>
+      <caption class="visually-hidden">{{ 'Content translation worklist'|t }}</caption>
+      <thead><tr><th scope="col">{{ 'Content'|t }}</th><th scope="col">{{ 'Content type'|t }}</th><th scope="col">{{ 'English (EN)'|t }}</th><th scope="col">{{ 'Kinyarwanda (RW)'|t }}</th><th scope="col">{{ 'Updated'|t }}</th></tr></thead>
+      <tbody>
+      {% for row in rows %}
+        <tr>
+          <th scope="row" class="reg-translation-workspace__content">
+            {% if row.overview_url %}<a href="{{ row.overview_url }}">{{ row.title }}</a>{% else %}{{ row.title }}{% endif %}
+            <small>#{{ row.id }} · {{ 'Original:'|t }} {{ row.source_language|upper }}</small>
+            {% if row.overview_url %}<a class="reg-translation-workspace__overview" href="{{ row.overview_url }}">{{ 'Manage translations'|t }}</a>{% endif %}
+          </th>
+          <td>{{ row.bundle_label }}</td>
+          {% for langcode in ['en', 'rw'] %}
+            {% set state = row.states[langcode] %}
+            <td>
+              <span class="reg-translation-workspace__status reg-translation-workspace__status--{{ state }}">{{ states[state]|t }}</span>
+              {% if row.actions[langcode] %}
+                <a class="reg-translation-workspace__action{{ row.actions[langcode].operation == 'add' ? ' is-add' : '' }}" href="{{ row.actions[langcode].url }}">
+                  {{ row.actions[langcode].operation == 'add' ? '+ Add translation'|t : 'Edit'|t }} {{ langcode|upper }}
+                </a>
+              {% endif %}
+            </td>
+          {% endfor %}
+          <td><small>{{ row.last_updated }}</small></td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5" class="reg-translation-workspace__empty">{{ 'No content matches your filters. Try another language, status or search term.'|t }} <a href="{{ clear_url }}">{{ 'Reset filters'|t }}</a></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {{ pager }}
 </div>

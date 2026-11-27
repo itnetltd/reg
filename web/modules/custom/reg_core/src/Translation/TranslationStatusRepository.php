@@ -37,6 +37,152 @@ final class TranslationStatusRepository {
     private readonly DateFormatterInterface $regDateFormatter,
   ) {}
 
+
+  /**
+   * Public editorial node bundles for the translation workspace.
+   *
+   * Private application, supplier, bid and submission records are excluded.
+   * Only bundles which exist and have Drupal content translation enabled
+   * appear in the workspace. The old report API remains available to dashboards.
+   */
+  public function workspaceBundleOptions(): array {
+    $manager = \Drupal::service('content_translation.manager');
+    $storage = $this->regEntityTypeManager->getStorage('node_type');
+    $public = array_unique(array_merge(self::BUNDLES, [
+      'reg_about_page', 'reg_what_we_do_page', 'reg_value', 'reg_leader',
+      'reg_employee_recognition', 'reg_homepage_hero', 'reg_section_hero',
+      'reg_public_alert', 'reg_energy_tool', 'reg_video', 'reg_fact',
+      'reg_social_post', 'reg_partner', 'reg_sports_membership',
+    ]));
+    $options = [];
+    foreach ($storage->loadMultiple($public) as $id => $type) {
+      if ($manager->isEnabled('node', $id)) {
+        $options[$id] = $type->label();
+      }
+    }
+    asort($options, SORT_NATURAL | SORT_FLAG_CASE);
+    return $options;
+  }
+
+  /**
+   * Search and report both language directions using accessible content.
+   *
+   * Counts respect search, bundle, publication, owner and target-language
+   * filters, but not the selected status tab. No silent 2,000-node cutoff.
+   */
+  public function workspace(array $filters): array {
+    $bundles = $this->workspaceBundleOptions();
+    $summary = ['all' => 0, 'missing' => 0, 'pending' => 0, 'outdated' => 0, 'complete' => 0];
+    $rows = [];
+    if (!$bundles) {
+      return ['rows' => [], 'summary' => $summary, 'bundles' => $bundles];
+    }
+    $storage = $this->regEntityTypeManager->getStorage('node');
+    $query = $storage->getQuery()->accessCheck(TRUE)
+      ->condition('type', array_keys($bundles), 'IN')
+      ->sort('nid', 'DESC');
+    if (isset($bundles[$filters['content_type']])) {
+      $query->condition('type', $filters['content_type']);
+    }
+    $q = $filters['q'];
+    $owner = mb_strtolower($filters['owner']);
+    $manager = \Drupal::service('content_translation.manager');
+    $ids = $query->execute();
+    foreach (array_chunk(array_values($ids), 100) as $chunk) {
+      $loaded = $storage->loadMultiple($chunk);
+      foreach ($chunk as $nid) {
+        $node = $loaded[$nid] ?? NULL;
+        if (!$node instanceof NodeInterface || !$node->access('view')) {
+          continue;
+        }
+        $source = $node->getUntranslated();
+        if ($filters['published'] !== '' && $source->isPublished() !== ($filters['published'] === 'published')) {
+          continue;
+        }
+        $ownerName = (string) ($source->getOwner()?->getDisplayName() ?? '');
+        $department = $this->value($source, 'field_reg_content_department');
+        if ($owner !== '' && !str_contains(mb_strtolower($ownerName . ' ' . $department), $owner)) {
+          continue;
+        }
+        // Search the original title, accessible translations and the node ID.
+        $titles = [(string) $source->label()];
+        foreach (['en', 'rw'] as $lang) {
+          if ($node->hasTranslation($lang) && $node->getTranslation($lang)->access('view')) {
+            $titles[] = (string) $node->getTranslation($lang)->label();
+          }
+        }
+        if ($q !== '' && (string) $nid !== $q && !str_contains(mb_strtolower(implode(' ', $titles)), mb_strtolower($q))) {
+          continue;
+        }
+        $sourceLang = $source->language()->getId();
+        $states = [];
+        foreach (['en', 'rw'] as $lang) {
+          $translation = $node->hasTranslation($lang) ? $node->getTranslation($lang) : NULL;
+          if ($lang !== $sourceLang && !$translation) {
+            // Drupal's translation overview also considers pending revisions.
+            // Do not label a saved, accessible draft translation as missing.
+            $revisionId = $storage->getLatestTranslationAffectedRevisionId($nid, $lang);
+            if ($revisionId && (string) $revisionId !== (string) $node->getRevisionId()) {
+              $revision = $storage->loadRevision($revisionId);
+              if ($revision instanceof NodeInterface && !$revision->wasDefaultRevision()
+                && $revision->hasTranslation($lang) && $revision->getTranslation($lang)->access('view')) {
+                $translation = $revision->getTranslation($lang);
+              }
+            }
+          }
+          if (!$translation) {
+            $states[$lang] = 'missing';
+          }
+          elseif (!$translation->access('view')) {
+            $states[$lang] = 'restricted';
+          }
+          elseif (!$translation->isPublished() || !$translation->isDefaultRevision()) {
+            $states[$lang] = 'pending';
+          }
+          elseif ($lang !== $sourceLang && $manager->getTranslationMetadata($translation)->isOutdated()) {
+            $states[$lang] = 'outdated';
+          }
+          else {
+            $states[$lang] = 'complete';
+          }
+        }
+        $targetStates = $filters['target'] === '' ? array_values($states) : [$states[$filters['target']]];
+        $matching = self::workspaceStatus($targetStates);
+        $summary['all']++;
+        if (isset($summary[$matching])) {
+          $summary[$matching]++;
+        }
+        if ($filters['status'] !== 'all' && $filters['status'] !== $matching) {
+          continue;
+        }
+        $rows[] = [
+          'id' => (int) $nid,
+          'title' => (string) $source->label(),
+          'bundle' => $source->bundle(),
+          'bundle_label' => $bundles[$source->bundle()],
+          'source_language' => $sourceLang,
+          'states' => $states,
+          'status_key' => $matching,
+          'published' => $source->isPublished(),
+          'last_updated' => $this->regDateFormatter->format($source->getChangedTime(), 'short'),
+        ];
+      }
+    }
+    return ['rows' => $rows, 'summary' => $summary, 'bundles' => $bundles];
+  }
+
+  /**
+   * Classifies a target language or the overall bilingual editorial status.
+   */
+  public static function workspaceStatus(array $states): string {
+    foreach (['missing', 'pending', 'outdated', 'restricted'] as $status) {
+      if (in_array($status, $states, TRUE)) {
+        return $status;
+      }
+    }
+    return 'complete';
+  }
+
   /**
    * Returns report rows after applying governance filters.
    */

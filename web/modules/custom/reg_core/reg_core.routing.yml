@@ -1299,7 +1299,7 @@ reg_core.translation_report:
   path: '/admin/reports/reg-translations'
   defaults:
     _controller: '\Drupal\reg_core\Controller\TranslationReportController::report'
-    _title: 'REG Translation Status'
+    _title: 'REG Translation Workspace'
   requirements:
     _permission: 'view reg translation report'
   options:
@@ -1493,7 +1493,7 @@ reg_core.dashboard_translations:
   path: '/admin/reg-dashboard/translations'
   defaults:
     _controller: '\Drupal\reg_core\Controller\TranslationReportController::report'
-    _title: 'REG Translation Status'
+    _title: 'REG Translation Workspace'
   requirements:
     _permission: 'view reg translation report'
   options:

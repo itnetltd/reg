@@ -303,3 +303,8 @@ homepage_opportunities:
       css/homepage-opportunities.css: {}
   dependencies:
     - reg_core/tenders
+translation_workspace:
+  version: 1.0.0
+  css:
+    theme:
+      css/translation-workspace.css: {}
